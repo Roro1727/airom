@@ -1,0 +1,7 @@
+AI Bill of Materials — go-openai
+3 component(s), 0 relationship(s)
+
+KIND        NAME                               VERSION  PROVIDER  CONF  EVIDENCE
+hosted-llm  gpt-4o                             -        -         0.75  1 occ
+library     github.com/sashabaranov/go-openai  -        -         0.8   1 occ
+library     github.com/sashabaranov/go-openai  v1.32.0  openai    0.95  1 occ

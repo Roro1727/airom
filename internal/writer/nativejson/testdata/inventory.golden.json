@@ -95,11 +95,11 @@
       "kind": "local-model-file",
       "name": "tiny.gguf",
       "provider": "local",
-      "purl": "pkg:generic/tiny.gguf?checksum=sha256:abcd",
+      "purl": "pkg:generic/tiny.gguf?checksum=sha256:abababababababababababababababababababababababababababababababab",
       "hashes": [
         {
           "alg": "SHA-256",
-          "hex": "abcd"
+          "hex": "abababababababababababababababababababababababababababababababab"
         }
       ],
       "model": {
@@ -197,13 +197,7 @@
             "confidence": 0.7
           }
         ]
-      },
-      "props": [
-        {
-          "name": "airom:rel.queries",
-          "value": "airom:1111111111111111@0.6"
-        }
-      ]
+      }
     }
   ],
   "relationships": [
@@ -230,9 +224,9 @@
             "path": "src/rag.py",
             "line": 12
           },
-          "detectorId": "",
-          "method": "",
-          "confidence": 0
+          "detectorId": "rules/chroma/client",
+          "method": "source-code-analysis",
+          "confidence": 0.6
         }
       ]
     }

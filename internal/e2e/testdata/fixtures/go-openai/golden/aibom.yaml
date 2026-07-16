@@ -1,0 +1,212 @@
+components:
+  - confidence: 0.8
+    evidence:
+      occurrences:
+        - confidence: 0.8
+          detectorId: gosrc/ast
+          location:
+            line: 7
+            path: main.go
+          method: ast-fingerprint
+          snippet: openai "github.com/sashabaranov/go-openai"
+    id: airom:cffbe1cb532342ef
+    kind: library
+    name: github.com/sashabaranov/go-openai
+    package:
+      ecosystem: golang
+  - confidence: 0.75
+    evidence:
+      occurrences:
+        - confidence: 0.75
+          detectorId: gosrc/ast
+          location:
+            line: 12
+            path: main.go
+          method: ast-fingerprint
+          snippet: model := "gpt-4o"
+          symbol: main
+    id: airom:d641d9eba24d3a58
+    kind: hosted-llm
+    name: gpt-4o
+    props:
+      - name: airom:model.id
+        value: gpt-4o
+  - confidence: 0
+    evidence: {}
+    id: airom:f7e06de2ad26950f
+    kind: application
+    name: go-openai
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: v1.32.0
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/gomod
+          location:
+            line: 5
+            path: go.mod
+          method: manifest-analysis
+          snippet: require github.com/sashabaranov/go-openai v1.32.0
+    id: airom:f96ee68bb40a8bb3
+    kind: library
+    name: github.com/sashabaranov/go-openai
+    package:
+      ecosystem: golang
+    provider: openai
+    purl: pkg:golang/github.com/sashabaranov/go-openai@v1.32.0
+    version: v1.32.0
+lifecycle: pre-build
+root: airom:f7e06de2ad26950f
+schemaVersion: "1"
+serial: urn:uuid:00000000-0000-4000-8000-000000000000
+source:
+  kind: dir
+  target: go-openai
+stats:
+  contentBytes: 547
+  detectors:
+    - findings: 0
+      id: dataset/file
+      invocations: 0
+      ns: 0
+    - findings: 2
+      id: gosrc/ast
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: infra/compose
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/dockerfile
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/cargo
+      invocations: 0
+      ns: 0
+    - findings: 1
+      id: manifest/gomod
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: manifest/gradle
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/maven
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/npm
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/nuget
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-pyproject
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-requirements
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/gguf
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/onnx
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/safetensors
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/hdf5
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/savedmodel
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tensorrt
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tflite
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/torch
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: project/adapter
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/configbind
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/hfdir
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/raglink
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: prompt/file
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: ruleengine
+      invocations: 1
+      ns: 0
+  durationNs: 0
+  filesFailed: 0
+  filesProcessed: 2
+  filesWalked: 2
+  headerBytes: 547
+  selection:
+    - 'dataset/file: selected by "default"'
+    - 'gosrc/ast: selected by "default"'
+    - 'infra/compose: selected by "default"'
+    - 'infra/dockerfile: selected by "default"'
+    - 'manifest/nuget: selected by "default"'
+    - 'manifest/cargo: selected by "default"'
+    - 'manifest/gomod: selected by "default"'
+    - 'manifest/gradle: selected by "default"'
+    - 'manifest/maven: selected by "default"'
+    - 'manifest/npm: selected by "default"'
+    - 'manifest/pypi-pyproject: selected by "default"'
+    - 'manifest/pypi-requirements: selected by "default"'
+    - 'modelfile/gguf: selected by "default"'
+    - 'modelfile/onnx: selected by "default"'
+    - 'modelfile/safetensors: selected by "default"'
+    - 'modelfilex/hdf5: selected by "default"'
+    - 'modelfilex/savedmodel: selected by "default"'
+    - 'modelfilex/tflite: selected by "default"'
+    - 'modelfilex/tensorrt: selected by "default"'
+    - 'modelfilex/torch: selected by "default"'
+    - 'project/adapter: selected by "default"'
+    - 'project/configbind: selected by "default"'
+    - 'project/hfdir: selected by "default"'
+    - 'project/raglink: selected by "default"'
+    - 'prompt/file: selected by "default"'
+    - 'ruleengine: selected by "default"'
+timestamp: "2026-07-17T12:00:00Z"
+tool:
+  name: airom
+  version: dev

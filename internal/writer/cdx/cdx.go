@@ -111,7 +111,12 @@ func newBuilder(inv *airom.Inventory) *builder {
 func (b *builder) build() *cyclonedx.BOM {
 	inv := b.inv
 	bom := cyclonedx.NewBOM()
-	bom.SerialNumber = "urn:uuid:" + inv.Serial
+	// Serial is already a full "urn:uuid:<uuid>" URN (assembler's newSerial);
+	// emit it verbatim. Tolerate a bare UUID for hand-built inventories.
+	bom.SerialNumber = inv.Serial
+	if inv.Serial != "" && !strings.HasPrefix(inv.Serial, "urn:uuid:") {
+		bom.SerialNumber = "urn:uuid:" + inv.Serial
+	}
 	bom.Metadata = b.metadata()
 
 	// Components arrive sorted by ID (deterministic, P7); preserve that order.

@@ -1,0 +1,359 @@
+// Package e2e is the end-to-end golden suite: it drives the whole scanner —
+// walk, classify, dispatch, the built-in detectors, the embedded rule packs,
+// assembly — through the app.Scan seam over committed fixture repositories,
+// then renders every writer format and locks the bytes down as goldens.
+//
+// The embedded rule packs are active by default (app's init sets
+// app.EmbeddedRules), so the fixtures exercise the real detector + rule
+// surface, not a stub. Goldens are portable: machine-specific values (the
+// random serial, the wall clock, and the absolute scan target) are normalized
+// away BEFORE rendering, and every writer is a deterministic pure projection
+// of the assembled graph (invariants P5, P7).
+//
+// Regenerate goldens after an intended behavior change:
+//
+//	go test ./internal/e2e/... -update
+package e2e
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"flag"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/Roro1727/airom/internal/app"
+	"github.com/Roro1727/airom/internal/writer"
+	"github.com/Roro1727/airom/pkg/airom"
+
+	// Register every writer format via its init().
+	_ "github.com/Roro1727/airom/internal/writer/cdx"
+	_ "github.com/Roro1727/airom/internal/writer/nativejson"
+	_ "github.com/Roro1727/airom/internal/writer/sarifw"
+	_ "github.com/Roro1727/airom/internal/writer/tablew"
+	_ "github.com/Roro1727/airom/internal/writer/yamlw"
+)
+
+// update regenerates the golden files instead of comparing against them.
+var update = flag.Bool("update", false, "regenerate golden files")
+
+// Injected clock and serial: the two values a real scan draws from the
+// environment (time.Now, crypto/rand). Pinning them is what makes the goldens
+// reproducible (P7).
+var fixedTimestamp = time.Date(2026, 7, 17, 12, 0, 0, 0, time.UTC)
+
+const fixedSerial = "urn:uuid:00000000-0000-4000-8000-000000000000"
+
+// goldenFormats pairs each writer format with its golden filename.
+var goldenFormats = []struct{ format, file string }{
+	{"json", "aibom.json"},
+	{"cyclonedx", "bom.cdx.json"},
+	{"sarif", "scan.sarif"},
+	{"yaml", "aibom.yaml"},
+	{"table", "table.txt"},
+}
+
+// goldenFixtures are the repositories golden-filed across all five formats.
+var goldenFixtures = []string{
+	"python-langchain-rag",
+	"node-openai",
+	"go-openai",
+	"mixed-monorepo",
+}
+
+func fixtureDir(name string) string { return filepath.Join("testdata", "fixtures", name) }
+
+// scanNormalized runs the full pipeline over a fixture and normalizes the
+// assembled inventory so it is byte-portable. tweak may adjust the Config
+// (e.g. Parallel) before the scan; it may be nil.
+func scanNormalized(t *testing.T, name string, tweak func(*app.Config)) *airom.Inventory {
+	t.Helper()
+	cfg := &app.Config{
+		Source: app.SourceFS,
+		Target: fixtureDir(name),
+		// The goldens are committed INSIDE the fixture tree
+		// (fixtures/<name>/golden/), so the scan must never walk them —
+		// otherwise the suite is non-idempotent (each written golden becomes
+		// an extra walked file on the next run). Excluding it keeps every
+		// scan a pure function of the source files.
+		IgnoreGlobs: []string{"**/golden", "**/golden/**"},
+	}
+	if tweak != nil {
+		tweak(cfg)
+	}
+	inv, err := app.Scan(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("scan %s: %v", name, err)
+	}
+	normalize(inv, name)
+	return inv
+}
+
+// normalize strips every machine-specific and volatile value from an
+// inventory while keeping the stable honesty counters. It runs BEFORE
+// rendering so the goldens never carry a machine path, a wall clock, a random
+// serial, or a timing measurement. The root component's identity already
+// derives from the fixture-name basename, so overwriting Source.Target with
+// the bare name keeps it consistent with the minted root.
+func normalize(inv *airom.Inventory, name string) {
+	inv.Serial = fixedSerial
+	inv.Timestamp = fixedTimestamp
+	inv.Source.Target = name
+
+	// Duration and per-detector nanoseconds are legitimately nondeterministic
+	// (§14); zero them. FilesWalked/Processed/Failed, the byte counters, the
+	// selection explanation, and the detector invocation/finding counts are
+	// all stable functions of the fixed fixture bytes, so they stay.
+	inv.Stats.Duration = 0
+	for i := range inv.Stats.Detectors {
+		inv.Stats.Detectors[i].NS = 0
+	}
+}
+
+// renderFormat renders inv to one writer format with default options.
+func renderFormat(t *testing.T, format string, inv *airom.Inventory) []byte {
+	t.Helper()
+	w, err := writer.New(format, writer.Options{})
+	if err != nil {
+		t.Fatalf("writer.New(%q): %v", format, err)
+	}
+	var buf bytes.Buffer
+	if err := w.Write(&buf, inv); err != nil {
+		t.Fatalf("write %s: %v", format, err)
+	}
+	return buf.Bytes()
+}
+
+// checkGolden compares got against the golden at path, or rewrites it under
+// -update.
+func checkGolden(t *testing.T, path string, got []byte) {
+	t.Helper()
+	if *update || os.Getenv("UPDATE_GOLDEN") != "" {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+		}
+		if err := os.WriteFile(path, got, 0o644); err != nil {
+			t.Fatalf("write golden %s: %v", path, err)
+		}
+		return
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read golden %s: %v (run `go test ./internal/e2e/... -update` to create it)", path, err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("golden mismatch for %s\n%s", path, firstLineDiff(got, want))
+	}
+}
+
+// TestGoldenFixtures scans every fixture and byte-compares all five rendered
+// formats against their committed goldens — the core end-to-end contract.
+func TestGoldenFixtures(t *testing.T) {
+	for _, name := range goldenFixtures {
+		t.Run(name, func(t *testing.T) {
+			inv := scanNormalized(t, name, nil)
+			for _, gf := range goldenFormats {
+				got := renderFormat(t, gf.format, inv)
+				golden := filepath.Join(fixtureDir(name), "golden", gf.file)
+				checkGolden(t, golden, got)
+			}
+		})
+	}
+}
+
+// TestScanDeterminismParallelism proves invariant P7 end-to-end: the assembled
+// output is independent of worker count. Two scans of the same fixture at
+// Parallel=1 and Parallel=16 must render byte-identical native JSON.
+func TestScanDeterminismParallelism(t *testing.T) {
+	const fixture = "python-langchain-rag"
+	inv1 := scanNormalized(t, fixture, func(c *app.Config) { c.Parallel = 1 })
+	inv16 := scanNormalized(t, fixture, func(c *app.Config) { c.Parallel = 16 })
+
+	j1 := renderFormat(t, "json", inv1)
+	j16 := renderFormat(t, "json", inv16)
+	if !bytes.Equal(j1, j16) {
+		t.Errorf("P7 violated: Parallel=1 and Parallel=16 produced different output\n%s", firstLineDiff(j16, j1))
+	}
+}
+
+// TestScanChaosDegradation proves per-file degradation end-to-end (invariant
+// P6): a tree of deliberately corrupt weight files must not crash the scan.
+// The truncated PyTorch zip surfaces as an attributed Unknown; the malformed
+// safetensors/onnx/gguf degrade silently; and the valid components sitting
+// beside them are still discovered.
+func TestScanChaosDegradation(t *testing.T) {
+	inv := scanNormalized(t, "malformed-models", nil)
+	// Reaching here already proves the scan COMPLETED without error.
+
+	// The corrupt torch zip must degrade to an attributed Unknown, not a panic.
+	var torch *airom.Unknown
+	for i := range inv.Unknowns {
+		if inv.Unknowns[i].DetectorID == "modelfilex/torch" {
+			torch = &inv.Unknowns[i]
+			break
+		}
+	}
+	if torch == nil {
+		t.Fatalf("expected a modelfilex/torch Unknown for the corrupt broken.pt; unknowns = %+v", inv.Unknowns)
+	}
+	if !strings.Contains(torch.Path, "broken.pt") {
+		t.Errorf("torch Unknown path = %q, want it to name broken.pt", torch.Path)
+	}
+	if strings.TrimSpace(torch.Reason) == "" {
+		t.Errorf("torch Unknown carries no reason")
+	}
+
+	// The degradation is accounted honestly in the stats block.
+	if inv.Stats.FilesFailed < 1 {
+		t.Errorf("Stats.FilesFailed = %d, want >= 1 (the corrupt torch file)", inv.Stats.FilesFailed)
+	}
+
+	// Valid components in the same tree are still found: the well-formed GGUF
+	// weight file and the langchain manifest entry.
+	names := componentNames(inv)
+	for _, want := range []string{"tiny.gguf", "langchain"} {
+		if !names[want] {
+			t.Errorf("valid component %q was dropped; found: %v", want, sortedKeys(names))
+		}
+	}
+
+	// The malformed safetensors/onnx must not have produced phantom
+	// components — they degrade to nothing, honestly.
+	for _, ghost := range []string{"corrupt.safetensors", "garbage.onnx"} {
+		if names[ghost] {
+			t.Errorf("malformed file %q produced a phantom component", ghost)
+		}
+	}
+}
+
+// TestCrossFormatConsistency proves the writers are consistent projections of
+// one graph: the native-JSON component set equals the CycloneDX component set,
+// modulo the application root that CDX relocates into metadata.component.
+func TestCrossFormatConsistency(t *testing.T) {
+	inv := scanNormalized(t, "python-langchain-rag", nil)
+
+	nativeNames := multiset(componentNamesSlice(inv))
+
+	cdxBytes := renderFormat(t, "cyclonedx", inv)
+	var cdxDoc struct {
+		Metadata struct {
+			Component struct {
+				Name string `json:"name"`
+			} `json:"component"`
+		} `json:"metadata"`
+		Components []struct {
+			Name string `json:"name"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal(cdxBytes, &cdxDoc); err != nil {
+		t.Fatalf("parse cdx: %v", err)
+	}
+
+	cdxNames := []string{cdxDoc.Metadata.Component.Name} // the root lives here
+	for _, c := range cdxDoc.Components {
+		cdxNames = append(cdxNames, c.Name)
+	}
+
+	if got, want := len(cdxNames), len(inv.Components); got != want {
+		t.Errorf("component count: cdx has %d (incl. metadata root), native has %d", got, want)
+	}
+	if diff := multisetDiff(nativeNames, multiset(cdxNames)); diff != "" {
+		t.Errorf("component-name sets diverge between native json and cyclonedx:\n%s", diff)
+	}
+}
+
+// ── small helpers ───────────────────────────────────────────────────────────
+
+func componentNames(inv *airom.Inventory) map[string]bool {
+	m := make(map[string]bool, len(inv.Components))
+	for _, c := range inv.Components {
+		m[c.Name] = true
+	}
+	return m
+}
+
+func componentNamesSlice(inv *airom.Inventory) []string {
+	out := make([]string, 0, len(inv.Components))
+	for _, c := range inv.Components {
+		out = append(out, c.Name)
+	}
+	return out
+}
+
+func sortedKeys(m map[string]bool) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// multiset counts occurrences of each string (names need not be unique).
+func multiset(xs []string) map[string]int {
+	m := make(map[string]int, len(xs))
+	for _, x := range xs {
+		m[x]++
+	}
+	return m
+}
+
+// multisetDiff returns a human-readable description of the symmetric
+// difference between two multisets, or "" when they are equal.
+func multisetDiff(a, b map[string]int) string {
+	keys := map[string]struct{}{}
+	for k := range a {
+		keys[k] = struct{}{}
+	}
+	for k := range b {
+		keys[k] = struct{}{}
+	}
+	var lines []string
+	for k := range keys {
+		if a[k] != b[k] {
+			lines = append(lines, k+": native="+itoa(a[k])+" cdx="+itoa(b[k]))
+		}
+	}
+	sort.Strings(lines)
+	return strings.Join(lines, "\n")
+}
+
+func itoa(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	var b [20]byte
+	i := len(b)
+	for n > 0 {
+		i--
+		b[i] = byte('0' + n%10)
+		n /= 10
+	}
+	return string(b[i:])
+}
+
+// firstLineDiff reports the first line at which got and want differ, with a
+// little context — far more useful than dumping two large documents.
+func firstLineDiff(got, want []byte) string {
+	gl := strings.Split(string(got), "\n")
+	wl := strings.Split(string(want), "\n")
+	n := len(gl)
+	if len(wl) < n {
+		n = len(wl)
+	}
+	for i := 0; i < n; i++ {
+		if gl[i] != wl[i] {
+			return "first difference at line " + itoa(i+1) + ":\n  got:  " + gl[i] + "\n  want: " + wl[i]
+		}
+	}
+	if len(gl) != len(wl) {
+		return "documents share a prefix but differ in length: got " +
+			itoa(len(gl)) + " lines, want " + itoa(len(wl)) + " lines"
+	}
+	return "documents differ in trailing bytes but not by line"
+}

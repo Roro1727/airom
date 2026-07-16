@@ -1,0 +1,291 @@
+components:
+  - confidence: 0.85
+    evidence:
+      occurrences:
+        - confidence: 0.85
+          detectorId: rules/anthropic/model-literal
+          fields:
+            model: claude-sonnet-4-5
+          location:
+            column: 5
+            endColumn: 31
+            endLine: 7
+            line: 7
+            path: src/agent.ts
+          method: source-code-analysis
+          snippet: 'model: "claude-sonnet-4-5",'
+    id: airom:14ac8720c7a8d1ef
+    kind: hosted-llm
+    name: claude-sonnet-4-5
+    props:
+      - name: airom:model.provider
+        value: anthropic
+      - name: airom:model.id
+        value: claude-sonnet-4-5
+    provider: anthropic
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 0.27.3
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/npm
+          location:
+            line: 7
+            path: package.json
+          method: manifest-analysis
+          snippet: '"@anthropic-ai/sdk": "^0.27.3",'
+    id: airom:3da8474d2f151a8b
+    kind: library
+    name: '@anthropic-ai/sdk'
+    package:
+      ecosystem: npm
+    provider: anthropic
+    purl: pkg:npm/@anthropic-ai/sdk@0.27.3
+    version: 0.27.3
+  - confidence: 0.5
+    evidence:
+      occurrences:
+        - confidence: 0.5
+          detectorId: rules/aiconfig/token-limits
+          fields:
+            param: max_tokens
+          location:
+            column: 1
+            endColumn: 18
+            endLine: 8
+            line: 8
+            path: src/agent.ts
+          method: source-code-analysis
+          snippet: 'max_tokens: 512,'
+    id: airom:737f185ea7c9f67f
+    kind: ai-config
+    name: max_tokens
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 0.3.2
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/npm
+          location:
+            line: 8
+            path: package.json
+          method: manifest-analysis
+          snippet: '"langchain": "^0.3.2",'
+    id: airom:74c94e76beb18249
+    kind: framework
+    name: langchain
+    package:
+      ecosystem: npm
+    provider: langchain
+    purl: pkg:npm/langchain@0.3.2
+    version: 0.3.2
+  - confidence: 0.7
+    evidence:
+      occurrences:
+        - confidence: 0.7
+          detectorId: rules/openai/chat-call
+          fields:
+            param.max_tokens: "512"
+          location:
+            column: 34
+            endColumn: 59
+            endLine: 6
+            line: 6
+            path: src/agent.ts
+          method: source-code-analysis
+          snippet: const completion = await client.chat.completions.create({
+    id: airom:bd6fd4f86f30fa53
+    kind: library
+    name: openai-sdk
+    provider: openai
+  - confidence: 0
+    evidence: {}
+    id: airom:bfa221b1fd6ea0d5
+    kind: application
+    name: node-openai
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 4.67.1
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/npm
+          location:
+            line: 6
+            path: package.json
+          method: manifest-analysis
+          snippet: '"openai": "^4.67.1",'
+    id: airom:f16d02e10b6caf23
+    kind: library
+    name: openai
+    package:
+      ecosystem: npm
+    provider: openai
+    purl: pkg:npm/openai@4.67.1
+    version: 4.67.1
+lifecycle: pre-build
+root: airom:bfa221b1fd6ea0d5
+schemaVersion: "1"
+serial: urn:uuid:00000000-0000-4000-8000-000000000000
+source:
+  kind: dir
+  target: node-openai
+stats:
+  contentBytes: 588
+  detectors:
+    - findings: 0
+      id: dataset/file
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: gosrc/ast
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/compose
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/dockerfile
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/cargo
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gomod
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gradle
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/maven
+      invocations: 0
+      ns: 0
+    - findings: 3
+      id: manifest/npm
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: manifest/nuget
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-pyproject
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-requirements
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/gguf
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/onnx
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/safetensors
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/hdf5
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/savedmodel
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tensorrt
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tflite
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/torch
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: project/adapter
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/configbind
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/hfdir
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/raglink
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: prompt/file
+      invocations: 0
+      ns: 0
+    - findings: 3
+      id: ruleengine
+      invocations: 1
+      ns: 0
+  durationNs: 0
+  filesFailed: 0
+  filesProcessed: 2
+  filesWalked: 2
+  headerBytes: 588
+  selection:
+    - 'dataset/file: selected by "default"'
+    - 'gosrc/ast: selected by "default"'
+    - 'infra/compose: selected by "default"'
+    - 'infra/dockerfile: selected by "default"'
+    - 'manifest/nuget: selected by "default"'
+    - 'manifest/cargo: selected by "default"'
+    - 'manifest/gomod: selected by "default"'
+    - 'manifest/gradle: selected by "default"'
+    - 'manifest/maven: selected by "default"'
+    - 'manifest/npm: selected by "default"'
+    - 'manifest/pypi-pyproject: selected by "default"'
+    - 'manifest/pypi-requirements: selected by "default"'
+    - 'modelfile/gguf: selected by "default"'
+    - 'modelfile/onnx: selected by "default"'
+    - 'modelfile/safetensors: selected by "default"'
+    - 'modelfilex/hdf5: selected by "default"'
+    - 'modelfilex/savedmodel: selected by "default"'
+    - 'modelfilex/tflite: selected by "default"'
+    - 'modelfilex/tensorrt: selected by "default"'
+    - 'modelfilex/torch: selected by "default"'
+    - 'project/adapter: selected by "default"'
+    - 'project/configbind: selected by "default"'
+    - 'project/hfdir: selected by "default"'
+    - 'project/raglink: selected by "default"'
+    - 'prompt/file: selected by "default"'
+    - 'ruleengine: selected by "default"'
+  warnings:
+    - 'unresolved uses relation from "openai-sdk" at src/agent.ts: occurrence has no "model" field'
+timestamp: "2026-07-17T12:00:00Z"
+tool:
+  name: airom
+  version: dev

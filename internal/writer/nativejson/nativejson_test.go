@@ -66,7 +66,7 @@ func TestGolden(t *testing.T) {
 		t.Fatal(err)
 	}
 	golden := filepath.Join("testdata", "inventory.golden.json")
-	if *update {
+	if *update || os.Getenv("UPDATE_GOLDEN") != "" {
 		if err := os.MkdirAll("testdata", 0o750); err != nil {
 			t.Fatal(err)
 		}

@@ -50,12 +50,13 @@ func BuildFixture() *airom.Inventory {
 			},
 		},
 	}
+	const sha = "abababababababababababababababababababababababababababababababab" // 64 hex chars (schema-valid SHA-256)
 	weights := airom.Component{
 		ID: "airom:2222222222222222", Kind: airom.KindLocalModelFile, Name: "tiny.gguf",
 		Provider:   airom.KnownString("local"),
-		PURL:       "pkg:generic/tiny.gguf?checksum=sha256:abcd",
+		PURL:       "pkg:generic/tiny.gguf?checksum=sha256:" + sha,
 		Confidence: 1,
-		Hashes:     []airom.Hash{{Alg: "SHA-256", Hex: "abcd"}},
+		Hashes:     []airom.Hash{{Alg: "SHA-256", Hex: sha}},
 		Model:      &airom.ModelFacet{Format: airom.KnownString("gguf"), PickleRisk: &airom.PickleRisk{Globals: []string{"os.system"}}},
 		Props:      []airom.KV{{Name: "airom:pickle.risk", Value: "high"}, {Name: "airom:pickle.imports", Value: "os.system"}},
 		Evidence:   airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "models/tiny.gguf"}, DetectorID: "modelfile/gguf", Method: airom.MethodHash, Confidence: 1}}},
@@ -77,8 +78,10 @@ func BuildFixture() *airom.Inventory {
 	vecdb := airom.Component{
 		ID: "airom:5555555555555555", Kind: airom.KindVectorDB, Name: "chroma",
 		Confidence: 0.7,
-		Props:      []airom.KV{{Name: "airom:rel.queries", Value: "airom:1111111111111111@0.6"}},
-		Evidence:   airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "src/rag.py", Line: 12}, DetectorID: "rules/chroma/client", Method: airom.MethodSourceCode, Confidence: 0.7}}},
+		// The queries edge lives in Relationships below; the CDX writer
+		// synthesizes the airom:rel.queries property from it (no manual
+		// double-encoding).
+		Evidence: airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "src/rag.py", Line: 12}, DetectorID: "rules/chroma/client", Method: airom.MethodSourceCode, Confidence: 0.7}}},
 	}
 
 	return &airom.Inventory{
@@ -93,7 +96,7 @@ func BuildFixture() *airom.Inventory {
 		Relationships: []airom.Relationship{
 			{From: root.ID, To: framework.ID, Type: airom.RelDependsOn, Confidence: 0.95},
 			{From: model.ID, To: dataset.ID, Type: airom.RelTrainedOn, Confidence: 0.8},
-			{From: vecdb.ID, To: model.ID, Type: airom.RelQueries, Confidence: 0.6, Evidence: []airom.Occurrence{{Location: airom.Location{Path: "src/rag.py", Line: 12}}}},
+			{From: vecdb.ID, To: model.ID, Type: airom.RelQueries, Confidence: 0.6, Evidence: []airom.Occurrence{{Location: airom.Location{Path: "src/rag.py", Line: 12}, DetectorID: "rules/chroma/client", Method: airom.MethodSourceCode, Confidence: 0.6}}},
 		},
 		Unknowns: []airom.Unknown{{Path: "models/corrupt.safetensors", DetectorID: "modelfile/safetensors", Reason: "header length exceeds file"}},
 	}

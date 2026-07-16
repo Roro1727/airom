@@ -1,0 +1,419 @@
+{
+  "schemaVersion": "1",
+  "tool": {
+    "name": "airom",
+    "version": "dev"
+  },
+  "serial": "urn:uuid:00000000-0000-4000-8000-000000000000",
+  "timestamp": "2026-07-17T12:00:00Z",
+  "lifecycle": "pre-build",
+  "source": {
+    "kind": "dir",
+    "target": "node-openai"
+  },
+  "root": "airom:bfa221b1fd6ea0d5",
+  "components": [
+    {
+      "id": "airom:14ac8720c7a8d1ef",
+      "kind": "hosted-llm",
+      "name": "claude-sonnet-4-5",
+      "provider": "anthropic",
+      "confidence": 0.85,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "src/agent.ts",
+              "line": 7,
+              "endLine": 7,
+              "column": 5,
+              "endColumn": 31
+            },
+            "detectorId": "rules/anthropic/model-literal",
+            "method": "source-code-analysis",
+            "confidence": 0.85,
+            "snippet": "model: \"claude-sonnet-4-5\",",
+            "fields": {
+              "model": "claude-sonnet-4-5"
+            }
+          }
+        ]
+      },
+      "props": [
+        {
+          "name": "airom:model.provider",
+          "value": "anthropic"
+        },
+        {
+          "name": "airom:model.id",
+          "value": "claude-sonnet-4-5"
+        }
+      ]
+    },
+    {
+      "id": "airom:3da8474d2f151a8b",
+      "kind": "library",
+      "name": "@anthropic-ai/sdk",
+      "version": "0.27.3",
+      "provider": "anthropic",
+      "purl": "pkg:npm/@anthropic-ai/sdk@0.27.3",
+      "package": {
+        "ecosystem": "npm"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "package.json",
+              "line": 7
+            },
+            "detectorId": "manifest/npm",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "\"@anthropic-ai/sdk\": \"^0.27.3\","
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "0.27.3",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:737f185ea7c9f67f",
+      "kind": "ai-config",
+      "name": "max_tokens",
+      "confidence": 0.5,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "src/agent.ts",
+              "line": 8,
+              "endLine": 8,
+              "column": 1,
+              "endColumn": 18
+            },
+            "detectorId": "rules/aiconfig/token-limits",
+            "method": "source-code-analysis",
+            "confidence": 0.5,
+            "snippet": "max_tokens: 512,",
+            "fields": {
+              "param": "max_tokens"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:74c94e76beb18249",
+      "kind": "framework",
+      "name": "langchain",
+      "version": "0.3.2",
+      "provider": "langchain",
+      "purl": "pkg:npm/langchain@0.3.2",
+      "package": {
+        "ecosystem": "npm"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "package.json",
+              "line": 8
+            },
+            "detectorId": "manifest/npm",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "\"langchain\": \"^0.3.2\","
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "0.3.2",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:bd6fd4f86f30fa53",
+      "kind": "library",
+      "name": "openai-sdk",
+      "provider": "openai",
+      "confidence": 0.7,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "src/agent.ts",
+              "line": 6,
+              "endLine": 6,
+              "column": 34,
+              "endColumn": 59
+            },
+            "detectorId": "rules/openai/chat-call",
+            "method": "source-code-analysis",
+            "confidence": 0.7,
+            "snippet": "const completion = await client.chat.completions.create({",
+            "fields": {
+              "param.max_tokens": "512"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:bfa221b1fd6ea0d5",
+      "kind": "application",
+      "name": "node-openai",
+      "confidence": 0,
+      "evidence": {}
+    },
+    {
+      "id": "airom:f16d02e10b6caf23",
+      "kind": "library",
+      "name": "openai",
+      "version": "4.67.1",
+      "provider": "openai",
+      "purl": "pkg:npm/openai@4.67.1",
+      "package": {
+        "ecosystem": "npm"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "package.json",
+              "line": 6
+            },
+            "detectorId": "manifest/npm",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "\"openai\": \"^4.67.1\","
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "4.67.1",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "stats": {
+    "filesWalked": 2,
+    "filesProcessed": 2,
+    "filesFailed": 0,
+    "headerBytes": 588,
+    "contentBytes": 588,
+    "durationNs": 0,
+    "selection": [
+      "dataset/file: selected by \"default\"",
+      "gosrc/ast: selected by \"default\"",
+      "infra/compose: selected by \"default\"",
+      "infra/dockerfile: selected by \"default\"",
+      "manifest/nuget: selected by \"default\"",
+      "manifest/cargo: selected by \"default\"",
+      "manifest/gomod: selected by \"default\"",
+      "manifest/gradle: selected by \"default\"",
+      "manifest/maven: selected by \"default\"",
+      "manifest/npm: selected by \"default\"",
+      "manifest/pypi-pyproject: selected by \"default\"",
+      "manifest/pypi-requirements: selected by \"default\"",
+      "modelfile/gguf: selected by \"default\"",
+      "modelfile/onnx: selected by \"default\"",
+      "modelfile/safetensors: selected by \"default\"",
+      "modelfilex/hdf5: selected by \"default\"",
+      "modelfilex/savedmodel: selected by \"default\"",
+      "modelfilex/tflite: selected by \"default\"",
+      "modelfilex/tensorrt: selected by \"default\"",
+      "modelfilex/torch: selected by \"default\"",
+      "project/adapter: selected by \"default\"",
+      "project/configbind: selected by \"default\"",
+      "project/hfdir: selected by \"default\"",
+      "project/raglink: selected by \"default\"",
+      "prompt/file: selected by \"default\"",
+      "ruleengine: selected by \"default\""
+    ],
+    "detectors": [
+      {
+        "id": "dataset/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "gosrc/ast",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/compose",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/dockerfile",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/cargo",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gomod",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gradle",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/maven",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/npm",
+        "invocations": 1,
+        "findings": 3,
+        "ns": 0
+      },
+      {
+        "id": "manifest/nuget",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-pyproject",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-requirements",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/gguf",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/onnx",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/safetensors",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/hdf5",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/savedmodel",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tensorrt",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tflite",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/torch",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/adapter",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/configbind",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/hfdir",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/raglink",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "prompt/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "ruleengine",
+        "invocations": 1,
+        "findings": 3,
+        "ns": 0
+      }
+    ],
+    "warnings": [
+      "unresolved uses relation from \"openai-sdk\" at src/agent.ts: occurrence has no \"model\" field"
+    ]
+  }
+}

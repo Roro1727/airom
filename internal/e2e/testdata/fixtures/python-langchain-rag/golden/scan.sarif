@@ -1,0 +1,670 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "airom",
+          "semanticVersion": "dev",
+          "informationUri": "https://github.com/Roro1727/airom",
+          "rules": [
+            {
+              "id": "manifest/pypi-requirements",
+              "name": "ManifestPypiRequirements",
+              "shortDescription": {
+                "text": "Components identified by the manifest/pypi-requirements detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "manifest-analysis"
+              }
+            },
+            {
+              "id": "modelfile/gguf",
+              "name": "ModelfileGguf",
+              "shortDescription": {
+                "text": "Components identified by the modelfile/gguf detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "project/raglink",
+              "name": "ProjectRaglink",
+              "shortDescription": {
+                "text": "Components identified by the project/raglink detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "prompt/file",
+              "name": "PromptFile",
+              "shortDescription": {
+                "text": "Components identified by the prompt/file detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "config-analysis"
+              }
+            },
+            {
+              "id": "rules/aiconfig/sampling",
+              "name": "RulesAiconfigSampling",
+              "shortDescription": {
+                "text": "Components identified by the rules/aiconfig/sampling detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/aiconfig/token-limits",
+              "name": "RulesAiconfigTokenLimits",
+              "shortDescription": {
+                "text": "Components identified by the rules/aiconfig/token-limits detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/chroma/client",
+              "name": "RulesChromaClient",
+              "shortDescription": {
+                "text": "Components identified by the rules/chroma/client detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/chroma/import",
+              "name": "RulesChromaImport",
+              "shortDescription": {
+                "text": "Components identified by the rules/chroma/import detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/openai/chat-call",
+              "name": "RulesOpenaiChatCall",
+              "shortDescription": {
+                "text": "Components identified by the rules/openai/chat-call detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/openai/embedding-literal",
+              "name": "RulesOpenaiEmbeddingLiteral",
+              "shortDescription": {
+                "text": "Components identified by the rules/openai/embedding-literal detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/openai/model-literal",
+              "name": "RulesOpenaiModelLiteral",
+              "shortDescription": {
+                "text": "Components identified by the rules/openai/model-literal detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            }
+          ]
+        }
+      },
+      "columnKind": "utf16CodeUnits",
+      "originalUriBaseIds": {
+        "SRCROOT": {
+          "uri": "file:///python-langchain-rag/"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-07-17T12:00:00Z"
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "project/raglink",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "rag-pipeline 'rag-pipeline' detected (confidence 0.6)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 15,
+                  "endLine": 6,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "866ae79219f0dc113719bb5de1ce1d7a46608d35e90b75be66d3b9bd7216b412"
+          },
+          "properties": {
+            "airom:componentId": "airom:1d7789e0b7e68c35",
+            "airom:confidence": 0.6,
+            "airom:kind": "rag-pipeline",
+            "airom:occurrence.confidence": 0.6
+          }
+        },
+        {
+          "ruleId": "rules/openai/embedding-literal",
+          "ruleIndex": 9,
+          "level": "note",
+          "message": {
+            "text": "embedding-model 'text-embedding-3-large' detected (confidence 0.85)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 15,
+                  "endLine": 6,
+                  "endColumn": 39,
+                  "snippet": {
+                    "text": "EMBED_MODEL = \"text-embedding-3-large\""
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "29523706d1165dc9b645b60a8853e7151a32deeeb5e396ffd8bcce801036a889"
+          },
+          "properties": {
+            "airom:componentId": "airom:3c77e68ca5b2bf87",
+            "airom:confidence": 0.85,
+            "airom:kind": "embedding-model",
+            "airom:occurrence.confidence": 0.85,
+            "airom:provider": "openai"
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "vector-db 'chroma' [0.5.5] detected (confidence 0.985)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "snippet": {
+                    "text": "chromadb==0.5.5"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "2aac23f6a2c7625f1457addee02683f0db2e48d9328b88f2b8bb46da5d488065"
+          },
+          "properties": {
+            "airom:componentId": "airom:3e3a9735550d6b44",
+            "airom:confidence": 0.985,
+            "airom:kind": "vector-db",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "chroma"
+          }
+        },
+        {
+          "ruleId": "rules/chroma/import",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "vector-db 'chroma' [0.5.5] detected (confidence 0.985)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1,
+                  "endLine": 3,
+                  "endColumn": 16,
+                  "snippet": {
+                    "text": "import chromadb"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "0a8aa96217f2a3805b2d07e2d3eb08656055ce5fb04a0dfeac0f422b70125230"
+          },
+          "properties": {
+            "airom:componentId": "airom:3e3a9735550d6b44",
+            "airom:confidence": 0.985,
+            "airom:kind": "vector-db",
+            "airom:occurrence.confidence": 0.7,
+            "airom:provider": "chroma"
+          }
+        },
+        {
+          "ruleId": "rules/chroma/client",
+          "ruleIndex": 6,
+          "level": "note",
+          "message": {
+            "text": "vector-db 'chroma' [0.5.5] detected (confidence 0.985)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 12,
+                  "endLine": 10,
+                  "endColumn": 38,
+                  "snippet": {
+                    "text": "return chromadb.PersistentClient(path=\"./chroma-store\")"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "6315f915d54cf98a95a28413296b2a6832360060ab27fc5f42536a5ae4c90610"
+          },
+          "properties": {
+            "airom:componentId": "airom:3e3a9735550d6b44",
+            "airom:confidence": 0.985,
+            "airom:kind": "vector-db",
+            "airom:occurrence.confidence": 0.7,
+            "airom:provider": "chroma"
+          }
+        },
+        {
+          "ruleId": "prompt/file",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "prompt 'system.txt' detected (confidence 0.8)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompts/system.txt",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "3676dcd30a2c9f238565e944274e2a57597bd9ad99a05a69163d8e046fc2a8b8"
+          },
+          "properties": {
+            "airom:componentId": "airom:43f7aec19ad0c8e0",
+            "airom:confidence": 0.8,
+            "airom:kind": "prompt",
+            "airom:occurrence.confidence": 0.8
+          }
+        },
+        {
+          "ruleId": "rules/aiconfig/sampling",
+          "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "ai-config 'temperature' detected (confidence 0.5)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 1,
+                  "endLine": 16,
+                  "endColumn": 22,
+                  "snippet": {
+                    "text": "temperature=0.2,"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "d02a1d7cb140b3f4c63ad9b922e619f758659cfaf47d6a230c118aa33ff494d6"
+          },
+          "properties": {
+            "airom:componentId": "airom:6b1292e468717462",
+            "airom:confidence": 0.5,
+            "airom:kind": "ai-config",
+            "airom:occurrence.confidence": 0.5
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "framework 'langchain' [0.2.16] detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "snippet": {
+                    "text": "langchain==0.2.16"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "44930b44a8f6a0da30547a457ef5f954c4bb1715976244f958f633b0205bc23d"
+          },
+          "properties": {
+            "airom:componentId": "airom:6ed15db34c48ea41",
+            "airom:confidence": 0.95,
+            "airom:kind": "framework",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "langchain",
+            "airom:purl": "pkg:pypi/langchain@0.2.16"
+          }
+        },
+        {
+          "ruleId": "rules/aiconfig/token-limits",
+          "ruleIndex": 5,
+          "level": "note",
+          "message": {
+            "text": "ai-config 'max_tokens' detected (confidence 0.5)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 1,
+                  "endLine": 17,
+                  "endColumn": 21,
+                  "snippet": {
+                    "text": "max_tokens=800,"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "fde9b75dc3057081dcc519656b4e4157b6c132a6335499aae9f30587769483f6"
+          },
+          "properties": {
+            "airom:componentId": "airom:737f185ea7c9f67f",
+            "airom:confidence": 0.5,
+            "airom:kind": "ai-config",
+            "airom:occurrence.confidence": 0.5
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "library 'openai' [1.51.0] detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3,
+                  "snippet": {
+                    "text": "openai==1.51.0"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "f4dcbce03a17b673ff77be6971ebf09e56e678c2cc59e8c21d148ee42f8277e7"
+          },
+          "properties": {
+            "airom:componentId": "airom:a6ccf893ff130124",
+            "airom:confidence": 0.95,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "openai",
+            "airom:purl": "pkg:pypi/openai@1.51.0"
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "library 'sentence-transformers' [3.1.1] detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "snippet": {
+                    "text": "sentence-transformers==3.1.1"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "0dbc818eb80a7d4316a24561ece88820d782a3142cc55bbb1d27108a2ef59a11"
+          },
+          "properties": {
+            "airom:componentId": "airom:b9cc121d3e5cdbf0",
+            "airom:confidence": 0.95,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "hugging face",
+            "airom:purl": "pkg:pypi/sentence-transformers@3.1.1"
+          }
+        },
+        {
+          "ruleId": "rules/openai/chat-call",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "library 'openai-sdk' detected (confidence 0.7)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 22,
+                  "endLine": 14,
+                  "endColumn": 47,
+                  "snippet": {
+                    "text": "response = client.chat.completions.create("
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "360c7c471f1efc1c51b22195ee902df219bade679bee14a581219b38d15a861e"
+          },
+          "properties": {
+            "airom:componentId": "airom:bd6fd4f86f30fa53",
+            "airom:confidence": 0.7,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.7,
+            "airom:provider": "openai"
+          }
+        },
+        {
+          "ruleId": "rules/openai/model-literal",
+          "ruleIndex": 10,
+          "level": "note",
+          "message": {
+            "text": "hosted-llm 'gpt-4.1' detected (confidence 0.85)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/rag.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 9,
+                  "endLine": 15,
+                  "endColumn": 24,
+                  "snippet": {
+                    "text": "model=\"gpt-4.1\","
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "c5f66a54675df36839c080ae6d733ee4e0d72187eed6700649d3f2afd4eeb7c6"
+          },
+          "properties": {
+            "airom:componentId": "airom:cfc27e587216febe",
+            "airom:confidence": 0.85,
+            "airom:kind": "hosted-llm",
+            "airom:occurrence.confidence": 0.85,
+            "airom:provider": "openai"
+          }
+        },
+        {
+          "ruleId": "modelfile/gguf",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'tiny.gguf' detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/tiny.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "b895ff9a82a8d84870a872212e0461e3cfa7e1a5e8651cf1141a7b8267de465c"
+          },
+          "properties": {
+            "airom:componentId": "airom:e9e505aeb0e23154",
+            "airom:confidence": 0.95,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/tiny.gguf?checksum=sha256:a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99"
+          }
+        }
+      ]
+    }
+  ]
+}

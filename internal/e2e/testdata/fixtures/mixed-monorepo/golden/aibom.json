@@ -1,0 +1,352 @@
+{
+  "schemaVersion": "1",
+  "tool": {
+    "name": "airom",
+    "version": "dev"
+  },
+  "serial": "urn:uuid:00000000-0000-4000-8000-000000000000",
+  "timestamp": "2026-07-17T12:00:00Z",
+  "lifecycle": "pre-build",
+  "source": {
+    "kind": "dir",
+    "target": "mixed-monorepo"
+  },
+  "root": "airom:c4cea838751d80a9",
+  "components": [
+    {
+      "id": "airom:53f987ae810a0674",
+      "kind": "infra",
+      "name": "ollama",
+      "infra": {
+        "endpoint": "11434"
+      },
+      "confidence": 0.75,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "Dockerfile",
+              "line": 1
+            },
+            "detectorId": "infra/dockerfile",
+            "method": "config-analysis",
+            "confidence": 0.75,
+            "snippet": "FROM ollama/ollama:latest",
+            "fields": {
+              "env": "OLLAMA_HOST"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:6ed15db34c48ea41",
+      "kind": "framework",
+      "name": "langchain",
+      "version": "0.2.16",
+      "provider": "langchain",
+      "purl": "pkg:pypi/langchain@0.2.16",
+      "package": {
+        "ecosystem": "pypi"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "api/requirements.txt",
+              "line": 1
+            },
+            "detectorId": "manifest/pypi-requirements",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "langchain==0.2.16"
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "0.2.16",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:a6ccf893ff130124",
+      "kind": "library",
+      "name": "openai",
+      "version": "1.51.0",
+      "provider": "openai",
+      "purl": "pkg:pypi/openai@1.51.0",
+      "package": {
+        "ecosystem": "pypi"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "api/requirements.txt",
+              "line": 2
+            },
+            "detectorId": "manifest/pypi-requirements",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "openai==1.51.0"
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "1.51.0",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:c4cea838751d80a9",
+      "kind": "application",
+      "name": "mixed-monorepo",
+      "confidence": 0,
+      "evidence": {}
+    },
+    {
+      "id": "airom:f16d02e10b6caf23",
+      "kind": "library",
+      "name": "openai",
+      "version": "4.67.1",
+      "provider": "openai",
+      "purl": "pkg:npm/openai@4.67.1",
+      "package": {
+        "ecosystem": "npm"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "web/package.json",
+              "line": 6
+            },
+            "detectorId": "manifest/npm",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "\"openai\": \"^4.67.1\","
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "4.67.1",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "stats": {
+    "filesWalked": 4,
+    "filesProcessed": 4,
+    "filesFailed": 0,
+    "headerBytes": 777,
+    "contentBytes": 321,
+    "durationNs": 0,
+    "selection": [
+      "dataset/file: selected by \"default\"",
+      "gosrc/ast: selected by \"default\"",
+      "infra/compose: selected by \"default\"",
+      "infra/dockerfile: selected by \"default\"",
+      "manifest/nuget: selected by \"default\"",
+      "manifest/cargo: selected by \"default\"",
+      "manifest/gomod: selected by \"default\"",
+      "manifest/gradle: selected by \"default\"",
+      "manifest/maven: selected by \"default\"",
+      "manifest/npm: selected by \"default\"",
+      "manifest/pypi-pyproject: selected by \"default\"",
+      "manifest/pypi-requirements: selected by \"default\"",
+      "modelfile/gguf: selected by \"default\"",
+      "modelfile/onnx: selected by \"default\"",
+      "modelfile/safetensors: selected by \"default\"",
+      "modelfilex/hdf5: selected by \"default\"",
+      "modelfilex/savedmodel: selected by \"default\"",
+      "modelfilex/tflite: selected by \"default\"",
+      "modelfilex/tensorrt: selected by \"default\"",
+      "modelfilex/torch: selected by \"default\"",
+      "project/adapter: selected by \"default\"",
+      "project/configbind: selected by \"default\"",
+      "project/hfdir: selected by \"default\"",
+      "project/raglink: selected by \"default\"",
+      "prompt/file: selected by \"default\"",
+      "ruleengine: selected by \"default\""
+    ],
+    "detectors": [
+      {
+        "id": "dataset/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "gosrc/ast",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/compose",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/dockerfile",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "manifest/cargo",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gomod",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gradle",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/maven",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/npm",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "manifest/nuget",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-pyproject",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-requirements",
+        "invocations": 1,
+        "findings": 2,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/gguf",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/onnx",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/safetensors",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/hdf5",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/savedmodel",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tensorrt",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tflite",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/torch",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/adapter",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/configbind",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/hfdir",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/raglink",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "prompt/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "ruleengine",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      }
+    ]
+  }
+}

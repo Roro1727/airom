@@ -1,0 +1,9 @@
+{
+  "name": "monorepo-web",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "openai": "^4.67.1",
+    "react": "^18.3.1"
+  }
+}

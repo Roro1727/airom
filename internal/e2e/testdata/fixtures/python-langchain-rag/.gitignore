@@ -1,0 +1,4 @@
+# local artifacts (benign: must not match any fixture file)
+*.log
+.env
+chroma-store/

@@ -1,0 +1,4 @@
+# A valid manifest sitting alongside deliberately corrupt model files.
+# The scan must still surface these components (per-file degradation, P6).
+langchain==0.2.16
+transformers==4.44.2

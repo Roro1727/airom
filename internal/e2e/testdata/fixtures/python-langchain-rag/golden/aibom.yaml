@@ -1,0 +1,459 @@
+components:
+  - confidence: 0
+    evidence: {}
+    id: airom:0f9a0955ae2b259c
+    kind: application
+    name: python-langchain-rag
+  - confidence: 0.6
+    evidence:
+      occurrences:
+        - confidence: 0.6
+          detectorId: project/raglink
+          location:
+            column: 15
+            endColumn: 39
+            endLine: 6
+            line: 6
+            path: src/rag.py
+          method: source-code-analysis
+    id: airom:1d7789e0b7e68c35
+    kind: rag-pipeline
+    name: rag-pipeline
+  - confidence: 0.85
+    evidence:
+      occurrences:
+        - confidence: 0.85
+          detectorId: rules/openai/embedding-literal
+          fields:
+            model: text-embedding-3-large
+          location:
+            column: 15
+            endColumn: 39
+            endLine: 6
+            line: 6
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: EMBED_MODEL = "text-embedding-3-large"
+    id: airom:3c77e68ca5b2bf87
+    kind: embedding-model
+    name: text-embedding-3-large
+    props:
+      - name: airom:model.provider
+        value: openai
+      - name: airom:model.id
+        value: text-embedding-3-large
+    provider: openai
+  - confidence: 0.985
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 0.5.5
+        - confidence: 0.95
+          field: name
+          methods:
+            - manifest-analysis
+          value: chromadb
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 4
+            path: requirements.txt
+          method: manifest-analysis
+          snippet: chromadb==0.5.5
+        - confidence: 0.7
+          detectorId: rules/chroma/import
+          location:
+            column: 1
+            endColumn: 16
+            endLine: 3
+            line: 3
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: import chromadb
+        - confidence: 0.7
+          detectorId: rules/chroma/client
+          location:
+            column: 12
+            endColumn: 38
+            endLine: 10
+            line: 10
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: return chromadb.PersistentClient(path="./chroma-store")
+    id: airom:3e3a9735550d6b44
+    kind: vector-db
+    name: chroma
+    package:
+      ecosystem: pypi
+    provider: chroma
+    version: 0.5.5
+  - confidence: 0.8
+    data:
+      format: prompt
+    evidence:
+      occurrences:
+        - confidence: 0.8
+          detectorId: prompt/file
+          location:
+            path: prompts/system.txt
+          method: config-analysis
+    id: airom:43f7aec19ad0c8e0
+    kind: prompt
+    name: system.txt
+  - confidence: 0.5
+    evidence:
+      occurrences:
+        - confidence: 0.5
+          detectorId: rules/aiconfig/sampling
+          fields:
+            param: temperature
+          location:
+            column: 1
+            endColumn: 22
+            endLine: 16
+            line: 16
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: temperature=0.2,
+    id: airom:6b1292e468717462
+    kind: ai-config
+    name: temperature
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 0.2.16
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 2
+            path: requirements.txt
+          method: manifest-analysis
+          snippet: langchain==0.2.16
+    id: airom:6ed15db34c48ea41
+    kind: framework
+    name: langchain
+    package:
+      ecosystem: pypi
+    provider: langchain
+    purl: pkg:pypi/langchain@0.2.16
+    version: 0.2.16
+  - confidence: 0.5
+    evidence:
+      occurrences:
+        - confidence: 0.5
+          detectorId: rules/aiconfig/token-limits
+          fields:
+            param: max_tokens
+          location:
+            column: 1
+            endColumn: 21
+            endLine: 17
+            line: 17
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: max_tokens=800,
+    id: airom:737f185ea7c9f67f
+    kind: ai-config
+    name: max_tokens
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 1.51.0
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 3
+            path: requirements.txt
+          method: manifest-analysis
+          snippet: openai==1.51.0
+    id: airom:a6ccf893ff130124
+    kind: library
+    name: openai
+    package:
+      ecosystem: pypi
+    provider: openai
+    purl: pkg:pypi/openai@1.51.0
+    version: 1.51.0
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 3.1.1
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 5
+            path: requirements.txt
+          method: manifest-analysis
+          snippet: sentence-transformers==3.1.1
+    id: airom:b9cc121d3e5cdbf0
+    kind: library
+    name: sentence-transformers
+    package:
+      ecosystem: pypi
+    provider: hugging face
+    purl: pkg:pypi/sentence-transformers@3.1.1
+    version: 3.1.1
+  - confidence: 0.7
+    evidence:
+      occurrences:
+        - confidence: 0.7
+          detectorId: rules/openai/chat-call
+          fields:
+            param.max_tokens: "800"
+            param.temperature: "0.2"
+          location:
+            column: 22
+            endColumn: 47
+            endLine: 14
+            line: 14
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: response = client.chat.completions.create(
+    id: airom:bd6fd4f86f30fa53
+    kind: library
+    name: openai-sdk
+    provider: openai
+  - confidence: 0.85
+    evidence:
+      occurrences:
+        - confidence: 0.85
+          detectorId: rules/openai/model-literal
+          fields:
+            model: gpt-4.1
+          location:
+            column: 9
+            endColumn: 24
+            endLine: 15
+            line: 15
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: model="gpt-4.1",
+    id: airom:cfc27e587216febe
+    kind: hosted-llm
+    name: gpt-4.1
+    props:
+      - name: airom:model.provider
+        value: openai
+      - name: airom:model.id
+        value: gpt-4.1
+    provider: openai
+  - confidence: 0.95
+    evidence:
+      occurrences:
+        - confidence: 0.95
+          detectorId: modelfile/gguf
+          fields:
+            version: "3"
+          location:
+            path: models/tiny.gguf
+          method: binary-analysis
+    hashes:
+      - alg: SHA-256
+        hex: a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99
+    id: airom:e9e505aeb0e23154
+    kind: local-model-file
+    model:
+      format: gguf
+    name: tiny.gguf
+    provider: local
+    purl: pkg:generic/tiny.gguf?checksum=sha256:a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99
+lifecycle: pre-build
+relationships:
+  - confidence: 0.6
+    evidence:
+      - confidence: 0.6
+        detectorId: project/raglink
+        location:
+          column: 15
+          endColumn: 39
+          endLine: 6
+          line: 6
+          path: src/rag.py
+        method: source-code-analysis
+    from: airom:1d7789e0b7e68c35
+    to: airom:3e3a9735550d6b44
+    type: contains
+  - confidence: 0.6
+    evidence:
+      - confidence: 0.6
+        detectorId: project/raglink
+        location:
+          column: 15
+          endColumn: 39
+          endLine: 6
+          line: 6
+          path: src/rag.py
+        method: source-code-analysis
+    from: airom:1d7789e0b7e68c35
+    to: airom:3c77e68ca5b2bf87
+    type: embeds-with
+root: airom:0f9a0955ae2b259c
+schemaVersion: "1"
+serial: urn:uuid:00000000-0000-4000-8000-000000000000
+source:
+  kind: dir
+  target: python-langchain-rag
+stats:
+  contentBytes: 1112
+  detectors:
+    - findings: 0
+      id: dataset/file
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: gosrc/ast
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/compose
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/dockerfile
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/cargo
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gomod
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gradle
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/maven
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/npm
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/nuget
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-pyproject
+      invocations: 0
+      ns: 0
+    - findings: 4
+      id: manifest/pypi-requirements
+      invocations: 1
+      ns: 0
+    - findings: 1
+      id: modelfile/gguf
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: modelfile/onnx
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/safetensors
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/hdf5
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/savedmodel
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tensorrt
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tflite
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/torch
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: project/adapter
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/configbind
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/hfdir
+      invocations: 1
+      ns: 0
+    - findings: 1
+      id: project/raglink
+      invocations: 1
+      ns: 0
+    - findings: 1
+      id: prompt/file
+      invocations: 1
+      ns: 0
+    - findings: 7
+      id: ruleengine
+      invocations: 1
+      ns: 0
+  durationNs: 0
+  filesFailed: 0
+  filesProcessed: 5
+  filesWalked: 5
+  headerBytes: 1197
+  selection:
+    - 'dataset/file: selected by "default"'
+    - 'gosrc/ast: selected by "default"'
+    - 'infra/compose: selected by "default"'
+    - 'infra/dockerfile: selected by "default"'
+    - 'manifest/nuget: selected by "default"'
+    - 'manifest/cargo: selected by "default"'
+    - 'manifest/gomod: selected by "default"'
+    - 'manifest/gradle: selected by "default"'
+    - 'manifest/maven: selected by "default"'
+    - 'manifest/npm: selected by "default"'
+    - 'manifest/pypi-pyproject: selected by "default"'
+    - 'manifest/pypi-requirements: selected by "default"'
+    - 'modelfile/gguf: selected by "default"'
+    - 'modelfile/onnx: selected by "default"'
+    - 'modelfile/safetensors: selected by "default"'
+    - 'modelfilex/hdf5: selected by "default"'
+    - 'modelfilex/savedmodel: selected by "default"'
+    - 'modelfilex/tflite: selected by "default"'
+    - 'modelfilex/tensorrt: selected by "default"'
+    - 'modelfilex/torch: selected by "default"'
+    - 'project/adapter: selected by "default"'
+    - 'project/configbind: selected by "default"'
+    - 'project/hfdir: selected by "default"'
+    - 'project/raglink: selected by "default"'
+    - 'prompt/file: selected by "default"'
+    - 'ruleengine: selected by "default"'
+  warnings:
+    - 'unresolved uses relation from "openai-sdk" at src/rag.py: occurrence has no "model" field'
+timestamp: "2026-07-17T12:00:00Z"
+tool:
+  name: airom
+  version: dev

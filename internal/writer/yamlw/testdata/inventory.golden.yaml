@@ -57,7 +57,7 @@ components:
           method: hash-comparison
     hashes:
       - alg: SHA-256
-        hex: abcd
+        hex: abababababababababababababababababababababababababababababababab
     id: airom:2222222222222222
     kind: local-model-file
     model:
@@ -72,7 +72,7 @@ components:
       - name: airom:pickle.imports
         value: os.system
     provider: local
-    purl: pkg:generic/tiny.gguf?checksum=sha256:abcd
+    purl: pkg:generic/tiny.gguf?checksum=sha256:abababababababababababababababababababababababababababababababab
   - confidence: 0.985
     evidence:
       occurrences:
@@ -115,9 +115,6 @@ components:
     id: airom:5555555555555555
     kind: vector-db
     name: chroma
-    props:
-      - name: airom:rel.queries
-        value: airom:1111111111111111@0.6
 lifecycle: pre-build
 relationships:
   - confidence: 0.95
@@ -130,12 +127,12 @@ relationships:
     type: trained-on
   - confidence: 0.6
     evidence:
-      - confidence: 0
-        detectorId: ""
+      - confidence: 0.6
+        detectorId: rules/chroma/client
         location:
           line: 12
           path: src/rag.py
-        method: ""
+        method: source-code-analysis
     from: airom:5555555555555555
     to: airom:1111111111111111
     type: queries

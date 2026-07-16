@@ -1,0 +1,11 @@
+# RAG service dependencies
+langchain==0.2.16
+openai==1.51.0
+chromadb==0.5.5
+sentence-transformers==3.1.1
+
+# non-AI dependencies (must NOT appear in the AIBOM)
+requests==2.32.3
+numpy==2.1.1
+pydantic==2.9.2
+python-dotenv==1.0.1

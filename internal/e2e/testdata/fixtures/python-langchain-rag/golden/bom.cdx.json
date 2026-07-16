@@ -1,0 +1,507 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-4000-8000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-17T12:00:00Z",
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "airom",
+          "version": "dev"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "airom:0f9a0955ae2b259c",
+      "type": "application",
+      "name": "python-langchain-rag",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0"
+        },
+        {
+          "name": "airom:kind",
+          "value": "application"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "airom:source.target",
+        "value": "python-langchain-rag"
+      },
+      {
+        "name": "airom:source.type",
+        "value": "dir"
+      },
+      {
+        "name": "airom:unknowns",
+        "value": "0"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "airom:1d7789e0b7e68c35",
+      "type": "application",
+      "name": "rag-pipeline",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.6"
+        },
+        {
+          "name": "airom:kind",
+          "value": "rag-pipeline"
+        },
+        {
+          "name": "airom:rel.contains",
+          "value": "airom:3e3a9735550d6b44@0.6"
+        },
+        {
+          "name": "airom:rel.embeds-with",
+          "value": "airom:3c77e68ca5b2bf87@0.6"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:3c77e68ca5b2bf87",
+      "type": "machine-learning-model",
+      "name": "text-embedding-3-large",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.85"
+        },
+        {
+          "name": "airom:kind",
+          "value": "embedding-model"
+        },
+        {
+          "name": "airom:model.id",
+          "value": "text-embedding-3-large"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "openai"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "openai"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 6,
+            "additionalContext": "EMBED_MODEL = \"text-embedding-3-large\""
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:3e3a9735550d6b44",
+      "type": "application",
+      "name": "chroma",
+      "version": "0.5.5",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.985"
+        },
+        {
+          "name": "airom:kind",
+          "value": "vector-db"
+        },
+        {
+          "name": "airom:provider",
+          "value": "chroma"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "0.5.5",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          },
+          {
+            "field": "name",
+            "confidence": 0.95,
+            "concludedValue": "chromadb",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 4,
+            "additionalContext": "chromadb==0.5.5"
+          },
+          {
+            "location": "src/rag.py",
+            "line": 3,
+            "additionalContext": "import chromadb"
+          },
+          {
+            "location": "src/rag.py",
+            "line": 10,
+            "additionalContext": "return chromadb.PersistentClient(path=\"./chroma-store\")"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:43f7aec19ad0c8e0",
+      "type": "data",
+      "name": "system.txt",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.8"
+        },
+        {
+          "name": "airom:dataset.types",
+          "value": "prompt"
+        },
+        {
+          "name": "airom:kind",
+          "value": "prompt"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "prompts/system.txt"
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "other",
+          "name": "system.txt"
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:6b1292e468717462",
+      "type": "data",
+      "name": "temperature",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.5"
+        },
+        {
+          "name": "airom:kind",
+          "value": "ai-config"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 16,
+            "additionalContext": "temperature=0.2,"
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "configuration",
+          "name": "temperature"
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:6ed15db34c48ea41",
+      "type": "framework",
+      "name": "langchain",
+      "version": "0.2.16",
+      "purl": "pkg:pypi/langchain@0.2.16",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "framework"
+        },
+        {
+          "name": "airom:provider",
+          "value": "langchain"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "0.2.16",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 2,
+            "additionalContext": "langchain==0.2.16"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:737f185ea7c9f67f",
+      "type": "data",
+      "name": "max_tokens",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.5"
+        },
+        {
+          "name": "airom:kind",
+          "value": "ai-config"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 17,
+            "additionalContext": "max_tokens=800,"
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "configuration",
+          "name": "max_tokens"
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:a6ccf893ff130124",
+      "type": "library",
+      "name": "openai",
+      "version": "1.51.0",
+      "purl": "pkg:pypi/openai@1.51.0",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "library"
+        },
+        {
+          "name": "airom:provider",
+          "value": "openai"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "1.51.0",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 3,
+            "additionalContext": "openai==1.51.0"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:b9cc121d3e5cdbf0",
+      "type": "library",
+      "name": "sentence-transformers",
+      "version": "3.1.1",
+      "purl": "pkg:pypi/sentence-transformers@3.1.1",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "library"
+        },
+        {
+          "name": "airom:provider",
+          "value": "hugging face"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "3.1.1",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 5,
+            "additionalContext": "sentence-transformers==3.1.1"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:bd6fd4f86f30fa53",
+      "type": "library",
+      "name": "openai-sdk",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.7"
+        },
+        {
+          "name": "airom:kind",
+          "value": "library"
+        },
+        {
+          "name": "airom:provider",
+          "value": "openai"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 14,
+            "additionalContext": "response = client.chat.completions.create("
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:cfc27e587216febe",
+      "type": "machine-learning-model",
+      "name": "gpt-4.1",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.85"
+        },
+        {
+          "name": "airom:kind",
+          "value": "hosted-llm"
+        },
+        {
+          "name": "airom:model.id",
+          "value": "gpt-4.1"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "openai"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "openai"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 15,
+            "additionalContext": "model=\"gpt-4.1\","
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:e9e505aeb0e23154",
+      "type": "machine-learning-model",
+      "name": "tiny.gguf",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99"
+        }
+      ],
+      "purl": "pkg:generic/tiny.gguf?checksum=sha256:a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "gguf"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/tiny.gguf"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -85,6 +85,12 @@ fuzz: ## Run every Fuzz* target briefly (FUZZ_TIME per target, default 10s)
 		done; \
 	done
 
+bench: ## Run the tracked benchmarks (throughput, assembly) — not asserted, for tracking
+	go test -run '^$$' -bench . -benchmem ./internal/perf/...
+
+test-heavy: ## Run the heavy perf trees (10x files + a 200 MB model file); slow, no -race
+	AIROM_PERF_HEAVY=1 go test -run 'Heavy|BigFile' ./internal/perf/...
+
 clean: ## Remove build artifacts, coverage output, and dist/
 	rm -f $(BINARY) $(BINARY).exe coverage.out coverage.html
 	rm -rf dist/ tmp/

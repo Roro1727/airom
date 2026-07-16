@@ -1,0 +1,12 @@
+{
+  "name": "node-openai-agent",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "openai": "^4.67.1",
+    "@anthropic-ai/sdk": "^0.27.3",
+    "langchain": "^0.3.2",
+    "express": "^4.21.0",
+    "lodash": "^4.17.21"
+  }
+}

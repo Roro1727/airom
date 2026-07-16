@@ -1,0 +1,245 @@
+components:
+  - confidence: 0.75
+    evidence:
+      occurrences:
+        - confidence: 0.75
+          detectorId: infra/dockerfile
+          fields:
+            env: OLLAMA_HOST
+          location:
+            line: 1
+            path: Dockerfile
+          method: config-analysis
+          snippet: FROM ollama/ollama:latest
+    id: airom:53f987ae810a0674
+    infra:
+      endpoint: "11434"
+    kind: infra
+    name: ollama
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 0.2.16
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 1
+            path: api/requirements.txt
+          method: manifest-analysis
+          snippet: langchain==0.2.16
+    id: airom:6ed15db34c48ea41
+    kind: framework
+    name: langchain
+    package:
+      ecosystem: pypi
+    provider: langchain
+    purl: pkg:pypi/langchain@0.2.16
+    version: 0.2.16
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 1.51.0
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 2
+            path: api/requirements.txt
+          method: manifest-analysis
+          snippet: openai==1.51.0
+    id: airom:a6ccf893ff130124
+    kind: library
+    name: openai
+    package:
+      ecosystem: pypi
+    provider: openai
+    purl: pkg:pypi/openai@1.51.0
+    version: 1.51.0
+  - confidence: 0
+    evidence: {}
+    id: airom:c4cea838751d80a9
+    kind: application
+    name: mixed-monorepo
+  - confidence: 0.95
+    evidence:
+      identity:
+        - confidence: 0.95
+          field: version
+          methods:
+            - manifest-analysis
+          value: 4.67.1
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/npm
+          location:
+            line: 6
+            path: web/package.json
+          method: manifest-analysis
+          snippet: '"openai": "^4.67.1",'
+    id: airom:f16d02e10b6caf23
+    kind: library
+    name: openai
+    package:
+      ecosystem: npm
+    provider: openai
+    purl: pkg:npm/openai@4.67.1
+    version: 4.67.1
+lifecycle: pre-build
+root: airom:c4cea838751d80a9
+schemaVersion: "1"
+serial: urn:uuid:00000000-0000-4000-8000-000000000000
+source:
+  kind: dir
+  target: mixed-monorepo
+stats:
+  contentBytes: 321
+  detectors:
+    - findings: 0
+      id: dataset/file
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: gosrc/ast
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: infra/compose
+      invocations: 0
+      ns: 0
+    - findings: 1
+      id: infra/dockerfile
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: manifest/cargo
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gomod
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/gradle
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/maven
+      invocations: 0
+      ns: 0
+    - findings: 1
+      id: manifest/npm
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: manifest/nuget
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: manifest/pypi-pyproject
+      invocations: 0
+      ns: 0
+    - findings: 2
+      id: manifest/pypi-requirements
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: modelfile/gguf
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/onnx
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfile/safetensors
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/hdf5
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/savedmodel
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tensorrt
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/tflite
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: modelfilex/torch
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: project/adapter
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/configbind
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/hfdir
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: project/raglink
+      invocations: 1
+      ns: 0
+    - findings: 0
+      id: prompt/file
+      invocations: 0
+      ns: 0
+    - findings: 0
+      id: ruleengine
+      invocations: 0
+      ns: 0
+  durationNs: 0
+  filesFailed: 0
+  filesProcessed: 4
+  filesWalked: 4
+  headerBytes: 777
+  selection:
+    - 'dataset/file: selected by "default"'
+    - 'gosrc/ast: selected by "default"'
+    - 'infra/compose: selected by "default"'
+    - 'infra/dockerfile: selected by "default"'
+    - 'manifest/nuget: selected by "default"'
+    - 'manifest/cargo: selected by "default"'
+    - 'manifest/gomod: selected by "default"'
+    - 'manifest/gradle: selected by "default"'
+    - 'manifest/maven: selected by "default"'
+    - 'manifest/npm: selected by "default"'
+    - 'manifest/pypi-pyproject: selected by "default"'
+    - 'manifest/pypi-requirements: selected by "default"'
+    - 'modelfile/gguf: selected by "default"'
+    - 'modelfile/onnx: selected by "default"'
+    - 'modelfile/safetensors: selected by "default"'
+    - 'modelfilex/hdf5: selected by "default"'
+    - 'modelfilex/savedmodel: selected by "default"'
+    - 'modelfilex/tflite: selected by "default"'
+    - 'modelfilex/tensorrt: selected by "default"'
+    - 'modelfilex/torch: selected by "default"'
+    - 'project/adapter: selected by "default"'
+    - 'project/configbind: selected by "default"'
+    - 'project/hfdir: selected by "default"'
+    - 'project/raglink: selected by "default"'
+    - 'prompt/file: selected by "default"'
+    - 'ruleengine: selected by "default"'
+timestamp: "2026-07-17T12:00:00Z"
+tool:
+  name: airom
+  version: dev

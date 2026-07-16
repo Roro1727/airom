@@ -418,7 +418,7 @@ func TestDeterminism(t *testing.T) {
 func TestGolden(t *testing.T) {
 	got := render(t, false)
 	path := filepath.Join("testdata", "inventory.golden.sarif.json")
-	if *update {
+	if *update || os.Getenv("UPDATE_GOLDEN") != "" {
 		if err := os.MkdirAll("testdata", 0o755); err != nil {
 			t.Fatal(err)
 		}

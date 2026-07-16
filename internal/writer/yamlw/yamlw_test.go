@@ -24,7 +24,7 @@ func TestGoldenAndDeterminism(t *testing.T) {
 		t.Error("yaml not deterministic (P7)")
 	}
 	golden := filepath.Join("testdata", "inventory.golden.yaml")
-	if *update {
+	if *update || os.Getenv("UPDATE_GOLDEN") != "" {
 		_ = os.MkdirAll("testdata", 0o750)
 		if err := os.WriteFile(golden, a.Bytes(), 0o600); err != nil {
 			t.Fatal(err)

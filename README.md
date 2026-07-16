@@ -191,6 +191,7 @@ AIROM is **pre-release (v0.1.0-dev)**, building out in phases toward a first tag
 | Sources: `repo` (exec-git shallow clone + local worktrees), `image` (docker-save/OCI archive + OCI layout — live registry/daemon pull is a follow-up), `k8s` (offline `--manifests` image enumeration — live cluster is a follow-up) | **Complete** — Phase 6 (with the noted follow-ups) |
 | Binary model-file parsers (GGUF, safetensors, ONNX, torch/pickle, …) | Designed, lands with the detector phases |
 | Writers: native JSON (versioned, lossless superset — round-trip tested), CycloneDX 1.6/1.7 ML-BOM (modelCard + `evidence.occurrences[]`, validated against the official schemas), SARIF 2.1.0 (one rule per detector, one result per occurrence, line-free fingerprints), YAML, table; multi-output `-o fmt=path` | **Complete** — Phase 7. `airom scan . -o cyclonedx=bom.json -o sarif=scan.sarif` emits both from one pass |
+| Test suite: golden end-to-end fixture repos through the whole pipeline into all five formats, official CycloneDX/SARIF schema conformance, `docs/mapping.md` round-trip enforcement, full-scan determinism (`--parallel 1` vs `16`), chaos degradation, and a P2 RSS-ceiling regression harness — everything under `-race`, ~74% coverage | **Complete** — Phase 8 |
 | Image & k8s sources, caching, phase-2 project detectors, RAG stitching | Designed, later phases |
 | SPDX 3.0.1 AI profile, attestation verification, per-layer attribution, OCI rule registry | Deferred to v2 by design (reserved slots — see [ARCHITECTURE §16](docs/ARCHITECTURE.md)) |
 

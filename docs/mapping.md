@@ -61,7 +61,7 @@ Conventions used throughout:
 | `SchemaVersion` | — (implied by `bomFormat` + `specVersion`) | — (implied by `CreationInfo.specVersion: "3.0.1"`) | — (implied by `version: "2.1.0"`) | `schemaVersion` *(native)* |
 | `Tool` (name, version) | `metadata.tools.components[]` `{type: "application", name, version}` *(native)* | `CreationInfo.createdUsing` → `Tool` element *(native)* | `runs[].tool.driver.{name, semanticVersion, informationUri}` *(native)* | `tool.{name, version}` |
 | `Tool.Commit` | `metadata.properties[]` `airom:tool.commit` *(prop)* | `Tool` element `comment` | `runs[].tool.driver.properties["airom:tool.commit"]` *(prop)* | `tool.commit` |
-| `Serial` | `serialNumber` = `"urn:uuid:" + Serial` *(native)* | seeds the `SpdxDocument` `spdxId` / document namespace: `https://airom.dev/spdxdocs/<Serial>` (IRI prefix finalized with the v2 writer) | — | `serial` |
+| `Serial` (a full `urn:uuid:<uuid>` URN) | `serialNumber` = `Serial` verbatim *(native; already a `urn:uuid:` URN — a bare UUID is prefixed for hand-built inventories)* | seeds the `SpdxDocument` `spdxId` / document namespace: `https://airom.dev/spdxdocs/<Serial>` (IRI prefix finalized with the v2 writer) | — | `serial` |
 | `Timestamp` (RFC 3339 UTC, injectable clock) | `metadata.timestamp` *(native)* | `CreationInfo.created` *(native)* | `runs[].invocations[].endTimeUtc` *(native)* | `timestamp` |
 | `Lifecycle` (`"pre-build"` \| `"post-build"`) | `metadata.lifecycles[].phase` *(native — same enum values; never `discovery`, which CDX defines as network discovery)* | *(lossy)* `software_Sbom` element `comment` | — | `lifecycle` |
 | `Source.Type` (`dir` \| `repo` \| `image` \| `k8s`) | `metadata.properties[]` `airom:source.type` *(prop)* | — | — | `source.type` |

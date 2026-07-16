@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "airom",
+          "semanticVersion": "dev",
+          "informationUri": "https://github.com/Roro1727/airom",
+          "rules": [
+            {
+              "id": "gosrc/ast",
+              "name": "GosrcAst",
+              "shortDescription": {
+                "text": "Components identified by the gosrc/ast detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "ast-fingerprint"
+              }
+            },
+            {
+              "id": "manifest/gomod",
+              "name": "ManifestGomod",
+              "shortDescription": {
+                "text": "Components identified by the manifest/gomod detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "manifest-analysis"
+              }
+            }
+          ]
+        }
+      },
+      "columnKind": "utf16CodeUnits",
+      "originalUriBaseIds": {
+        "SRCROOT": {
+          "uri": "file:///go-openai/"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-07-17T12:00:00Z"
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "gosrc/ast",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "library 'github.com/sashabaranov/go-openai' detected (confidence 0.8)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "main.go",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "snippet": {
+                    "text": "openai \"github.com/sashabaranov/go-openai\""
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "ec65289fa7bf006b7cf3f2728cb6a458f4ac86c744f76e0a451bd610cc04f709"
+          },
+          "properties": {
+            "airom:componentId": "airom:cffbe1cb532342ef",
+            "airom:confidence": 0.8,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.8
+          }
+        },
+        {
+          "ruleId": "gosrc/ast",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "hosted-llm 'gpt-4o' detected (confidence 0.75)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "main.go",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12,
+                  "snippet": {
+                    "text": "model := \"gpt-4o\""
+                  }
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "main"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "67c611e6e038c6d22c36aa320c99a2cbefa91f13909cbb5be13dc0691fb6345f"
+          },
+          "properties": {
+            "airom:componentId": "airom:d641d9eba24d3a58",
+            "airom:confidence": 0.75,
+            "airom:kind": "hosted-llm",
+            "airom:occurrence.confidence": 0.75
+          }
+        },
+        {
+          "ruleId": "manifest/gomod",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "library 'github.com/sashabaranov/go-openai' [v1.32.0] detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "go.mod",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "snippet": {
+                    "text": "require github.com/sashabaranov/go-openai v1.32.0"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "6ed4e3a5b12e679e482d87ee12e5666dbbd7ef52357d26b18e25d3c14d610194"
+          },
+          "properties": {
+            "airom:componentId": "airom:f96ee68bb40a8bb3",
+            "airom:confidence": 0.95,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "openai",
+            "airom:purl": "pkg:golang/github.com/sashabaranov/go-openai@v1.32.0"
+          }
+        }
+      ]
+    }
+  ]
+}

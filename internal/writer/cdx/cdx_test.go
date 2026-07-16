@@ -508,7 +508,7 @@ func TestGolden(t *testing.T) {
 	raw := encode(t, writer.Options{})
 	golden := filepath.Join("testdata", "inventory.golden.cdx.json")
 
-	if *update {
+	if *update || os.Getenv("UPDATE_GOLDEN") != "" {
 		if err := os.MkdirAll("testdata", 0o755); err != nil {
 			t.Fatal(err)
 		}
