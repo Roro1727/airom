@@ -12,6 +12,7 @@ module github.com/Roro1727/airom
 go 1.25.0
 
 require (
+	github.com/CycloneDX/cyclonedx-go v0.11.0
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/charlievieth/fastwalk v1.0.14
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396

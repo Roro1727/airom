@@ -1,0 +1,166 @@
+components:
+  - confidence: 1
+    evidence: {}
+    id: airom:0000000000000000
+    kind: application
+    name: ai-app
+  - confidence: 0.8738
+    evidence:
+      identity:
+        - confidence: 0.85
+          field: name
+          methods:
+            - source-code-analysis
+          value: gpt-4.1
+      occurrences:
+        - confidence: 0.85
+          detectorId: rules/openai/model-literal
+          location:
+            column: 5
+            endColumn: 20
+            endLine: 7
+            line: 7
+            path: src/rag.py
+          method: source-code-analysis
+          snippet: model = "gpt-4.1"
+        - confidence: 0.7
+          detectorId: rules/openai/chat-call
+          location:
+            column: 5
+            endColumn: 20
+            endLine: 8
+            line: 8
+            path: src/rag.py
+          method: config-analysis
+          snippet: model = "gpt-4.1"
+    id: airom:1111111111111111
+    kind: hosted-llm
+    model:
+      architecture: null
+      task: text-generation
+    name: gpt-4.1
+    props:
+      - name: airom:model.provider
+        value: openai
+      - name: airom:model.id
+        value: gpt-4.1
+      - name: airom:param.temperature
+        value: 0.2 @ src/rag.py:8
+    provider: openai
+  - confidence: 1
+    evidence:
+      occurrences:
+        - confidence: 1
+          detectorId: modelfile/gguf
+          location:
+            path: models/tiny.gguf
+          method: hash-comparison
+    hashes:
+      - alg: SHA-256
+        hex: abcd
+    id: airom:2222222222222222
+    kind: local-model-file
+    model:
+      format: gguf
+      pickleRisk:
+        globals:
+          - os.system
+    name: tiny.gguf
+    props:
+      - name: airom:pickle.risk
+        value: high
+      - name: airom:pickle.imports
+        value: os.system
+    provider: local
+    purl: pkg:generic/tiny.gguf?checksum=sha256:abcd
+  - confidence: 0.985
+    evidence:
+      occurrences:
+        - confidence: 0.95
+          detectorId: manifest/pypi-requirements
+          location:
+            line: 1
+            path: requirements.txt
+          method: manifest-analysis
+    id: airom:3333333333333333
+    kind: framework
+    name: langchain
+    package:
+      ecosystem: pypi
+    purl: pkg:pypi/langchain@0.2.1
+    version: 0.2.1
+  - confidence: 0.7
+    data:
+      format: jsonl
+      sizeBytes: 2048
+    evidence:
+      occurrences:
+        - confidence: 0.7
+          detectorId: dataset/file
+          location:
+            path: data/squad.jsonl
+          method: filename
+    id: airom:4444444444444444
+    kind: dataset
+    name: squad
+  - confidence: 0.7
+    evidence:
+      occurrences:
+        - confidence: 0.7
+          detectorId: rules/chroma/client
+          location:
+            line: 12
+            path: src/rag.py
+          method: source-code-analysis
+    id: airom:5555555555555555
+    kind: vector-db
+    name: chroma
+    props:
+      - name: airom:rel.queries
+        value: airom:1111111111111111@0.6
+lifecycle: pre-build
+relationships:
+  - confidence: 0.95
+    from: airom:0000000000000000
+    to: airom:3333333333333333
+    type: depends-on
+  - confidence: 0.8
+    from: airom:1111111111111111
+    to: airom:4444444444444444
+    type: trained-on
+  - confidence: 0.6
+    evidence:
+      - confidence: 0
+        detectorId: ""
+        location:
+          line: 12
+          path: src/rag.py
+        method: ""
+    from: airom:5555555555555555
+    to: airom:1111111111111111
+    type: queries
+root: airom:0000000000000000
+schemaVersion: "1"
+serial: urn:uuid:00000000-0000-4000-8000-000000000000
+source:
+  git:
+    commit: deadbeef
+    remote: https://github.com/acme/ai-app.git
+  kind: dir
+  target: /src/ai-app
+stats:
+  contentBytes: 0
+  durationNs: 0
+  filesFailed: 0
+  filesProcessed: 0
+  filesWalked: 0
+  headerBytes: 0
+timestamp: "2026-07-17T12:00:00Z"
+tool:
+  commit: abc123
+  name: airom
+  version: 1.0.0
+unknowns:
+  - detectorId: modelfile/safetensors
+    path: models/corrupt.safetensors
+    reason: header length exceeds file

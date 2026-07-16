@@ -1,0 +1,463 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:11111111-2222-3333-4444-555555555555",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-16T12:00:00Z",
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "airom",
+          "version": "1.0.0"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "airom:0000000000000000",
+      "type": "application",
+      "name": "my-rag-app",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "application"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "pyproject.toml"
+          }
+        ]
+      }
+    },
+    "properties": [
+      {
+        "name": "airom:source.git.commit",
+        "value": "deadbeefcafe"
+      },
+      {
+        "name": "airom:source.git.dirty",
+        "value": "false"
+      },
+      {
+        "name": "airom:source.git.remote",
+        "value": "https://github.com/example/rag-app.git"
+      },
+      {
+        "name": "airom:source.target",
+        "value": "https://github.com/example/rag-app"
+      },
+      {
+        "name": "airom:source.type",
+        "value": "repo"
+      },
+      {
+        "name": "airom:tool.commit",
+        "value": "abc123def456"
+      },
+      {
+        "name": "airom:unknowns",
+        "value": "1"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "airom:1111111111111111",
+      "type": "machine-learning-model",
+      "group": "openai",
+      "name": "gpt-4.1",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.9"
+        },
+        {
+          "name": "airom:kind",
+          "value": "hosted-llm"
+        },
+        {
+          "name": "airom:model.id",
+          "value": "gpt-4.1-2026-01-14"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "openai"
+        },
+        {
+          "name": "airom:param.temperature",
+          "value": "0.2 @ src/rag.py:42"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "name",
+            "confidence": 0.9,
+            "concludedValue": "gpt-4.1",
+            "methods": [
+              {
+                "technique": "source-code-analysis",
+                "confidence": 0.9
+              }
+            ]
+          },
+          {
+            "field": "name",
+            "confidence": 0.3,
+            "concludedValue": "gpt-4",
+            "methods": [
+              {
+                "technique": "other",
+                "confidence": 0.3,
+                "value": "config-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "src/rag.py",
+            "line": 42,
+            "symbol": "build_chain",
+            "additionalContext": "model=\"gpt-4.1\""
+          }
+        ]
+      },
+      "modelCard": {
+        "modelParameters": {
+          "task": "text-generation"
+        },
+        "quantitativeAnalysis": {
+          "performanceMetrics": [
+            {
+              "type": "accuracy",
+              "value": "0.92",
+              "slice": "test"
+            }
+          ]
+        },
+        "considerations": {
+          "users": [
+            "analysts"
+          ],
+          "useCases": [
+            "summarization"
+          ],
+          "technicalLimitations": [
+            "bounded context window"
+          ],
+          "environmentalConsiderations": {
+            "energyConsumptions": [
+              {
+                "activity": "inference",
+                "energyProviders": [],
+                "activityEnergyCost": {
+                  "value": 0.5,
+                  "unit": "kWh"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "bom-ref": "airom:2222222222222222",
+      "type": "machine-learning-model",
+      "name": "llama-3-8b.Q4_K_M.gguf",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      ],
+      "purl": "pkg:generic/llama-3-8b?checksum=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "externalReferences": [
+        {
+          "url": "https://huggingface.co/meta/llama-3-8b/resolve/main/model.gguf",
+          "type": "distribution"
+        },
+        {
+          "url": "https://example.com/attestation.json",
+          "type": "attestation"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "1"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.contextLength",
+          "value": "8192"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "gguf"
+        },
+        {
+          "name": "airom:model.paramCount",
+          "value": "8030261248"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        },
+        {
+          "name": "airom:model.quantization",
+          "value": "Q4_K_M"
+        },
+        {
+          "name": "airom:pickle.imports",
+          "value": "os.system|builtins.eval"
+        },
+        {
+          "name": "airom:pickle.risk",
+          "value": "suspicious"
+        },
+        {
+          "name": "airom:releaseTime",
+          "value": "2026-01-14T00:00:00Z"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "hash",
+            "confidence": 1,
+            "concludedValue": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "methods": [
+              {
+                "technique": "hash-comparison",
+                "confidence": 1
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "models/llama.gguf",
+            "additionalContext": "GGUF"
+          }
+        ]
+      },
+      "modelCard": {
+        "modelParameters": {
+          "modelArchitecture": "llama",
+          "datasets": [
+            {
+              "ref": "airom:4444444444444444"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "bom-ref": "airom:3333333333333333",
+      "type": "framework",
+      "supplier": {
+        "name": "LangChain, Inc.",
+        "url": [
+          "https://langchain.com"
+        ]
+      },
+      "name": "langchain",
+      "version": "0.2.1",
+      "description": "declared in requirements.txt",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/langchain@0.2.1",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "framework"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "0.2.1",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 3,
+            "additionalContext": "langchain==0.2.1"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:4444444444444444",
+      "type": "data",
+      "name": "wikitext-103",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.8"
+        },
+        {
+          "name": "airom:dataset.size",
+          "value": "524288000"
+        },
+        {
+          "name": "airom:dataset.types",
+          "value": "parquet"
+        },
+        {
+          "name": "airom:kind",
+          "value": "dataset"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "train.py",
+            "line": 12
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "dataset",
+          "name": "wikitext-103",
+          "contents": {
+            "url": "https://huggingface.co/datasets/wikitext"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:5555555555555555",
+      "type": "data",
+      "name": "system-prompt",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.7"
+        },
+        {
+          "name": "airom:kind",
+          "value": "prompt"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "prompts/system.txt",
+            "line": 1
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "other",
+          "name": "system-prompt"
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:6666666666666666",
+      "type": "data",
+      "name": "generation.yaml",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.85"
+        },
+        {
+          "name": "airom:kind",
+          "value": "ai-config"
+        },
+        {
+          "name": "airom:param.top_p",
+          "value": "0.9 @ config/generation.yaml:5"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "config/generation.yaml",
+            "line": 5
+          }
+        ]
+      },
+      "data": [
+        {
+          "type": "configuration",
+          "name": "generation.yaml"
+        }
+      ]
+    },
+    {
+      "bom-ref": "airom:7777777777777777",
+      "type": "application",
+      "name": "pinecone",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.75"
+        },
+        {
+          "name": "airom:kind",
+          "value": "vector-db"
+        },
+        {
+          "name": "airom:rel.uses",
+          "value": "airom:1111111111111111@0.9"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/store.py",
+            "line": 8
+          }
+        ]
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "airom:0000000000000000",
+      "dependsOn": [
+        "airom:3333333333333333"
+      ]
+    }
+  ]
+}

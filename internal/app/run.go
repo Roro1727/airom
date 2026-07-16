@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/Roro1727/airom/internal/metrics"
 	"github.com/Roro1727/airom/internal/source/dirsource"
@@ -83,8 +82,7 @@ func runFS(ctx context.Context, cfg *Config) error {
 		return err
 	}
 
-	printSummary(inv, cfg)
-	return nil
+	return emit(ctx, inv, cfg)
 }
 
 // runRepo scans a git repository: a remote URL is shallow-cloned (exec-git),
@@ -100,8 +98,7 @@ func runRepo(ctx context.Context, cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	printSummary(inv, cfg)
-	return nil
+	return emit(ctx, inv, cfg)
 }
 
 // runImage scans a container image: a saved archive (--input) or an OCI
@@ -126,8 +123,7 @@ func runImage(ctx context.Context, cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	printSummary(inv, cfg)
-	return nil
+	return emit(ctx, inv, cfg)
 }
 
 // runK8s scans Kubernetes workloads. Offline manifest mode (--manifests)
@@ -163,7 +159,9 @@ func runK8s(ctx context.Context, cfg *Config) error {
 			continue
 		}
 		fmt.Fprintf(stdout, "\n=== image %s ===\n", ref)
-		printSummary(inv, cfg)
+		if err := emit(ctx, inv, cfg); err != nil {
+			return err
+		}
 	}
 	if len(scanErrs) > 0 {
 		slog.Warn("k8s: some images could not be scanned", "count", len(scanErrs))
@@ -174,33 +172,10 @@ func runK8s(ctx context.Context, cfg *Config) error {
 	return nil
 }
 
-// printSummary is the interim scan report: the table/CycloneDX/SARIF
-// writers land in Phase 7; until then the scan reports the assembled graph
-// honestly.
-func printSummary(inv *airom.Inventory, cfg *Config) {
-	components := 0
-	for _, c := range inv.Components {
-		if c.Kind != airom.KindApplication && float64(c.Confidence) >= cfg.MinConfidence {
-			components++
-		}
-	}
-	fmt.Fprintf(stdout, "airom: scan of %s complete\n", cfg.Target)
-	fmt.Fprintf(stdout, "  files walked:  %d\n", inv.Stats.FilesWalked)
-	fmt.Fprintf(stdout, "  components:    %d (relationships: %d)\n", components, len(inv.Relationships))
-	fmt.Fprintf(stdout, "  unknowns:      %d\n", len(inv.Unknowns))
-	fmt.Fprintf(stdout, "  duration:      %s\n", inv.Stats.Duration.Round(time.Millisecond))
-	for _, c := range inv.Components {
-		if c.Kind == airom.KindApplication || float64(c.Confidence) < cfg.MinConfidence {
-			continue
-		}
-		version := ""
-		if v, ok := c.Version.Value(); ok {
-			version = "@" + v
-		}
-		fmt.Fprintf(stdout, "    %-18s %s%s  (confidence %.2f, %d occurrences)\n",
-			c.Kind, c.Name, version, c.Confidence, len(c.Evidence.Occurrences))
-	}
-	fmt.Fprintf(stdout, "  output formats (cyclonedx/sarif/json/yaml/table) land in Phase 7\n")
+// logDiagnostics surfaces assembler warnings and, under --stats or when
+// present, the Unknown records to the log — the writers carry the graph
+// itself, the log carries the honesty channel.
+func logDiagnostics(inv *airom.Inventory, cfg *Config) {
 	if cfg.Stats || len(inv.Unknowns) > 0 {
 		for _, u := range inv.Unknowns {
 			slog.Warn("unknown", "path", u.Path, "detector", u.DetectorID, "reason", u.Reason)

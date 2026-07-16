@@ -1,0 +1,214 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "airom",
+          "semanticVersion": "1.2.3",
+          "informationUri": "https://github.com/Roro1727/airom",
+          "rules": [
+            {
+              "id": "rules/gguf/header",
+              "name": "RulesGgufHeader",
+              "shortDescription": {
+                "text": "Components identified by the rules/gguf/header detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "rules/openai/model-literal",
+              "name": "RulesOpenaiModelLiteral",
+              "shortDescription": {
+                "text": "Components identified by the rules/openai/model-literal detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "rules/openai/sdk-import",
+              "name": "RulesOpenaiSdkImport",
+              "shortDescription": {
+                "text": "Components identified by the rules/openai/sdk-import detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "manifest-analysis"
+              }
+            }
+          ],
+          "properties": {
+            "airom:tool.commit": "deadbeef"
+          }
+        }
+      },
+      "columnKind": "utf16CodeUnits",
+      "originalUriBaseIds": {
+        "SRCROOT": {
+          "uri": "file:///home/user/proj/"
+        }
+      },
+      "versionControlProvenance": [
+        {
+          "repositoryUri": "https://github.com/acme/proj",
+          "revisionId": "abc123def456"
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-07-16T12:30:00Z",
+          "toolExecutionNotifications": [
+            {
+              "message": {
+                "text": "truncated GGUF header"
+              },
+              "level": "note",
+              "locations": [
+                {
+                  "physicalLocation": {
+                    "artifactLocation": {
+                      "uri": "data/weird.bin"
+                    }
+                  }
+                }
+              ],
+              "properties": {
+                "airom:detectorId": "rules/gguf/header"
+              }
+            },
+            {
+              "message": {
+                "text": "permission denied"
+              },
+              "level": "note",
+              "properties": {
+                "airom:detectorId": "walk"
+              }
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "rules/openai/model-literal",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "hosted-llm 'openai/gpt-4.1' detected (confidence 0.9)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 5,
+                  "endLine": 12,
+                  "endColumn": 21,
+                  "snippet": {
+                    "text": "model=\"gpt-4.1\""
+                  }
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "chat"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "ca1821f3ef649db74a944b72d9c08a571dc86fc868ae9875b13b773aa7f35817"
+          },
+          "properties": {
+            "airom:componentId": "airom:aaaa111122223333",
+            "airom:confidence": 0.9,
+            "airom:kind": "hosted-llm",
+            "airom:occurrence.confidence": 0.8,
+            "airom:provider": "openai"
+          }
+        },
+        {
+          "ruleId": "rules/openai/sdk-import",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "hosted-llm 'openai/gpt-4.1' detected (confidence 0.9)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/util.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 40
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "993145709fdab3c8103dbe9909c4f058c98ba2aa7f93adfeb5e4e4209f04f20a"
+          },
+          "properties": {
+            "airom:componentId": "airom:aaaa111122223333",
+            "airom:confidence": 0.9,
+            "airom:kind": "hosted-llm",
+            "airom:occurrence.confidence": 0.7,
+            "airom:provider": "openai"
+          }
+        },
+        {
+          "ruleId": "rules/gguf/header",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'llama-3-8b' [q4_k_m] detected (confidence 1)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/llama.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "aeed290a72d6fe3469b4091b569aea23cff473783a78866685596da9de4032f3"
+          },
+          "properties": {
+            "airom:componentId": "airom:bbbb444455556666",
+            "airom:confidence": 1,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 1,
+            "airom:pickle.risk": "suspicious",
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/llama-3-8b?checksum=sha256:00ff"
+          }
+        }
+      ]
+    }
+  ]
+}

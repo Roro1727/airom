@@ -45,11 +45,10 @@ func TestRunFSEndToEnd(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "files walked:  3") { // app.py, web/index.ts, .gitignore
-		t.Errorf("summary:\n%s", out)
-	}
-	if !strings.Contains(out, "components:    0") {
-		t.Errorf("summary must state honestly that no detectors ran:\n%s", out)
+	// This tree (import openai + trivial ts) matches no rule, so the table
+	// writer reports no components honestly.
+	if !strings.Contains(out, "No AI components found") {
+		t.Errorf("table output:\n%s", out)
 	}
 }
 
@@ -138,13 +137,13 @@ rules:
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "components:    1") {
+	if !strings.Contains(out, "1 component(s)") {
 		t.Errorf("want exactly one component (two sightings, one identity):\n%s", out)
 	}
 	if !strings.Contains(out, "hosted-llm") || !strings.Contains(out, "gpt-4.1") {
-		t.Errorf("summary missing the detected model:\n%s", out)
+		t.Errorf("table missing the detected model:\n%s", out)
 	}
-	if !strings.Contains(out, "2 occurrences") {
+	if !strings.Contains(out, "2 occ") {
 		t.Errorf("want 2 occurrences (py + ts merged by identity):\n%s", out)
 	}
 }

@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Roro1727/airom/schemas/airom-v1.schema.json",
+  "title": "AIROM native AIBOM (schema version 1)",
+  "description": "The canonical, lossless AIROM AI Bill of Materials. This is the superset format every other output (CycloneDX, SARIF, YAML, table) projects from. Tri-state fields serialize as the value (Known), null (Unknown, applies-but-undetermined), or are omitted (Absent).",
+  "type": "object",
+  "required": ["schemaVersion", "tool", "serial", "timestamp", "source", "root", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "serial": { "type": "string", "pattern": "^urn:uuid:" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "lifecycle": { "enum": ["pre-build", "post-build", ""] },
+    "source": { "$ref": "#/$defs/source" },
+    "root": { "$ref": "#/$defs/id" },
+    "components": { "type": "array", "items": { "$ref": "#/$defs/component" } },
+    "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
+    "unknowns": { "type": "array", "items": { "$ref": "#/$defs/unknown" } },
+    "stats": { "type": "object" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^airom:[0-9a-f]{16}$" },
+    "optString": { "type": ["string", "null"] },
+    "optInt64": { "type": ["integer", "null"] },
+    "optTime": { "type": ["string", "null"], "format": "date-time" },
+    "triState": { "enum": ["yes", "no", "unknown"] },
+    "componentKind": {
+      "enum": [
+        "hosted-llm", "local-model-file", "embedding-model", "framework",
+        "library", "vector-db", "prompt", "dataset", "ai-config", "infra",
+        "service", "rag-pipeline", "application"
+      ]
+    },
+    "detectionMethod": {
+      "enum": [
+        "source-code-analysis", "ast-fingerprint", "manifest-analysis",
+        "binary-analysis", "hash-comparison", "config-analysis", "filename",
+        "attestation"
+      ]
+    },
+    "relType": {
+      "enum": [
+        "uses", "depends-on", "served-by", "queries", "embeds-with",
+        "prompted-by", "trained-on", "derived-from", "configures", "contains"
+      ]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "source": {
+      "type": "object",
+      "required": ["kind", "target"],
+      "properties": {
+        "kind": { "enum": ["dir", "repo", "image", "k8s"] },
+        "target": { "type": "string" },
+        "imageDigest": { "type": "string" },
+        "git": {
+          "type": "object",
+          "properties": {
+            "remote": { "type": "string" },
+            "commit": { "type": "string" },
+            "branch": { "type": "string" },
+            "dirty": { "type": "boolean" }
+          }
+        },
+        "k8s": { "type": "object" }
+      }
+    },
+    "hash": {
+      "type": "object",
+      "required": ["alg", "hex"],
+      "properties": { "alg": { "type": "string" }, "hex": { "type": "string" } }
+    },
+    "kv": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^airom:" },
+        "value": { "type": "string" }
+      }
+    },
+    "location": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "line": { "type": "integer", "minimum": 0 },
+        "endLine": { "type": "integer", "minimum": 0 },
+        "column": { "type": "integer", "minimum": 0 },
+        "endColumn": { "type": "integer", "minimum": 0 },
+        "layer": { "type": "string" }
+      }
+    },
+    "occurrence": {
+      "type": "object",
+      "required": ["location", "detectorId", "method", "confidence"],
+      "properties": {
+        "location": { "$ref": "#/$defs/location" },
+        "detectorId": { "type": "string" },
+        "method": { "$ref": "#/$defs/detectionMethod" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "snippet": { "type": "string" },
+        "symbol": { "type": "string" },
+        "fields": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "identityClaim": {
+      "type": "object",
+      "required": ["field", "value", "confidence"],
+      "properties": {
+        "field": { "enum": ["name", "version", "purl", "hash"] },
+        "value": { "type": "string" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "methods": { "type": "array", "items": { "$ref": "#/$defs/detectionMethod" } }
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": ["id", "kind", "name", "confidence", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "$ref": "#/$defs/componentKind" },
+        "name": { "type": "string" },
+        "group": { "type": "string" },
+        "version": { "$ref": "#/$defs/optString" },
+        "provider": { "$ref": "#/$defs/optString" },
+        "purl": { "type": "string" },
+        "licenses": { "type": "array" },
+        "supplier": { "type": "object" },
+        "hashes": { "type": "array", "items": { "$ref": "#/$defs/hash" } },
+        "downloadLocation": { "$ref": "#/$defs/optString" },
+        "sourceInfo": { "type": "string" },
+        "releaseTime": { "$ref": "#/$defs/optTime" },
+        "model": { "type": "object" },
+        "data": { "type": "object" },
+        "infra": { "type": "object" },
+        "package": { "type": "object" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "evidence": {
+          "type": "object",
+          "properties": {
+            "occurrences": { "type": "array", "items": { "$ref": "#/$defs/occurrence" } },
+            "identity": { "type": "array", "items": { "$ref": "#/$defs/identityClaim" } }
+          }
+        },
+        "props": { "type": "array", "items": { "$ref": "#/$defs/kv" } },
+        "attestations": { "type": "array" }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["from", "to", "type", "confidence"],
+      "properties": {
+        "from": { "$ref": "#/$defs/id" },
+        "to": { "$ref": "#/$defs/id" },
+        "type": { "$ref": "#/$defs/relType" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/occurrence" } }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "required": ["path", "detectorId", "reason"],
+      "properties": {
+        "path": { "type": "string" },
+        "detectorId": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}
