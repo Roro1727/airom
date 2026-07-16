@@ -1,0 +1,44 @@
+# EditorConfig — https://editorconfig.org
+# Conventions: Go is tab-indented (gofmt/gofumpt own formatting; the width
+# below is display-only). YAML — including the rule packs under rules/, the
+# contributor hot zone — JSON, and Markdown use 2-space indentation.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.go]
+indent_style = tab
+indent_size = 4
+
+[{Makefile,*.mk}]
+# make recipes require hard tabs.
+indent_style = tab
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = space
+indent_size = 2
+# Two trailing spaces are a hard line break in Markdown.
+trim_trailing_whitespace = false
+
+[**/testdata/**]
+# Fixtures reproduce real-world inputs byte-for-byte (goldens, handcrafted
+# binary headers, fuzz seeds). Editors must not normalize them.
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

@@ -1,0 +1,39 @@
+# ── Build artifacts ──────────────────────────────────────────────────────────
+# The static binary built by `make build` lands at the repo root.
+/airom
+/airom.exe
+# goreleaser output (release builds, archives, checksums, SBOM/AIBOM attachments).
+/dist/
+# Scratch space for local experiments.
+/tmp/
+
+# ── Test & coverage artifacts ────────────────────────────────────────────────
+*.test
+*.out
+coverage.out
+coverage.html
+# Never ignore checked-in fixtures or goldens, whatever their extension —
+# testdata trees reproduce real-world files byte-for-byte (see §14).
+!**/testdata/**
+
+# ── Fuzzing ──────────────────────────────────────────────────────────────────
+# Go's interesting-input fuzz cache lives in $GOCACHE/fuzz, OUTSIDE the repo,
+# so there is nothing to ignore here. Checked-in seed corpora and minimized
+# failing inputs under **/testdata/fuzz/ are deliberately TRACKED (every binary
+# header parser is fuzzed in CI, §13/§14) — do NOT add testdata/fuzz to this
+# file.
+
+# ── Go workspace files ───────────────────────────────────────────────────────
+# go.work is a local, per-developer multi-module setup; never commit it.
+go.work
+go.work.sum
+
+# ── Editors & IDEs ───────────────────────────────────────────────────────────
+.idea/
+.vscode/*
+# Shared, non-personal editor config is allowed back in:
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ── OS noise ─────────────────────────────────────────────────────────────────
+.DS_Store

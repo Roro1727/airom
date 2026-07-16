@@ -1,0 +1,132 @@
+# golangci-lint v2 configuration for AIROM.
+#
+# This file does double duty: ordinary lint hygiene AND enforcement of the
+# repository's import-direction law (docs/ARCHITECTURE.md §4). The depguard
+# rules below are architecture, not style — do not weaken them to silence a
+# finding; fix the import instead.
+
+version: "2"
+
+run:
+  timeout: 5m
+  # The CGO tree-sitter accuracy oracle (§6.4) is behind `//go:build oracle`
+  # and lints in its own dedicated CI job, not here — keeping the default lint
+  # pass CGO-free mirrors the CGO_ENABLED=0 release invariant (P8).
+
+linters:
+  default: none
+  enable:
+    - copyloopvar
+    - depguard
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+
+  settings:
+    misspell:
+      locale: US
+
+    gosec:
+      # No global excludes. AIROM is a security tool whose parsers eat
+      # untrusted bytes (§13); suppress individual findings with an inline
+      # `#nosec Gxxx -- justification`, never by disabling a rule here.
+      excludes: []
+
+    depguard:
+      # ── The import-direction law (§4), encoded as lint ──────────────────
+      #
+      #   internal/* may import pkg/airom/*; NEVER the reverse.
+      #   pkg/airom (root) and pkg/airom/detect import nothing outside the
+      #   Go standard library.
+      #
+      # Why it matters:
+      #   * pkg/airom/... is the public plugin SDK — the semver-guarded
+      #     (apidiff-in-CI) surface third-party detector authors compile
+      #     against. If it reached into internal/, every internal refactor
+      #     would become a breaking API change and the pkg/-vs-internal/
+      #     extensibility contract would be fiction.
+      #   * The domain model (pkg/airom) and detector interfaces
+      #     (pkg/airom/detect) are stdlib-only so that embedding AIROM as a
+      #     library, or writing a third-party detector, drags in ZERO
+      #     transitive dependencies. A `Finding` or `Selector` must never
+      #     force a plugin author to inherit our dependency graph.
+      rules:
+        # Rule 1 — nothing under pkg/airom/** may import internal/**.
+        # Covers all four SDK packages: airom (root), detect, purl,
+        # detectortest (§4). Lax mode: everything else is allowed here;
+        # the stdlib-only tightening for root+detect is Rule 2.
+        pkg-airom-never-imports-internal:
+          list-mode: lax
+          files:
+            - "**/pkg/airom/**"
+          deny:
+            - pkg: github.com/Roro1727/airom/internal
+              desc: >-
+                pkg/airom is the public plugin SDK and must never depend on
+                internal/ (ARCHITECTURE.md §4: "internal/* may import
+                pkg/airom/*; never the reverse"). Move shared code down into
+                pkg/airom or keep it in internal/ and invert the dependency.
+
+        # Rule 2 — pkg/airom root and pkg/airom/detect are STDLIB-ONLY.
+        # Strict mode: anything not on the allow list is denied, which blocks
+        # github.com/*, golang.org/x/*, k8s.io/*, gopkg.in/*, and every other
+        # module path — golang.org/x is NOT the standard library. The only
+        # non-stdlib imports permitted are AIROM's own SDK packages (e.g.
+        # detect importing the domain model). pkg/airom/purl and
+        # pkg/airom/detectortest are deliberately NOT listed here: §4 scopes
+        # the stdlib-only guarantee to the root and detect packages (the
+        # harness may need test tooling); Rule 1 still applies to them.
+        pkg-airom-sdk-stdlib-only:
+          list-mode: strict
+          files:
+            - "**/pkg/airom/*.go"
+            - "**/pkg/airom/detect/**"
+          allow:
+            - $gostd
+            - github.com/Roro1727/airom/pkg/airom
+          deny:
+            # Redundant with strict mode, but yields a precise message for
+            # the most likely violation instead of a generic denial.
+            - pkg: github.com/Roro1727/airom/internal
+              desc: >-
+                pkg/airom and pkg/airom/detect are stdlib-only (§4) and may
+                never import internal/.
+
+  exclusions:
+    # Generated code (e.g. internal/detectors/all, produced by go generate —
+    # §6.2) carries the standard "Code generated ... DO NOT EDIT." header and
+    # is skipped on that basis.
+    generated: lax
+    paths:
+      # Fixture trees are real-world file reproductions (miniature polyglot
+      # repos, handcrafted binary headers, goldens — §14), not project code.
+      # Go tooling never compiles testdata, so this is belt-and-suspenders.
+      - testdata
+    rules:
+      # Tests legitimately do things gosec flags in production code
+      # (fixed permissions on scratch files, path joins from test tables).
+      # The import-direction depguard rules above still apply to tests.
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      # Groups AIROM's own imports after stdlib/third-party — keeps the
+      # SDK-vs-internal boundary visible at the top of every file.
+      local-prefixes:
+        - github.com/Roro1727/airom
+  exclusions:
+    paths:
+      - testdata

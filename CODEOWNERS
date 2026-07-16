@@ -1,0 +1,39 @@
+# CODEOWNERS — review routing for AIROM.
+#
+# GitHub semantics: the LAST matching pattern wins, so the catch-all stays
+# first and more specific rules follow it.
+#
+# AIROM is pre-release (v0.1.0-dev) with a single maintainer, so every path
+# currently routes to @Roro1727. The sectioning below encodes where routing
+# is DESIGNED to go as the contributor base grows — per-provider rule-pack
+# ownership is the whole point of the one-file-per-provider layout.
+
+# ── Default: everything ───────────────────────────────────────────────────────
+*                       @Roro1727
+
+# ── rules/ — the contributor hot zone (ARCHITECTURE.md §4, §6.3, decision D3) ──
+# Rule packs are ONE YAML FILE PER PROVIDER precisely so that review can be
+# routed per provider with no merge conflicts. When provider maintainer teams
+# exist, add entries below the fallback, e.g.:
+#
+#   /rules/models/openai.yaml            @Roro1727/openai-rules
+#   /rules/models/anthropic.yaml         @Roro1727/anthropic-rules
+#   /rules/frameworks/langchain.yaml     @Roro1727/langchain-rules
+#   /rules/vectordb/qdrant.yaml          @Roro1727/qdrant-rules
+#
+# Actual team entries arrive when maintainers exist; until then all rule-pack
+# changes route to the core maintainer. Reminder for reviewers: every rule PR
+# must carry >=1 positive and >=1 negative fixture (`airom rules lint`
+# enforces this in CI, §6.3).
+/rules/                 @Roro1727
+
+# ── pkg/airom/ — the public plugin SDK (§4, decision D5) ─────────────────────
+# Semver-guarded surface (apidiff in CI). Changes here are breaking-change-
+# sensitive and stay routed to core maintainers even after per-provider teams
+# take over rules/.
+/pkg/airom/             @Roro1727
+
+# ── The canonical architecture document ──────────────────────────────────────
+# docs/ARCHITECTURE.md is the single source of truth; changes to it are
+# design decisions, not documentation edits.
+/docs/ARCHITECTURE.md   @Roro1727

@@ -165,7 +165,7 @@ airom/
 │   │   └── all/                #   GENERATED registration list (go generate) — no hand-edited hotspot
 │   ├── assemble/               # identity, merge, confidence calculus, param binder, relation resolver
 │   ├── cache/                  # bbolt: two-tier file cache + per-layer blob cache (§10)
-│   ├── writer/                 # json/, cdx/, sarifw/, yamlw/, tablew/ (§11)
+│   ├── writer/                 # nativejson/, cdx/, sarifw/, yamlw/, tablew/ (§11)
 │   ├── xio/                    # pooled buffers, spool (mem→tmpfile), clamped byte-semaphore
 │   └── metrics/                # ScanStats, per-detector timings, --pprof/--trace bootstrap
 ├── rules/                      # ── EMBEDDED RULE PACKS (go:embed) — the contributor hot zone ──
