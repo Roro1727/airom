@@ -96,7 +96,10 @@ func parseTerm(raw string) (term, error) {
 		}
 		return term{Cmp: &confidenceCmp{Op: m[1], Value: v}}, nil
 	}
-	if strings.HasPrefix(s, "confidence") {
+	// Bare "confidence" is reserved (almost certainly a typo'd comparison),
+	// but "confidence-*" and the like remain legal identifiers — the grammar
+	// reserves the word, not the prefix.
+	if s == "confidence" || (strings.HasPrefix(s, "confidence") && !identRe.MatchString(s)) {
 		return term{}, fmt.Errorf("bad confidence comparison %q (want e.g. confidence>=0.9)", s)
 	}
 	if !identRe.MatchString(s) {

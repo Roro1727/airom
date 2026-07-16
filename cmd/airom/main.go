@@ -25,7 +25,14 @@ var (
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	go func() {
+		// First signal: cancel ctx (graceful). Releasing the registration
+		// here restores default delivery, so a second Ctrl-C kills the
+		// process even if shutdown hangs.
+		<-ctx.Done()
+		stop()
+	}()
 	code := cli.Execute(ctx, cli.BuildInfo{Version: version, Commit: commit, Date: date})
-	stop()
+	stop() // idempotent; covers the signal-free path
 	os.Exit(code)
 }

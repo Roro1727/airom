@@ -135,6 +135,15 @@ type Config struct {
 	K8sParallelImages bool
 }
 
+// Documented defaults (docs/cli.md "Global flags"). Single source of truth:
+// the CLI derives its flag-default strings from these constants, so the two
+// paths (CLI and future library embedding) cannot drift.
+const (
+	DefaultIOBudget    int64 = 256 << 20 // 256m
+	DefaultMaxFileSize int64 = 1 << 20   // 1m
+	DefaultCDXVersion        = "1.6"
+)
+
 // DefaultCacheDir is <user cache dir>/airom, falling back to a temp-dir
 // location when the OS cache dir cannot be determined.
 func DefaultCacheDir() string {
@@ -145,29 +154,31 @@ func DefaultCacheDir() string {
 	return filepath.Join(base, "airom")
 }
 
-// ApplyDefaults fills zero values with the documented defaults
-// (docs/cli.md, "Global flags").
+// ApplyDefaults fills unset (zero) values with the documented defaults
+// (docs/cli.md, "Global flags"). It only fills true zero values: a negative
+// Parallel or size survives to Validate and is rejected there, never
+// silently normalized. ExitCode is NOT defaulted here — the CLI resolves
+// the documented "1 when a policy is active" default explicitly, so that an
+// explicit --exit-code 0 with an active policy means "evaluate and report,
+// but never fail the build" (the Trivy idiom).
 func (c *Config) ApplyDefaults() {
-	if c.Parallel <= 0 {
+	if c.Parallel == 0 {
 		c.Parallel = runtime.GOMAXPROCS(0)
 	}
-	if c.IOBudget <= 0 {
-		c.IOBudget = 256 << 20 // 256m
+	if c.IOBudget == 0 {
+		c.IOBudget = DefaultIOBudget
 	}
-	if c.MaxFileSize <= 0 {
-		c.MaxFileSize = 1 << 20 // 1m
+	if c.MaxFileSize == 0 {
+		c.MaxFileSize = DefaultMaxFileSize
 	}
 	if c.CacheDir == "" {
 		c.CacheDir = DefaultCacheDir()
 	}
 	if c.CDXVersion == "" {
-		c.CDXVersion = "1.6"
+		c.CDXVersion = DefaultCDXVersion
 	}
 	if len(c.Outputs) == 0 {
 		c.Outputs = []OutputSpec{{Format: FormatTable}}
-	}
-	if c.Policy != nil && c.ExitCode == 0 {
-		c.ExitCode = 1 // documented default when a policy is active
 	}
 }
 
@@ -181,6 +192,18 @@ func (c *Config) Validate() error {
 	}
 	if c.Source != SourceK8s && c.Target == "" && c.ImageInput == "" {
 		return fmt.Errorf("no scan target given")
+	}
+	if c.Source == SourceImage && c.Target != "" && c.ImageInput != "" {
+		return fmt.Errorf("image: a reference and --input are mutually exclusive")
+	}
+	if c.Parallel < 0 {
+		return fmt.Errorf("--parallel must be >= 0, got %d", c.Parallel)
+	}
+	if c.IOBudget < 0 {
+		return fmt.Errorf("--io-budget must be >= 0, got %d", c.IOBudget)
+	}
+	if c.MaxFileSize < 0 {
+		return fmt.Errorf("--max-file-size must be >= 0, got %d", c.MaxFileSize)
 	}
 	if c.MinConfidence < 0 || c.MinConfidence > 1 {
 		return fmt.Errorf("--min-confidence must be in [0,1], got %v", c.MinConfidence)

@@ -41,12 +41,15 @@ func TestApplyDefaults(t *testing.T) {
 	}
 }
 
-func TestApplyDefaultsPolicyExitCode(t *testing.T) {
+func TestApplyDefaultsNeverTouchesExitCode(t *testing.T) {
+	// The "default 1 when a policy is active" rule is resolved by the CLI
+	// (resolvePolicy), NOT here: an explicit ExitCode 0 with an active
+	// policy means "evaluate and report, but never fail" and must survive.
 	c := validConfig()
 	c.Policy = MatchAny()
 	c.ApplyDefaults()
-	if c.ExitCode != 1 {
-		t.Errorf("ExitCode = %d, want documented default 1 when policy active", c.ExitCode)
+	if c.ExitCode != 0 {
+		t.Errorf("ExitCode = %d, want 0 untouched (report-only is expressible)", c.ExitCode)
 	}
 
 	c2 := validConfig()
@@ -55,6 +58,18 @@ func TestApplyDefaultsPolicyExitCode(t *testing.T) {
 	c2.ApplyDefaults()
 	if c2.ExitCode != 3 {
 		t.Errorf("ExitCode = %d, want explicit 3 preserved", c2.ExitCode)
+	}
+}
+
+func TestApplyDefaultsPreservesNegativesForValidate(t *testing.T) {
+	c := validConfig()
+	c.Parallel = -5
+	c.ApplyDefaults()
+	if c.Parallel != -5 {
+		t.Errorf("Parallel = %d, want -5 preserved for Validate to reject", c.Parallel)
+	}
+	if err := c.Validate(); err == nil {
+		t.Error("Validate: want error for negative parallel, got nil")
 	}
 }
 
@@ -69,6 +84,9 @@ func TestValidate(t *testing.T) {
 		{"no target", func(c *Config) { c.Target = "" }, "no scan target"},
 		{"k8s no target ok", func(c *Config) { c.Source = SourceK8s; c.Target = "" }, ""},
 		{"image input no target ok", func(c *Config) { c.Source = SourceImage; c.Target = ""; c.ImageInput = "x.tar" }, ""},
+		{"image ref and input", func(c *Config) { c.Source = SourceImage; c.Target = "ubuntu"; c.ImageInput = "x.tar" }, "mutually exclusive"},
+		{"neg parallel", func(c *Config) { c.Parallel = -1 }, "--parallel"},
+		{"neg io budget", func(c *Config) { c.IOBudget = -1 }, "--io-budget"},
 		{"neg confidence", func(c *Config) { c.MinConfidence = -0.1 }, "min-confidence"},
 		{"confidence >1", func(c *Config) { c.MinConfidence = 1.1 }, "min-confidence"},
 		{"bad cdx", func(c *Config) { c.CDXVersion = "2.0" }, "cdx-version"},

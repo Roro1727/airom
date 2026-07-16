@@ -12,6 +12,29 @@ import (
 	"github.com/Roro1727/airom/internal/source"
 )
 
+// exactArgs mirrors cobra.ExactArgs but keeps a usage hint in the error,
+// since SilenceUsage suppresses cobra's own help echo.
+func exactArgs(n int, what string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) != n {
+			return &app.UsageError{Err: fmt.Errorf("%s requires %s (got %d)\nRun '%s --help' for usage",
+				cmd.Name(), what, len(args), cmd.CommandPath())}
+		}
+		return nil
+	}
+}
+
+// maxArgs mirrors cobra.MaximumNArgs with the same usage-hint treatment.
+func maxArgs(n int, what string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) > n {
+			return &app.UsageError{Err: fmt.Errorf("%s accepts %s (got %d)\nRun '%s --help' for usage",
+				cmd.Name(), what, len(args), cmd.CommandPath())}
+		}
+		return nil
+	}
+}
+
 // runWith resolves configuration for a scan-family command and hands off to
 // the composition root.
 func runWith(cmd *cobra.Command, src app.SourceKind, target string) error {
@@ -32,7 +55,7 @@ func newScanCmd() *cobra.Command {
 		Short: "Scan a target with scheme auto-detection (dir | git URL | image ref)",
 		Long: `Scan auto-detects the target scheme in order: existing local path -> git URL
 -> image reference. Explicit prefixes force interpretation: dir:, repo:, image:.`,
-		Args: cobra.ExactArgs(1),
+		Args: exactArgs(1, "exactly one <target>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kind, target, err := source.DetectTarget(args[0])
 			if err != nil {
@@ -56,7 +79,7 @@ func newFSCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "fs <path>",
 		Short: "Scan a directory tree",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1, "exactly one <path>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if _, err := os.Stat(args[0]); err != nil {
 				return &app.UsageError{Err: fmt.Errorf("cannot scan %q: %w", args[0], err)}
@@ -70,7 +93,7 @@ func newRepoCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "repo <url|path>",
 		Short: "Scan a git repository (remote URL: shallow clone; local path: worktree)",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1, "exactly one <url|path>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runWith(cmd, app.SourceRepo, args[0])
 		},
@@ -81,20 +104,33 @@ func newImageCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "image [ref]",
 		Short: "Scan a container image (registry, daemon, tarball, or OCI layout)",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  maxArgs(1, "at most one [ref]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			input, _ := cmd.Flags().GetString("input")
 			var ref string
 			if len(args) == 1 {
 				ref = args[0]
 			}
+			// Build the layered config FIRST so an --input supplied via
+			// AIROM_INPUT or .airom.yaml participates in the validation
+			// (Config.Validate enforces the mutual exclusion as a backstop).
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("determine working directory: %w", err)
+			}
+			cfg, err := buildConfig(cmd.Flags(), wd, app.SourceImage, ref)
+			if err != nil {
+				return err
+			}
 			switch {
-			case ref == "" && input == "":
+			case ref == "" && cfg.ImageInput == "":
 				return &app.UsageError{Err: fmt.Errorf("image: give a reference or --input <tar>")}
-			case ref != "" && input != "":
+			case ref != "" && cfg.ImageInput != "":
+				// Config.Validate enforces this too; failing here gives the
+				// error before any engine work regardless of which layer
+				// (flag, AIROM_INPUT, .airom.yaml) supplied input.
 				return &app.UsageError{Err: fmt.Errorf("image: a reference and --input are mutually exclusive")}
 			}
-			return runWith(cmd, app.SourceImage, ref)
+			return runScan(cmd.Context(), cfg)
 		},
 	}
 	cmd.Flags().String("input", "", "scan a saved image tarball (docker save / OCI archive); no network")
@@ -106,7 +142,7 @@ func newK8sCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "k8s [context]",
 		Short: "Scan the images of Kubernetes workloads (or manifest files with --manifests)",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  maxArgs(1, "at most one [context]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			wd, err := os.Getwd()
 			if err != nil {
@@ -141,11 +177,11 @@ func newCleanCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("determine working directory: %w", err)
 			}
-			k, err := loadKoanf(cmd.Flags(), wd)
+			l, err := loadLayers(cmd.Flags(), wd)
 			if err != nil {
 				return err
 			}
-			dir := k.String("cache-dir")
+			dir := l.k.String("cache-dir")
 			if dir == "" {
 				dir = app.DefaultCacheDir()
 			}
@@ -153,13 +189,8 @@ func newCleanCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("resolve cache dir: %w", err)
 			}
-			// Refuse obviously catastrophic targets: RemoveAll on a root or
-			// home directory must never be one typo away.
-			if home, err := os.UserHomeDir(); err == nil && abs == home {
-				return &app.UsageError{Err: fmt.Errorf("refusing to remove home directory %q as a cache dir", abs)}
-			}
-			if abs == string(filepath.Separator) {
-				return &app.UsageError{Err: fmt.Errorf("refusing to remove filesystem root as a cache dir")}
+			if err := guardCacheRemoval(abs); err != nil {
+				return err
 			}
 			if _, err := os.Stat(abs); os.IsNotExist(err) {
 				fmt.Fprintf(cmd.OutOrStdout(), "no cache at %s\n", abs)
@@ -172,6 +203,49 @@ func newCleanCmd() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+// guardCacheRemoval refuses catastrophic RemoveAll targets. Three layers of
+// defense (each independently sufficient for its failure mode):
+//
+//  1. Basename allowlist: only directories the tool itself creates ("airom"
+//     from DefaultCacheDir, "airom-cache" from the temp fallback) may be
+//     removed — an arbitrary --cache-dir typo can never delete user data.
+//  2. Filesystem-identity check against $HOME and the volume root via
+//     os.SameFile — immune to case-insensitive filesystems (macOS APFS
+//     default), symlinked $HOME, and firmlink aliasing, where naive string
+//     comparison is bypassable by a one-character case typo.
+//  3. abs is Lstat'ed (not Stat'ed): a symlink passed as --cache-dir is
+//     compared as the link itself, matching RemoveAll's unlink-only behavior.
+func guardCacheRemoval(abs string) error {
+	if base := filepath.Base(abs); base != "airom" && base != "airom-cache" {
+		return &app.UsageError{Err: fmt.Errorf(
+			"refusing to remove %q: not an airom cache directory (basename must be \"airom\" or \"airom-cache\"); delete it manually if you really mean it", abs)}
+	}
+
+	sameAs := func(guard string) bool {
+		if abs == guard {
+			return true
+		}
+		gi, err := os.Stat(guard) // follow a symlinked $HOME to its target
+		if err != nil {
+			return false
+		}
+		ai, err := os.Lstat(abs) // do NOT follow abs (see rule 3 above)
+		if err != nil {
+			return false
+		}
+		return os.SameFile(gi, ai)
+	}
+
+	if home, err := os.UserHomeDir(); err == nil && sameAs(home) {
+		return &app.UsageError{Err: fmt.Errorf("refusing to remove home directory %q as a cache dir", abs)}
+	}
+	root := filepath.VolumeName(abs) + string(filepath.Separator)
+	if abs == root || sameAs(root) {
+		return &app.UsageError{Err: fmt.Errorf("refusing to remove filesystem root as a cache dir")}
+	}
+	return nil
 }
 
 func newVersionCmd(bi BuildInfo) *cobra.Command {

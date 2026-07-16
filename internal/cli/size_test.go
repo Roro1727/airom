@@ -43,3 +43,15 @@ func TestParseSize(t *testing.T) {
 		}
 	}
 }
+
+func TestFormatSizeRoundTrip(t *testing.T) {
+	for _, s := range []string{"256m", "1m", "512k", "2g", "3"} {
+		n, err := parseSize(s)
+		if err != nil {
+			t.Fatalf("parseSize(%q): %v", s, err)
+		}
+		if got := formatSize(n); got != s {
+			t.Errorf("formatSize(parseSize(%q)) = %q", s, got)
+		}
+	}
+}

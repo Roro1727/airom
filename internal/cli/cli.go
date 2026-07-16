@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -37,6 +39,10 @@ const (
 
 // Execute runs the airom CLI and returns the process exit code.
 func Execute(ctx context.Context, bi BuildInfo) int {
+	if err := checkPProfForm(os.Args[1:]); err != nil {
+		fmt.Fprintf(os.Stderr, "airom: invalid configuration: %v\n", err)
+		return exitFatal
+	}
 	root := newRootCmd(bi)
 	if err := root.ExecuteContext(ctx); err != nil {
 		var uerr *app.UsageError
@@ -70,6 +76,12 @@ Exit codes: 0 = scan completed (findings are NOT failures); use
 	}
 	root.SetVersionTemplate("airom {{.Version}}\n")
 
+	// Flag-parse errors keep a usage hint despite SilenceUsage — a typo'd
+	// flag must never produce a single terse line with no way forward.
+	root.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
+		return &app.UsageError{Err: fmt.Errorf("%v\nRun '%s --help' for usage", err, cmd.CommandPath())}
+	})
+
 	addGlobalFlags(root.PersistentFlags())
 
 	root.AddCommand(
@@ -84,20 +96,40 @@ Exit codes: 0 = scan completed (findings are NOT failures); use
 	return root
 }
 
-// setupLogging configures the process-wide slog default from -v/-q.
+// setupLogging configures the process-wide slog default from -v/-q,
+// resolved through the same flags > env > file layering as every other
+// global flag (AIROM_QUIET=true and `quiet: true` in .airom.yaml work).
 // Default level is Info; -v enables Debug, -vv adds source locations,
 // -q restricts to errors.
 func setupLogging(cmd *cobra.Command) error {
-	verbose, err := cmd.Flags().GetCount("verbose")
-	if err != nil {
-		verbose = 0 // command without the persistent flags (help, completion)
-	}
-	quiet, err := cmd.Flags().GetBool("quiet")
-	if err != nil {
-		quiet = false
-	}
-	if quiet && verbose > 0 {
-		return &app.UsageError{Err: errors.New("-q and -v are mutually exclusive")}
+	verbose, quiet := 0, false
+	if cmd.Flags().Lookup("verbose") != nil { // commands carrying the persistent flags
+		wd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("determine working directory: %w", err)
+		}
+		l, err := loadLayers(cmd.Flags(), wd)
+		if err != nil {
+			return err
+		}
+		if verbose, err = intKey(l.k, "verbose"); err != nil {
+			return &app.UsageError{Err: err}
+		}
+		if quiet, err = boolKey(l.k, "quiet"); err != nil {
+			return &app.UsageError{Err: err}
+		}
+
+		vChanged, qChanged := cmd.Flags().Changed("verbose"), cmd.Flags().Changed("quiet")
+		switch {
+		case vChanged && qChanged && quiet && verbose > 0:
+			return &app.UsageError{Err: errors.New("-q and -v are mutually exclusive")}
+		case vChanged && !qChanged:
+			quiet = false // explicit -v overrides env/file quiet
+		case qChanged && !vChanged:
+			verbose = 0 // explicit -q overrides env/file verbose
+		case quiet && verbose > 0:
+			verbose = 0 // both from env/file: quiet wins (less noise is the safe default)
+		}
 	}
 
 	level := slog.LevelInfo
@@ -112,5 +144,25 @@ func setupLogging(cmd *cobra.Command) error {
 		AddSource: verbose >= 2,
 	})
 	slog.SetDefault(slog.New(handler))
+	return nil
+}
+
+// checkPProfForm rejects the space-separated `--pprof addr` spelling early
+// with a precise error. --pprof uses NoOptDefVal (bare flag = localhost:6060),
+// so pflag would otherwise treat a following "host:port" token as a
+// positional argument — on `airom k8s` it would silently become the
+// kubeconfig context while pprof binds the default port.
+func checkPProfForm(args []string) error {
+	for i, a := range args {
+		if a == "--" {
+			break
+		}
+		if a == "--pprof" && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			next := args[i+1]
+			if _, port, err := net.SplitHostPort(next); err == nil && port != "" {
+				return fmt.Errorf("--pprof %s: an explicit address must be attached with '=' (--pprof=%s)", next, next)
+			}
+		}
+	}
 	return nil
 }

@@ -62,10 +62,10 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--no-cache` | bool | `false` | Disable cache reads and writes for this run. |
 | `--cdx-version <v>` | string | `1.6` | CycloneDX spec version: `1.6` (default) or `1.7` (modelCard shape is identical in both). |
 | `--sarif-strict-kinds` | bool | `false` | Emit spec-pure `kind:"informational"` instead of the GitHub-Code-Scanning-compatible default `level:"note"`. |
-| `--exit-code N` | int | `1` (when policy active) | Exit status to return when `--fail-on` matches. Setting `--exit-code` without `--fail-on` implies failing on **any** component. |
+| `--exit-code N` | int | `1` (when policy active) | Exit status to return when `--fail-on` matches. Setting `--exit-code` without `--fail-on` implies failing on **any** component. An explicit `--exit-code 0` with `--fail-on` means "evaluate and report matches, but never fail the build". |
 | `--fail-on <expr>` | string | — | CI policy expression evaluated over the assembled inventory. Grammar (finalized in Phase 3): OR-of-AND clauses — `expr = clause *("\|" clause)`, `clause = term *("&" term)`; a term is a kind/tag identifier (`hosted-llm`, `pickle-risk`) or `confidence OP n` with OP ∈ `>= <= > < =` and n ∈ [0,1]. `&` binds tighter than `\|`. Examples: `"hosted-llm"`, `"hosted-llm&confidence>=0.9"`, `"local-model-file\|hosted-llm&confidence>=0.8"`. Identifier terms are validated against the kind/tag vocabulary when the domain model lands (Phase 5). |
 | `--offline` | bool | `false` | Assert no network access for the entire run; any operation that would touch the network fails fast instead. (`fs`, local `repo`, and `image --input` scans perform no network access regardless.) |
-| `--pprof [addr]` | string | disabled | Serve `net/http/pprof`; bare flag binds `localhost:6060`. |
+| `--pprof[=addr]` | string | disabled | Serve `net/http/pprof`; bare flag binds `localhost:6060`. A custom address must be attached with `=` (`--pprof=localhost:7070`) — the space-separated form is rejected with a pointer to this rule. |
 | `--trace <file>` | path | — | Write a Go execution trace with per-phase regions (walk / detect / phase-2 / assemble / write). |
 | `--stats` | bool | `false` | Emit the full `ScanStats` block (files walked/skipped, bytes read vs bytes in tree, cache hit rates, per-detector timings, selection explanation). Always collected; this controls emission. |
 | `-v` / `-q` | count / bool | — | Verbose (repeatable; also expands file:line evidence lists in `table` output) / quiet (errors only). |
@@ -240,6 +240,11 @@ templates in Phase 6.
 Cache maintenance: removes the scan cache (all namespaces) under `--cache-dir`. The escape
 hatch when you want a guaranteed cold scan — though note the cache namespace already
 self-invalidates on any change to detectors, rules, size caps, or ignore config (§10).
+
+Safety: `clean` only removes directories the tool itself creates — the basename must be
+`airom` (the default cache location) or `airom-cache` (the temp fallback) — and refuses
+`$HOME` and the volume root by filesystem identity (immune to case-insensitive paths and
+symlinks). Anything else must be deleted manually.
 
 ```console
 $ airom clean

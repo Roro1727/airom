@@ -38,6 +38,22 @@ func parseSize(s string) (int64, error) {
 	return n << shift, nil
 }
 
+// formatSize is the inverse of parseSize for exact binary multiples; it
+// renders the app-level default constants as flag-default strings so the
+// two never drift.
+func formatSize(n int64) string {
+	switch {
+	case n >= 1<<30 && n%(1<<30) == 0:
+		return strconv.FormatInt(n>>30, 10) + "g"
+	case n >= 1<<20 && n%(1<<20) == 0:
+		return strconv.FormatInt(n>>20, 10) + "m"
+	case n >= 1<<10 && n%(1<<10) == 0:
+		return strconv.FormatInt(n>>10, 10) + "k"
+	default:
+		return strconv.FormatInt(n, 10)
+	}
+}
+
 // parseSizeKey reads a size-typed configuration key, attributing errors to
 // the flag name.
 func parseSizeKey(k *koanf.Koanf, key string) (int64, error) {

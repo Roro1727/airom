@@ -3,8 +3,11 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	kyaml "github.com/knadh/koanf/parsers/yaml"
@@ -19,6 +22,23 @@ import (
 // configFileName is discovered in the working directory (docs/cli.md).
 const configFileName = ".airom.yaml"
 
+// knownKeys is the closed set of configuration keys accepted from
+// .airom.yaml and the AIROM_* environment: every global flag plus the
+// command-specific keys. A typo'd key is a fatal configuration error
+// (exit 2), never a silent no-op — the same contract flags already have.
+var knownKeys = map[string]bool{
+	// global flags (flags.go)
+	"output": true, "format": true, "select": true, "rules": true,
+	"parallel": true, "io-budget": true, "max-file-size": true,
+	"min-confidence": true, "ignore": true, "cache-dir": true,
+	"no-cache": true, "cdx-version": true, "sarif-strict-kinds": true,
+	"exit-code": true, "fail-on": true, "offline": true, "pprof": true,
+	"trace": true, "stats": true, "verbose": true, "quiet": true,
+	// command-specific (image, k8s)
+	"input": true, "platform": true, "namespace": true,
+	"all-namespaces": true, "manifests": true, "parallel-images": true,
+}
+
 // listKeys are configuration keys whose env-variable form is comma-split
 // (AIROM_OUTPUT="table,sarif=airom.sarif").
 var listKeys = map[string]bool{
@@ -27,22 +47,45 @@ var listKeys = map[string]bool{
 	"ignore": true,
 }
 
-// loadKoanf layers configuration in the documented precedence order,
+// layers is the merged configuration plus per-layer provenance, needed
+// where CROSS-KEY precedence matters (an env-provided --format alias must
+// beat a file-provided output: list; same-key precedence is handled by the
+// merge order itself).
+type layers struct {
+	k   *koanf.Koanf // merged: flag defaults < .airom.yaml < AIROM_* env < set flags
+	env *koanf.Koanf // env layer alone
+}
+
+// loadLayers layers configuration in the documented precedence order,
 // lowest first: flag defaults (via posflag fill-in) < .airom.yaml < AIROM_*
 // env < explicitly-set flags. dir is the directory searched for .airom.yaml
 // (injectable for tests).
-func loadKoanf(flags *pflag.FlagSet, dir string) (*koanf.Koanf, error) {
+func loadLayers(flags *pflag.FlagSet, dir string) (*layers, error) {
 	k := koanf.New(".")
 
 	path := filepath.Join(dir, configFileName)
 	if _, err := os.Stat(path); err == nil {
-		if err := k.Load(kfile.Provider(path), kyaml.Parser()); err != nil {
+		fileK := koanf.New(".")
+		if err := fileK.Load(kfile.Provider(path), kyaml.Parser()); err != nil {
 			return nil, &app.UsageError{Err: fmt.Errorf("reading %s: %w", path, err)}
+		}
+		if err := checkKnownKeys(fileK, path+": unknown configuration key(s)"); err != nil {
+			return nil, err
+		}
+		if err := k.Merge(fileK); err != nil {
+			return nil, fmt.Errorf("merging %s: %w", path, err)
 		}
 	}
 
-	if err := k.Load(envProvider{environ: os.Environ()}, nil); err != nil {
+	envK := koanf.New(".")
+	if err := envK.Load(envProvider{environ: os.Environ()}, nil); err != nil {
 		return nil, fmt.Errorf("reading AIROM_* environment: %w", err)
+	}
+	if err := checkKnownKeys(envK, "unknown AIROM_* environment variable(s) for key(s)"); err != nil {
+		return nil, err
+	}
+	if err := k.Merge(envK); err != nil {
+		return nil, fmt.Errorf("merging environment: %w", err)
 	}
 
 	// posflag: explicitly-set flags always win; unset flag defaults fill
@@ -50,7 +93,27 @@ func loadKoanf(flags *pflag.FlagSet, dir string) (*koanf.Koanf, error) {
 	if err := k.Load(posflag.Provider(flags, ".", k), nil); err != nil {
 		return nil, fmt.Errorf("reading flags: %w", err)
 	}
-	return k, nil
+	return &layers{k: k, env: envK}, nil
+}
+
+// checkKnownKeys rejects configuration keys outside the documented surface,
+// so a typo (AIROM_PARALLELS=8, "parallels:" in the file) fails loudly instead
+// of silently not applying.
+func checkKnownKeys(k *koanf.Koanf, msg string) error {
+	seen := map[string]bool{}
+	var unknown []string
+	for _, key := range k.Keys() {
+		top, _, _ := strings.Cut(key, ".")
+		if !knownKeys[top] && !seen[top] {
+			seen[top] = true
+			unknown = append(unknown, top)
+		}
+	}
+	if len(unknown) > 0 {
+		sort.Strings(unknown)
+		return &app.UsageError{Err: fmt.Errorf("%s: %s", msg, strings.Join(unknown, ", "))}
+	}
+	return nil
 }
 
 // envProvider implements koanf.Provider over AIROM_* environment variables:
@@ -88,17 +151,102 @@ func (p envProvider) Read() (map[string]any, error) {
 	return out, nil
 }
 
+// ── Strict typed readers ────────────────────────────────────────────────────
+//
+// koanf's own getters (k.Int, k.Bool, k.Float64) silently coerce unparseable
+// values to zero — which would turn a typo'd AIROM_EXIT_CODE into a silently
+// deleted CI gate. These readers fail loudly instead; failures surface as
+// UsageError -> exit 2, the documented contract for invalid configuration.
+
+func intKey(k *koanf.Koanf, key string) (int, error) {
+	switch v := k.Get(key).(type) {
+	case nil:
+		return 0, nil
+	case int:
+		return v, nil
+	case int64:
+		return int(v), nil
+	case float64:
+		if v != math.Trunc(v) {
+			return 0, fmt.Errorf("--%s: invalid integer %v", key, v)
+		}
+		return int(v), nil
+	case string:
+		n, err := strconv.Atoi(strings.TrimSpace(v))
+		if err != nil {
+			return 0, fmt.Errorf("--%s: invalid integer %q", key, v)
+		}
+		return n, nil
+	default:
+		return 0, fmt.Errorf("--%s: invalid integer value %v", key, v)
+	}
+}
+
+func floatKey(k *koanf.Koanf, key string) (float64, error) {
+	switch v := k.Get(key).(type) {
+	case nil:
+		return 0, nil
+	case float64:
+		return v, nil
+	case int:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case string:
+		f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+		if err != nil {
+			return 0, fmt.Errorf("--%s: invalid number %q", key, v)
+		}
+		return f, nil
+	default:
+		return 0, fmt.Errorf("--%s: invalid number value %v", key, v)
+	}
+}
+
+func boolKey(k *koanf.Koanf, key string) (bool, error) {
+	switch v := k.Get(key).(type) {
+	case nil:
+		return false, nil
+	case bool:
+		return v, nil
+	case string:
+		b, err := strconv.ParseBool(strings.TrimSpace(v))
+		if err != nil {
+			return false, fmt.Errorf("--%s: invalid boolean %q (want true/false)", key, v)
+		}
+		return b, nil
+	default:
+		return false, fmt.Errorf("--%s: invalid boolean value %v", key, v)
+	}
+}
+
+// stringsKey reads a list-valued key, accepting a bare scalar as a
+// one-element list (`ignore: "**/fixtures/**"` in .airom.yaml), mirroring
+// the env layer where a single un-comma'd value is a one-element list.
+func stringsKey(k *koanf.Koanf, key string) []string {
+	if s, ok := k.Get(key).(string); ok {
+		if t := strings.TrimSpace(s); t != "" {
+			return []string{t}
+		}
+		return nil
+	}
+	return k.Strings(key)
+}
+
+// ── Config assembly ─────────────────────────────────────────────────────────
+
 // buildConfig assembles the *app.Config for a scan-family command from the
 // fully-layered configuration. Command-specific flags (image --input, k8s
 // --namespace, ...) flow through the same layering because cobra merges
 // them into cmd.Flags() at execution time.
 func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, target string) (*app.Config, error) {
-	k, err := loadKoanf(flags, workdir)
+	l, err := loadLayers(flags, workdir)
 	if err != nil {
 		return nil, err
 	}
+	k := l.k
 
-	outputs, err := resolveOutputs(k, flags)
+	outputs, err := resolveOutputs(l, flags)
 	if err != nil {
 		return nil, &app.UsageError{Err: err}
 	}
@@ -112,6 +260,31 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		return nil, &app.UsageError{Err: err}
 	}
 
+	parallel, err := intKey(k, "parallel")
+	if err != nil {
+		return nil, &app.UsageError{Err: err}
+	}
+	minConfidence, err := floatKey(k, "min-confidence")
+	if err != nil {
+		return nil, &app.UsageError{Err: err}
+	}
+
+	var noCache, sarifStrict, offline, stats, k8sAll, k8sParallelImages bool
+	for key, dst := range map[string]*bool{
+		"no-cache":           &noCache,
+		"sarif-strict-kinds": &sarifStrict,
+		"offline":            &offline,
+		"stats":              &stats,
+		"all-namespaces":     &k8sAll,
+		"parallel-images":    &k8sParallelImages,
+	} {
+		v, err := boolKey(k, key)
+		if err != nil {
+			return nil, &app.UsageError{Err: err}
+		}
+		*dst = v
+	}
+
 	policy, exitCode, err := resolvePolicy(k)
 	if err != nil {
 		return nil, &app.UsageError{Err: err}
@@ -123,44 +296,46 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 
 		Outputs:   outputs,
 		Select:    k.String("select"),
-		RulePaths: k.Strings("rules"),
+		RulePaths: stringsKey(k, "rules"),
 
-		Parallel:      k.Int("parallel"),
+		Parallel:      parallel,
 		IOBudget:      ioBudget,
 		MaxFileSize:   maxFileSize,
-		MinConfidence: k.Float64("min-confidence"),
+		MinConfidence: minConfidence,
 
-		IgnoreGlobs: k.Strings("ignore"),
+		IgnoreGlobs: stringsKey(k, "ignore"),
 		CacheDir:    k.String("cache-dir"),
-		NoCache:     k.Bool("no-cache"),
+		NoCache:     noCache,
 
 		CDXVersion:       k.String("cdx-version"),
-		SARIFStrictKinds: k.Bool("sarif-strict-kinds"),
+		SARIFStrictKinds: sarifStrict,
 
 		Policy:   policy,
 		ExitCode: exitCode,
 
-		Offline:   k.Bool("offline"),
+		Offline:   offline,
 		PProfAddr: k.String("pprof"),
 		TraceFile: k.String("trace"),
-		Stats:     k.Bool("stats"),
+		Stats:     stats,
 
 		ImageInput:    k.String("input"),
 		ImagePlatform: k.String("platform"),
 
 		K8sNamespace:      k.String("namespace"),
-		K8sAllNamespaces:  k.Bool("all-namespaces"),
+		K8sAllNamespaces:  k8sAll,
 		K8sManifests:      k.String("manifests"),
-		K8sParallelImages: k.Bool("parallel-images"),
+		K8sParallelImages: k8sParallelImages,
 	}
 	return cfg, nil
 }
 
 // resolveOutputs merges -o specs with the --format alias. Explicitly
-// passing both on the command line is an error; an explicit flag of either
-// spelling beats file/env values of the other (flags > env > file).
-func resolveOutputs(k *koanf.Koanf, flags *pflag.FlagSet) ([]app.OutputSpec, error) {
-	raw := k.Strings("output")
+// passing both on the command line is an error; otherwise the higher layer
+// wins across the two spellings (an env --format beats a file output: list),
+// and within one layer an output list beats the single-format alias.
+func resolveOutputs(l *layers, flags *pflag.FlagSet) ([]app.OutputSpec, error) {
+	k := l.k
+	raw := stringsKey(k, "output")
 	format := strings.TrimSpace(k.String("format"))
 	outChanged := flags.Changed("output")
 	fmtChanged := flags.Changed("format")
@@ -172,19 +347,36 @@ func resolveOutputs(k *koanf.Koanf, flags *pflag.FlagSet) ([]app.OutputSpec, err
 		raw = []string{format}
 	case outChanged:
 		// raw already holds the explicit -o values.
+	case format != "" && l.env.Exists("format") && !l.env.Exists("output"):
+		raw = []string{format} // env-provided alias beats a file-provided output list
 	case format != "" && len(raw) == 0:
-		raw = []string{format} // format came from file/env with no output list
+		raw = []string{format} // alias from file/env with no output list anywhere
 	}
 
 	return parseOutputSpecs(raw)
 }
 
+// exitCodeUnset is the --exit-code flag default: a sentinel meaning "no
+// layer set it", so that an explicit 0 (report matches, never fail) is
+// distinguishable from unset.
+const exitCodeUnset = -1
+
 // resolvePolicy applies the documented --exit-code/--fail-on interaction:
-// --fail-on alone -> exit code 1 on match; --exit-code alone -> fail on any
-// component; neither -> no policy, scan success always exits 0.
+//
+//	--fail-on alone            -> policy active, exit code defaults to 1
+//	--fail-on + --exit-code N  -> policy active, exit code N (0 = report-only)
+//	--exit-code N alone (N>0)  -> fail on ANY component with code N
+//	--exit-code 0 alone        -> no gate (same as unset)
+//	neither                    -> no gate; scan success always exits 0
 func resolvePolicy(k *koanf.Koanf) (*app.Policy, int, error) {
 	failOn := strings.TrimSpace(k.String("fail-on"))
-	exitCode := k.Int("exit-code")
+	exitCode, err := intKey(k, "exit-code")
+	if err != nil {
+		return nil, 0, err
+	}
+	if exitCode != exitCodeUnset && (exitCode < 0 || exitCode > 255) {
+		return nil, 0, fmt.Errorf("--exit-code must be in [0,255], got %d", exitCode)
+	}
 
 	switch {
 	case failOn != "":
@@ -192,10 +384,13 @@ func resolvePolicy(k *koanf.Koanf) (*app.Policy, int, error) {
 		if err != nil {
 			return nil, 0, err
 		}
-		return p, exitCode, nil // 0 -> defaulted to 1 in ApplyDefaults
-	case exitCode != 0:
-		return app.MatchAny(), exitCode, nil
-	default:
+		if exitCode == exitCodeUnset {
+			exitCode = 1 // documented default when a policy is active
+		}
+		return p, exitCode, nil
+	case exitCode == exitCodeUnset || exitCode == 0:
 		return nil, 0, nil
+	default:
+		return app.MatchAny(), exitCode, nil
 	}
 }

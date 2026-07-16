@@ -19,6 +19,8 @@ func TestParsePolicyValid(t *testing.T) {
 		{"a|b|c", 3, []int{1, 1, 1}},
 		{"confidence<0.5", 1, []int{1}},
 		{"confidence=1", 1, []int{1}},
+		{"confidence-risk", 1, []int{1}}, // the word is reserved, not the prefix
+		{"confidencex", 1, []int{1}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.expr, func(t *testing.T) {
@@ -53,6 +55,7 @@ func TestParsePolicyInvalid(t *testing.T) {
 		"confidence>=1.5",
 		"confidence>=-0.1",
 		"confidence>=",
+		"confidence", // bare reserved word: almost certainly a typo'd comparison
 		"Hosted-LLM", // uppercase not allowed
 		"has space",
 		"confidence0.9",

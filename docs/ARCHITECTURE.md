@@ -847,7 +847,7 @@ Flags: -o/--output fmt[=path] (repeatable) · --format (alias) · --select <expr
   --rules <file> (repeatable) · --parallel N · --io-budget 256m · --max-file-size 1m
   --min-confidence f · --ignore glob · --cache-dir · --no-cache · --cdx-version
   --sarif-strict-kinds · --exit-code N · --fail-on <expr> · --offline
-  --pprof [addr] · --trace file · --stats · -v/-q
+  --pprof[=addr] · --trace file · --stats · -v/-q
 Config: .airom.yaml + AIROM_* env via koanf (flags > env > file > defaults) · .airomignore
 ```
 

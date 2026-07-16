@@ -25,9 +25,25 @@ func captureScan(t *testing.T) **app.Config {
 	return &captured
 }
 
+// clearAiromEnv unsets ambient AIROM_* variables so tests are hermetic
+// regardless of the developer's shell. t.Setenv registers restoration of the
+// original value (and forbids t.Parallel, which the shared runScan seam
+// requires anyway).
+func clearAiromEnv(t *testing.T) {
+	t.Helper()
+	for _, kv := range os.Environ() {
+		name, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(name, "AIROM_") {
+			t.Setenv(name, os.Getenv(name)) // registers restore
+			_ = os.Unsetenv(name)
+		}
+	}
+}
+
 // execute runs the root command with args and returns stdout and the error.
 func execute(t *testing.T, args ...string) (string, error) {
 	t.Helper()
+	clearAiromEnv(t)
 	root := newRootCmd(BuildInfo{Version: "test", Commit: "abc", Date: "today"})
 	var out, errBuf bytes.Buffer
 	root.SetOut(&out)
@@ -120,10 +136,12 @@ func TestConfigPrecedence(t *testing.T) {
 		t.Errorf("Outputs = %v, want yaml from file", cfg.Outputs)
 	}
 
-	// env beats file
+	// env beats file (executeNoClear: execute's hermetic scrub would unset
+	// the very vars this test sets)
+	clearAiromEnv(t)
 	t.Setenv("AIROM_PARALLEL", "8")
 	t.Setenv("AIROM_OUTPUT", "table,sarif=airom.sarif")
-	if _, err := execute(t, "fs", "."); err != nil {
+	if err := executeNoClear(t, "fs", "."); err != nil {
 		t.Fatalf("fs error: %v", err)
 	}
 	cfg = *got
@@ -135,7 +153,7 @@ func TestConfigPrecedence(t *testing.T) {
 	}
 
 	// flag beats env
-	if _, err := execute(t, "fs", ".", "--parallel", "2"); err != nil {
+	if err := executeNoClear(t, "fs", ".", "--parallel", "2"); err != nil {
 		t.Fatalf("fs error: %v", err)
 	}
 	cfg = *got
@@ -258,5 +276,223 @@ func TestQuietVerboseConflict(t *testing.T) {
 	t.Chdir(t.TempDir())
 	if _, err := execute(t, "fs", ".", "-q", "-v"); err == nil {
 		t.Error("want -q/-v conflict error, got nil")
+	}
+}
+
+func TestFailOnDefaultsExitCodeToOne(t *testing.T) {
+	got := captureScan(t)
+	t.Chdir(t.TempDir())
+	if _, err := execute(t, "fs", ".", "--fail-on", "hosted-llm"); err != nil {
+		t.Fatalf("fs error: %v", err)
+	}
+	cfg := *got
+	if cfg.Policy == nil || cfg.ExitCode != 1 {
+		t.Errorf("policy=%v exitCode=%d, want active policy with documented default 1", cfg.Policy, cfg.ExitCode)
+	}
+}
+
+func TestExplicitExitCodeZeroIsReportOnly(t *testing.T) {
+	got := captureScan(t)
+	t.Chdir(t.TempDir())
+	if _, err := execute(t, "fs", ".", "--fail-on", "hosted-llm", "--exit-code", "0"); err != nil {
+		t.Fatalf("fs error: %v", err)
+	}
+	cfg := *got
+	if cfg.Policy == nil {
+		t.Fatal("Policy = nil, want active policy")
+	}
+	if cfg.ExitCode != 0 {
+		t.Errorf("ExitCode = %d, want explicit 0 preserved (report-only)", cfg.ExitCode)
+	}
+	// and 0 must survive ApplyDefaults too
+	cfg.ApplyDefaults()
+	if cfg.ExitCode != 0 {
+		t.Errorf("ExitCode after defaults = %d, want 0", cfg.ExitCode)
+	}
+}
+
+func TestBadEnvValuesAreFatal(t *testing.T) {
+	t.Chdir(t.TempDir())
+	cases := []struct{ env, val, want string }{
+		{"AIROM_EXIT_CODE", "oops", "invalid integer"},
+		{"AIROM_EXIT_CODE", "3 ", ""}, // trimmed: must PARSE, not fail (want == "" means success)
+		{"AIROM_NO_CACHE", "yes", "invalid boolean"},
+		{"AIROM_PARALLEL", "2.9", "invalid integer"},
+		{"AIROM_MIN_CONFIDENCE", "high", "invalid number"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.env+"="+tc.val, func(t *testing.T) {
+			captureScan(t)
+			clearAiromEnv(t)
+			t.Setenv(tc.env, tc.val)
+			err := executeNoClear(t, "fs", ".")
+			if tc.want == "" {
+				if err != nil {
+					t.Fatalf("want success, got %v", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("err = %v, want containing %q", err, tc.want)
+			}
+		})
+	}
+}
+
+// executeNoClear is execute without the hermetic env scrub, for tests that
+// set their own AIROM_* variables.
+func executeNoClear(t *testing.T, args ...string) error {
+	t.Helper()
+	root := newRootCmd(BuildInfo{Version: "test", Commit: "abc", Date: "today"})
+	var out, errBuf bytes.Buffer
+	root.SetOut(&out)
+	root.SetErr(&errBuf)
+	root.SetArgs(args)
+	return root.ExecuteContext(context.Background())
+}
+
+func TestUnknownConfigKeysAreFatal(t *testing.T) {
+	captureScan(t)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".airom.yaml"), []byte("workerz: 8\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	if _, err := execute(t, "fs", "."); err == nil || !strings.Contains(err.Error(), "unknown configuration key") {
+		t.Errorf("file typo: err = %v, want unknown-key error", err)
+	}
+
+	t.Chdir(t.TempDir())
+	clearAiromEnv(t)
+	t.Setenv("AIROM_WORKERZ", "8")
+	if err := executeNoClear(t, "fs", "."); err == nil || !strings.Contains(err.Error(), "unknown AIROM_") {
+		t.Errorf("env typo: err = %v, want unknown-env error", err)
+	}
+}
+
+func TestScalarYAMLListKeys(t *testing.T) {
+	got := captureScan(t)
+	dir := t.TempDir()
+	yaml := "output: json\nignore: \"**/fixtures/**\"\n"
+	if err := os.WriteFile(filepath.Join(dir, ".airom.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	if _, err := execute(t, "fs", "."); err != nil {
+		t.Fatalf("fs error: %v", err)
+	}
+	cfg := *got
+	if len(cfg.Outputs) != 1 || cfg.Outputs[0].Format != app.FormatJSON {
+		t.Errorf("Outputs = %v, want scalar output: json accepted", cfg.Outputs)
+	}
+	if len(cfg.IgnoreGlobs) != 1 || cfg.IgnoreGlobs[0] != "**/fixtures/**" {
+		t.Errorf("IgnoreGlobs = %v, want scalar ignore accepted", cfg.IgnoreGlobs)
+	}
+}
+
+func TestEnvFormatBeatsFileOutput(t *testing.T) {
+	got := captureScan(t)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".airom.yaml"), []byte("output:\n  - yaml\n  - table\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	clearAiromEnv(t)
+	t.Setenv("AIROM_FORMAT", "json")
+	if err := executeNoClear(t, "fs", "."); err != nil {
+		t.Fatalf("fs error: %v", err)
+	}
+	cfg := *got
+	if len(cfg.Outputs) != 1 || cfg.Outputs[0].Format != app.FormatJSON {
+		t.Errorf("Outputs = %v, want env format (json) to beat file output list", cfg.Outputs)
+	}
+}
+
+func TestQuietFromFileOverriddenByVerboseFlag(t *testing.T) {
+	captureScan(t)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".airom.yaml"), []byte("quiet: true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	// file quiet + explicit -v: -v wins, no conflict error
+	if _, err := execute(t, "fs", ".", "-v"); err != nil {
+		t.Fatalf("want -v to override file quiet, got error: %v", err)
+	}
+	// both explicit flags still conflict
+	if _, err := execute(t, "fs", ".", "-v", "-q"); err == nil {
+		t.Error("want -q/-v conflict error for explicit flags")
+	}
+}
+
+func TestCleanRefusesNonAiromDir(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "mydata")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(t.TempDir())
+	_, err := execute(t, "clean", "--cache-dir", dir)
+	if err == nil || !strings.Contains(err.Error(), "not an airom cache directory") {
+		t.Fatalf("err = %v, want basename refusal", err)
+	}
+	if _, statErr := os.Stat(dir); statErr != nil {
+		t.Error("directory was removed despite refusal")
+	}
+}
+
+func TestGuardCacheRemoval(t *testing.T) {
+	base := t.TempDir()
+
+	// 1. Arbitrary directory name: refused by the allowlist.
+	if err := guardCacheRemoval(filepath.Join(base, "documents")); err == nil {
+		t.Error("want refusal for non-airom basename")
+	}
+
+	// 2. A legitimate cache dir passes.
+	ok := filepath.Join(base, "airom")
+	if err := os.MkdirAll(ok, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := guardCacheRemoval(ok); err != nil {
+		t.Errorf("legitimate cache dir refused: %v", err)
+	}
+
+	// 3. $HOME that happens to be named "airom": refused via os.SameFile
+	//    even though the basename passes.
+	home := filepath.Join(base, "home", "airom")
+	if err := os.MkdirAll(home, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", home)
+	if err := guardCacheRemoval(home); err == nil || !strings.Contains(err.Error(), "home directory") {
+		t.Errorf("err = %v, want home refusal", err)
+	}
+
+	// 4. Symlinked $HOME: the target must still be refused.
+	link := filepath.Join(base, "homelink")
+	if err := os.Symlink(home, link); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", link)
+	if err := guardCacheRemoval(home); err == nil || !strings.Contains(err.Error(), "home directory") {
+		t.Errorf("err = %v, want symlinked-home refusal", err)
+	}
+}
+
+func TestCheckPProfForm(t *testing.T) {
+	if err := checkPProfForm([]string{"fs", ".", "--pprof"}); err != nil {
+		t.Errorf("bare --pprof: %v", err)
+	}
+	if err := checkPProfForm([]string{"fs", ".", "--pprof=localhost:7070"}); err != nil {
+		t.Errorf("attached addr: %v", err)
+	}
+	if err := checkPProfForm([]string{"fs", ".", "--pprof", "localhost:7070"}); err == nil {
+		t.Error("space-separated addr: want error")
+	}
+	if err := checkPProfForm([]string{"k8s", "--pprof", "prod"}); err != nil {
+		t.Errorf("context after bare --pprof: %v (must not false-positive)", err)
+	}
+	if err := checkPProfForm([]string{"--", "--pprof", "localhost:7070"}); err != nil {
+		t.Errorf("after --: %v", err)
 	}
 }
