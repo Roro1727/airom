@@ -4,8 +4,12 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/Roro1727/airom/internal/cli"
 )
 
 // Build metadata, stamped at release time by goreleaser:
@@ -19,12 +23,9 @@ var (
 	date    = "unknown"
 )
 
-// main is Phase-1 scaffolding: it keeps `go build ./...` green and proves the
-// ldflags stamping path end-to-end before the command tree exists.
-//
-// TODO(phase-3): replace body with internal/cli.Execute(ctx).
 func main() {
-	fmt.Printf("airom %s (%s, built %s)\n", version, commit, date)
-	fmt.Println("The airom command tree (scan, fs, repo, image, k8s, ...) is wired in Phase 3; this binary is a build scaffold until then.")
-	os.Exit(0)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	code := cli.Execute(ctx, cli.BuildInfo{Version: version, Commit: commit, Date: date})
+	stop()
+	os.Exit(code)
 }

@@ -183,8 +183,9 @@ AIROM is **pre-release (v0.1.0-dev)**, building out in phases toward a first tag
 | Area | Status |
 |---|---|
 | Architecture, domain model, decision log ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)) | **Complete** — accepted v1 baseline |
-| Repository scaffolding on the §4 layout (packages and their contracts, build files, docs) | **In progress** — Phase 2 (current) |
-| CLI command surface ([docs/cli.md](docs/cli.md)); public SDK types (`pkg/airom`, `pkg/airom/detect`) | Designed, land in Phases 3 and 5 |
+| Repository scaffolding on the §4 layout (packages and their contracts, build files, docs) | **Complete** — Phase 2 |
+| CLI ([docs/cli.md](docs/cli.md)): scan/fs/repo/image/k8s/clean/version, config layering (flags > env > file > defaults), exit-code contract, `--fail-on` grammar, pprof/trace bootstrap | **Complete** — Phase 3. Scan commands fail fast with a clear error until the engine lands (Phase 4); `detectors`/`rules`/`dev` command groups arrive with their subsystems (Phases 5–6) |
+| Public SDK types (`pkg/airom`, `pkg/airom/detect`) | Designed, land in Phase 5 |
 | Streaming engine, dispatcher, read-once file context, dir/repo sources | Designed, lands in the engine-core phases |
 | Rule engine (compiler, Aho–Corasick, region lexers) + first rule packs | Designed, lands after the engine core |
 | Binary model-file parsers (GGUF, safetensors, ONNX, torch/pickle, …) | Designed, lands with the detector phases |

@@ -1,10 +1,11 @@
 # AIROM CLI Reference
 
-> **Status: the CLI implementation lands in Phase 3; this document is the committed design
-> surface** ([ARCHITECTURE.md §12](./ARCHITECTURE.md#12-cli), decisions D15/D17). Command
-> names, flag names, defaults, config precedence, and the exit-code contract below are
-> frozen design — Phase 3 implements them and scripts them into CI tests against this
-> document. Anything genuinely still open is marked inline.
+> **Status: implemented as of Phase 3** for `scan`, `fs`, `repo`, `image`, `k8s`, `clean`,
+> and `version`, including config layering, the exit-code contract, and the `--fail-on`
+> grammar ([ARCHITECTURE.md §12](./ARCHITECTURE.md#12-cli), decisions D15/D17). Scan
+> commands fail fast with a clear error until the engine lands (Phase 4). The `detectors`,
+> `rules`, and `dev` command groups ship with their subsystems (Phases 5–6) — no dead
+> commands before the thing they operate on exists.
 
 Stack: cobra (command tree) + koanf (configuration) + stdlib `slog` (logging). One static
 binary, `CGO_ENABLED=0`, no daemon, no network unless the target requires it.
@@ -62,7 +63,7 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--cdx-version <v>` | string | `1.6` | CycloneDX spec version: `1.6` (default) or `1.7` (modelCard shape is identical in both). |
 | `--sarif-strict-kinds` | bool | `false` | Emit spec-pure `kind:"informational"` instead of the GitHub-Code-Scanning-compatible default `level:"note"`. |
 | `--exit-code N` | int | `1` (when policy active) | Exit status to return when `--fail-on` matches. Setting `--exit-code` without `--fail-on` implies failing on **any** component. |
-| `--fail-on <expr>` | string | — | CI policy expression evaluated over the assembled inventory: kinds, detector tags, confidence bands, and risk signals (e.g. `"hosted-llm"`, `"pickle-risk"`, `"hosted-llm&confidence>=0.9"`). *The expression grammar is finalized in Phase 3 alongside `--select`.* |
+| `--fail-on <expr>` | string | — | CI policy expression evaluated over the assembled inventory. Grammar (finalized in Phase 3): OR-of-AND clauses — `expr = clause *("\|" clause)`, `clause = term *("&" term)`; a term is a kind/tag identifier (`hosted-llm`, `pickle-risk`) or `confidence OP n` with OP ∈ `>= <= > < =` and n ∈ [0,1]. `&` binds tighter than `\|`. Examples: `"hosted-llm"`, `"hosted-llm&confidence>=0.9"`, `"local-model-file\|hosted-llm&confidence>=0.8"`. Identifier terms are validated against the kind/tag vocabulary when the domain model lands (Phase 5). |
 | `--offline` | bool | `false` | Assert no network access for the entire run; any operation that would touch the network fails fast instead. (`fs`, local `repo`, and `image --input` scans perform no network access regardless.) |
 | `--pprof [addr]` | string | disabled | Serve `net/http/pprof`; bare flag binds `localhost:6060`. |
 | `--trace <file>` | path | — | Write a Go execution trace with per-phase regions (walk / detect / phase-2 / assemble / write). |
@@ -231,8 +232,8 @@ $ airom rules list --rules ./mycorp-overrides.yaml
 Contributor scaffolding: `new-rulepack` creates a pack skeleton plus fixture files under
 `rules/models/` (category selectable via `--category`); `new-detector` creates a Go
 detector package skeleton with a `detectortest` harness test. Both are walked end-to-end in
-[plugin-guide.md](./plugin-guide.md). Command surface lands in Phase 3; the scaffold
-templates ship with Phase 6.
+[plugin-guide.md](./plugin-guide.md). The command group ships together with its scaffold
+templates in Phase 6.
 
 ### `airom clean`
 

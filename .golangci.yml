@@ -33,6 +33,15 @@ linters:
     misspell:
       locale: US
 
+    errcheck:
+      # fmt.Fprint* to a cobra command's stdout/stderr writer has no
+      # meaningful error-handling path in a CLI; every other error return
+      # stays checked (including os.* and io.Closer).
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+
     gosec:
       # No global excludes. AIROM is a security tool whose parsers eat
       # untrusted bytes (§13); suppress individual findings with an inline
