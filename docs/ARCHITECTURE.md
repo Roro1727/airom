@@ -1,6 +1,6 @@
 # AIROM Architecture
 
-> **Status:** Accepted (v1 design baseline) · **Phase:** 1 of 10 · **License:** MIT
+> **Status:** Accepted (v1 design baseline) · **Phase:** 1 of 10 · **License:** Apache-2.0
 >
 > AIROM is to AI systems what Trivy is to SBOMs: a single static Go binary that discovers AI
 > assets in a filesystem, source repository, container image, or Kubernetes workload and emits

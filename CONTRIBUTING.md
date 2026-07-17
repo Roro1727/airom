@@ -97,5 +97,6 @@ so we can agree on the shape — those touch shared seams.
 
 ## License
 
-AIROM is MIT-licensed. By contributing, you agree that your contributions are
-licensed under the same terms.
+AIROM is licensed under the [Apache License 2.0](LICENSE). By contributing, you
+agree that your contributions will be licensed under the same terms (Apache-2.0
+inbound = outbound), per section 5 of the license.

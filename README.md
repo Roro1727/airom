@@ -1,12 +1,14 @@
 # AIROM
 
-**AIROM is to AI systems what Trivy is to SBOMs** — a single static binary that discovers every AI asset in a filesystem, source repository, container image, or Kubernetes cluster and emits an AI Bill of Materials (AIBOM) with file:line evidence behind every entry.
+**Open-source AI Bill of Materials (AIBOM) scanner.**
+
+AIROM is an open-source scanner that discovers AI assets — including models, prompts, datasets, embeddings, vector databases, and AI frameworks — and generates AI Bills of Materials (AIBOMs). It runs as a single static binary over a filesystem, source repository, container image, or Kubernetes cluster, and puts `file:line` evidence behind every entry.
 
 [![CI](https://github.com/Roro1727/airom/actions/workflows/ci.yml/badge.svg)](https://github.com/Roro1727/airom/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Roro1727/airom?include_prereleases)](https://github.com/Roro1727/airom/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Roro1727/airom)](https://goreportcard.com/report/github.com/Roro1727/airom)
 [![Go Reference](https://pkg.go.dev/badge/github.com/Roro1727/airom.svg)](https://pkg.go.dev/github.com/Roro1727/airom)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 > **Pre-release.** AIROM is under active development (v0.1.0-dev, unpublished). The design below is fixed; see [Project status](#project-status) for what is implemented today versus in flight.
 
@@ -27,6 +29,8 @@ AIROM is **evidence-first**. Every component in the output carries:
 - **A calibrated confidence score** — with the arithmetic behind it, not a vibe
 
 That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occurrences[]` — a spec-native home for "seen at file:line, by technique T, with confidence C" that **no other shipping AIBOM tool populates** — plus a SARIF projection so the same findings land as annotations in GitHub Code Scanning. One scan, one graph, every format a pure projection of it.
+
+> **How it relates to SBOM tooling.** Think of AIROM as playing a role for AI assets similar to the role Trivy plays for software dependencies: where Trivy inventories software packages to produce an SBOM, AIROM inventories AI-specific assets to produce an AIBOM. AIROM is its own tool with its own problem space — the analogy is just a quick way in.
 
 ## What AIROM detects
 
@@ -67,7 +71,7 @@ Prebuilt, cosign-signed binaries will ship on the [releases page](https://github
 # Auto-detect the target: directory, git URL, or image reference
 airom scan .
 
-# Explicit nouns, Trivy-style
+# Explicit nouns — one subcommand per target type
 airom fs ./my-service
 airom repo https://github.com/org/rag-app
 airom image nginx:latest
@@ -209,7 +213,7 @@ No FUD, just positioning — the tools below solve different problems:
 | CycloneDX `evidence.occurrences[]` | **Emitted** | Not emitted | Not emitted |
 | Coverage | Hosted APIs **and** local weights **and** frameworks, vector DBs, prompts, datasets, params, infra, RAG graphs | The named model | Usually model files and/or a curated subset |
 | Distribution | Single static Go binary, offline-capable | Python package | Agent or SaaS |
-| License | MIT | Varies (often open source) | Proprietary |
+| License | Apache 2.0 | Varies (often open source) | Proprietary |
 
 If you already know exactly which registry model you use and want its card, a registry-centric generator is the right tool. AIROM is for when the ground truth is your codebase and you have to prove it.
 
@@ -231,4 +235,4 @@ Start with [docs/plugin-guide.md](docs/plugin-guide.md) (a `CONTRIBUTING.md` lan
 
 ## License
 
-[MIT](LICENSE) © AIROM contributors
+Licensed under the [Apache License 2.0](LICENSE). © AIROM contributors
