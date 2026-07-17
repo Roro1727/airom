@@ -240,6 +240,33 @@ func stringsKey(k *koanf.Koanf, key string) []string {
 // fully-layered configuration. Command-specific flags (image --input, k8s
 // --namespace, ...) flow through the same layering because cobra merges
 // them into cmd.Flags() at execution time.
+// reconcileVerbosity resolves -v and -q against each other and against the
+// env/file layers, returning the effective pair.
+//
+// It lives here, called by both setupLogging and buildConfig, because verbosity
+// has to mean ONE thing. When each derived it independently, `-v` against a
+// file's `quiet: true` turned logging on (correct) while leaving Config.Quiet
+// true, so the progress indicator stayed off — the opposite of what the user
+// asked for, and invisible.
+//
+// An explicit flag beats the env/file layers; between two explicit flags, -q and
+// -v contradict and are rejected; between two layered values, quiet wins because
+// less noise is the safe default.
+func reconcileVerbosity(flags *pflag.FlagSet, verbose int, quiet bool) (int, bool, error) {
+	vChanged, qChanged := flags.Changed("verbose"), flags.Changed("quiet")
+	switch {
+	case vChanged && qChanged && quiet && verbose > 0:
+		return 0, false, &app.UsageError{Err: errors.New("-q and -v are mutually exclusive")}
+	case vChanged && !qChanged:
+		quiet = false
+	case qChanged && !vChanged:
+		verbose = 0
+	case quiet && verbose > 0:
+		verbose = 0
+	}
+	return verbose, quiet, nil
+}
+
 func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, target string) (*app.Config, error) {
 	l, err := loadLayers(flags, workdir)
 	if err != nil {
@@ -286,6 +313,18 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 			return nil, &app.UsageError{Err: err}
 		}
 		*dst = v
+	}
+
+	// Same rule the logger uses, from the same helper. Deriving `quiet` twice is
+	// what let `-v` clear a file's `quiet: true` for logging while the Config
+	// kept Quiet=true — silently suppressing the progress indicator for the one
+	// user who explicitly asked for more output.
+	verbose, err := intKey(k, "verbose")
+	if err != nil {
+		return nil, &app.UsageError{Err: err}
+	}
+	if _, quiet, err = reconcileVerbosity(flags, verbose, quiet); err != nil {
+		return nil, err
 	}
 
 	policy, exitCode, err := resolvePolicy(k)

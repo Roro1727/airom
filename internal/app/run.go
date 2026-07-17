@@ -114,7 +114,10 @@ func runFS(ctx context.Context, cfg *Config) error {
 // runRepo scans a git repository: a remote URL is shallow-cloned (exec-git),
 // a local path is scanned as its worktree; git provenance feeds the output.
 func runRepo(ctx context.Context, cfg *Config) error {
-	src, err := gitsource.New(cfg.Target, gitsource.Options{IgnoreGlobs: cfg.IgnoreGlobs})
+	src, err := gitsource.New(cfg.Target, gitsource.Options{
+		IgnoreGlobs: cfg.IgnoreGlobs,
+		Offline:     cfg.Offline,
+	})
 	if err != nil {
 		return &UsageError{Err: err}
 	}
@@ -162,7 +165,13 @@ func runImage(ctx context.Context, cfg *Config) error {
 // enumerates workload images; each unique image is then scanned. Live-cluster
 // mode is not yet wired (k8ssource reports so).
 func runK8s(ctx context.Context, cfg *Config) error {
-	src, err := k8ssource.New(k8ssource.Options{ManifestsDir: cfg.K8sManifests})
+	// K8sAllNamespaces is the default in manifest mode (there is no "current"
+	// namespace to be restricted to), so -A simply asserts it; only --namespace
+	// narrows. Validate rejects the two together.
+	src, err := k8ssource.New(k8ssource.Options{
+		ManifestsDir: cfg.K8sManifests,
+		Namespace:    cfg.K8sNamespace,
+	})
 	if err != nil {
 		return &UsageError{Err: err}
 	}

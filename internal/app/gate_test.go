@@ -52,7 +52,10 @@ func TestPolicyMatches(t *testing.T) {
 		{"pickle-risk", inv, true},                   // the .pt flagged os.system
 		{"pickle-risk&confidence>=0.95", inv, false}, // the risky model is 0.9
 		{"confidence>=0.95", inv, true},              // openai
-		{"application", inv, false},                  // the root never counts
+		// "application" is no longer expressible: it is rejected at parse time
+		// (TestParsePolicyRejectsUnknownIdentifiers) precisely because it could
+		// only ever return false here. The root-never-counts rule itself is
+		// still exercised below, via MatchAny against rootOnly.
 	}
 	for _, tc := range cases {
 		if got := mustParse(tc.expr).Matches(tc.inv); got != tc.want {

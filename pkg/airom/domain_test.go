@@ -56,3 +56,27 @@ func TestConfidenceBand(t *testing.T) {
 		t.Error("Band boundaries wrong")
 	}
 }
+
+// TestKindsIsComplete guards the one hazard of a hand-written enumeration: a new
+// ComponentKind const that never reaches Kinds(). That would be silent —
+// --fail-on validates against Kinds(), so a missing entry makes the new kind
+// un-gate-able with a "want one of" message that omits it.
+//
+// If you added a kind: add it to Kinds() and bump the count here and in the
+// "The thirteen component kinds" comment.
+func TestKindsIsComplete(t *testing.T) {
+	const want = 13
+	if got := len(Kinds()); got != want {
+		t.Errorf("len(Kinds()) = %d, want %d — add the new kind to Kinds()", got, want)
+	}
+	seen := map[ComponentKind]bool{}
+	for _, k := range Kinds() {
+		if k == "" {
+			t.Error("Kinds() contains the empty kind")
+		}
+		if seen[k] {
+			t.Errorf("Kinds() lists %q twice", k)
+		}
+		seen[k] = true
+	}
+}

@@ -2,6 +2,7 @@ package gitsource
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -200,4 +201,42 @@ func TestRemoteURLDetection(t *testing.T) {
 			t.Errorf("New(%q) error = %q, want it to mention the target", url, got)
 		}
 	}
+}
+
+// TestOfflineRefusesRemoteBeforeTouchingTheNetwork pins the promise --offline
+// makes. It used to be inert: Config.Offline was parsed, validated, threaded
+// into the Config — and never read, so `airom repo <url> --offline` ran the
+// clone and hit DNS. An air-gap assertion that only fails after it has already
+// reached the network is worse than no flag at all.
+func TestOfflineRefusesRemoteBeforeTouchingTheNetwork(t *testing.T) {
+	for _, url := range []string{
+		"https://example.invalid/x.git",
+		"http://example.invalid/x.git",
+		"ssh://git@example.invalid/x.git",
+		"git://example.invalid/x.git",
+		"git@example.invalid:org/x.git",
+	} {
+		_, err := New(url, Options{Offline: true})
+		if err == nil {
+			t.Errorf("New(%q, Offline) = nil error; a remote clone must be refused", url)
+			continue
+		}
+		if !errors.Is(err, ErrOfflineViolation) {
+			t.Errorf("New(%q, Offline) error = %v; want ErrOfflineViolation so the CLI can report it as a usage error", url, err)
+		}
+	}
+}
+
+// TestOfflineStillScansALocalWorktree: --offline forbids the network, not the
+// tool. A local path needs nothing and must keep working.
+func TestOfflineStillScansALocalWorktree(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "app.py"), []byte("import openai\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	src, err := New(dir, Options{Offline: true})
+	if err != nil {
+		t.Fatalf("New(local, Offline): %v; offline must not disable local scanning", err)
+	}
+	t.Cleanup(func() { _ = src.Close() })
 }

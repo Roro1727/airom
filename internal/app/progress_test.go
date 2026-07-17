@@ -133,3 +133,34 @@ func TestShortenPath(t *testing.T) {
 		t.Errorf("shortenPath produced invalid UTF-8: %q", uni)
 	}
 }
+
+// TestHumanCountGroupsDigitsNotTheSign: the sign is not a digit. Counting it as
+// one put it in its own leading group, so -123 rendered as "-,123". Unreachable
+// from the live counters (they only ever Add(1) from zero), but a formatter that
+// is wrong on half its domain is a trap for the next caller.
+func TestHumanCountGroupsDigitsNotTheSign(t *testing.T) {
+	cases := []struct {
+		in   int64
+		want string
+	}{
+		{0, "0"},
+		{7, "7"},
+		{999, "999"},
+		{1000, "1,000"},
+		{1284, "1,284"},
+		{12345, "12,345"},
+		{123456, "123,456"},
+		{1234567, "1,234,567"},
+		{-1, "-1"},
+		{-999, "-999"},
+		{-123, "-123"},        // was "-,123"
+		{-123456, "-123,456"}, // was "-,123,456"
+		{-1000, "-1,000"},
+		{-1234567, "-1,234,567"},
+	}
+	for _, c := range cases {
+		if got := humanCount(c.in); got != c.want {
+			t.Errorf("humanCount(%d) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}

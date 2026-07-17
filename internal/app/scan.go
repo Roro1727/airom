@@ -66,6 +66,11 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 	// Progress is presentation-only and stderr-only: it never reaches stdout,
 	// so the emitted AIBOM stays byte-identical (P7). Disabled off a terminal.
 	live, stopProgress := startProgress(cfg, cfg.Target)
+	// Deferred, not merely called after Scan: a panic between here and there
+	// would otherwise leave the cursor hidden and slog permanently routed
+	// through a dead spinner. Stop is idempotent, so the explicit call below —
+	// which ends the animation before anything is printed — still stands.
+	defer stopProgress()
 
 	eng := engine.New(engine.Options{
 		Parallel:    cfg.Parallel,

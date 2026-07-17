@@ -138,16 +138,8 @@ func setupLogging(cmd *cobra.Command) error {
 			return &app.UsageError{Err: err}
 		}
 
-		vChanged, qChanged := cmd.Flags().Changed("verbose"), cmd.Flags().Changed("quiet")
-		switch {
-		case vChanged && qChanged && quiet && verbose > 0:
-			return &app.UsageError{Err: errors.New("-q and -v are mutually exclusive")}
-		case vChanged && !qChanged:
-			quiet = false // explicit -v overrides env/file quiet
-		case qChanged && !vChanged:
-			verbose = 0 // explicit -q overrides env/file verbose
-		case quiet && verbose > 0:
-			verbose = 0 // both from env/file: quiet wins (less noise is the safe default)
+		if verbose, quiet, err = reconcileVerbosity(cmd.Flags(), verbose, quiet); err != nil {
+			return err
 		}
 	}
 

@@ -98,18 +98,17 @@ func sniff(p string, header []byte) (format string, method airom.DetectionMethod
 		return format, airom.MethodBinary, confFormat, true
 
 	case ".jsonl":
-		fields := jsonlFields(header)
-		if fields == nil { // not JSON Lines at all
-			return "", "", 0, false
-		}
-		return textual("jsonl", fieldSignal(fields), named)
+		// A failed parse is not a verdict, only a missing signal: JSONL of bare
+		// arrays, a leading blank line, or an unfamiliar encoding all land here
+		// while still being `data/train.jsonl`. Fall through to the name the way
+		// the Parquet branch above does, rather than deleting the file outright.
+		return textual("jsonl", fieldSignal(jsonlFields(header)), named)
 
 	case ".csv":
-		fields := csvFields(header)
-		if fields == nil { // not a delimited record
-			return "", "", 0, false
-		}
-		return textual("csv", fieldSignal(fields), named)
+		// Likewise: a semicolon-delimited export (the EU Excel locale) or a
+		// single-column corpus yields no fields but is still corroborated by a
+		// dataset name.
+		return textual("csv", fieldSignal(csvFields(header)), named)
 	}
 	return "", "", 0, false
 }
@@ -130,9 +129,18 @@ func textual(format string, fields, named bool) (string, airom.DetectionMethod, 
 	}
 }
 
-// firstLine returns the first line of the sample with surrounding whitespace
-// trimmed, without its terminator.
+// utf8BOM is the UTF-8 byte order mark. Excel's "Save as CSV UTF-8", pandas'
+// encoding="utf-8-sig" and PowerShell's Export-Csv all emit it, so it arrives on
+// mainstream real-world datasets. It is not whitespace (U+FEFF is White_Space=No),
+// so bytes.TrimSpace leaves it in place — where it corrupts the first column
+// name into a "<BOM>prompt" no lookup matches and, worse, hides a JSON line's
+// leading brace.
+var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
+
+// firstLine returns the first line of the sample with any byte order mark and
+// surrounding whitespace trimmed, without its terminator.
 func firstLine(b []byte) []byte {
+	b = bytes.TrimPrefix(b, utf8BOM)
 	if i := bytes.IndexByte(b, '\n'); i >= 0 {
 		b = b[:i]
 	}

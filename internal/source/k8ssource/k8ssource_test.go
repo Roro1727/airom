@@ -265,3 +265,52 @@ func TestContractBasics(t *testing.T) {
 		t.Errorf("Resolver.Open = nil error, want error")
 	}
 }
+
+// TestNamespaceFilter pins a flag that was advertised and ignored: --namespace
+// reached Config and stopped there, so `--namespace does-not-exist` happily
+// returned every namespace's images — a filter that silently does nothing is
+// worse than one that is absent.
+func TestNamespaceFilter(t *testing.T) {
+	dir := t.TempDir()
+	manifests := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: alpha, namespace: team-alpha}
+spec: {template: {spec: {containers: [{name: a, image: alpine:3.19}]}}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: beta, namespace: team-beta}
+spec: {template: {spec: {containers: [{name: b, image: busybox:1.36}]}}}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: nons}
+spec: {containers: [{name: c, image: redis:7}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "w.yaml"), []byte(manifests), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		ns   string
+		want []string
+	}{
+		{"", []string{"alpine:3.19", "busybox:1.36", "redis:7"}},
+		{"team-alpha", []string{"alpine:3.19"}},
+		{"team-beta", []string{"busybox:1.36"}},
+		// A manifest with no metadata.namespace is where kubectl apply would
+		// put it: default.
+		{"default", []string{"redis:7"}},
+		{"does-not-exist", []string{}}, // empty, not nil: Images() always returns a slice
+	}
+	for _, c := range cases {
+		s, err := New(Options{ManifestsDir: dir, Namespace: c.ns})
+		if err != nil {
+			t.Fatalf("New(ns=%q): %v", c.ns, err)
+		}
+		got := s.Images() // already deduped and sorted by ref
+		if !reflect.DeepEqual(got, c.want) {
+			t.Errorf("Namespace=%q: images = %v, want %v", c.ns, got, c.want)
+		}
+	}
+}

@@ -54,6 +54,16 @@ type Options struct {
 	// ManifestsDir enables offline manifest mode; when empty, New errors
 	// (live-cluster mode is unimplemented).
 	ManifestsDir string
+
+	// Namespace restricts the scan to workloads in one namespace. Empty means
+	// every namespace in the manifests.
+	//
+	// A manifest with no explicit metadata.namespace is treated as "default",
+	// which is where `kubectl apply` would put it absent an -n override. That is
+	// a guess about apply-time context, but it is the same guess kubectl makes,
+	// and the alternative — silently matching nothing — is how this filter was
+	// broken before.
+	Namespace string
 }
 
 // Image is a unique container image discovered across the manifests, plus any
@@ -66,7 +76,8 @@ type Image struct {
 
 // Source is the offline k8s implementation of source.Source.
 type Source struct {
-	dir string
+	dir       string
+	namespace string // "" scans every namespace
 
 	images   []Image // deduped, sorted by Ref
 	byRef    map[string]*Image
@@ -92,7 +103,7 @@ func New(opts Options) (*Source, error) {
 	if !st.IsDir() {
 		return nil, fmt.Errorf("k8s source: %q is not a directory", opts.ManifestsDir)
 	}
-	s := &Source{dir: abs, byRef: map[string]*Image{}}
+	s := &Source{dir: abs, namespace: opts.Namespace, byRef: map[string]*Image{}}
 	s.parse()
 	return s, nil
 }
@@ -148,9 +159,28 @@ func (s *Source) parseFile(path string) {
 	}
 }
 
+// defaultNamespace is where a manifest without an explicit metadata.namespace
+// lands under `kubectl apply` with no -n override.
+const defaultNamespace = "default"
+
+// inScope reports whether the document passes the namespace filter.
+func (s *Source) inScope(doc workload) bool {
+	if s.namespace == "" {
+		return true // every namespace
+	}
+	ns := doc.Metadata.Namespace
+	if ns == "" {
+		ns = defaultNamespace
+	}
+	return ns == s.namespace
+}
+
 // collect records the images (and AI signals) from one workload document.
 func (s *Source) collect(doc workload) {
 	if !recognizedKinds[doc.Kind] {
+		return
+	}
+	if !s.inScope(doc) {
 		return
 	}
 	where := doc.Kind

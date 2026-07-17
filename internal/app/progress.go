@@ -19,6 +19,10 @@ var stderr *os.File = os.Stderr
 // be inappropriate or harmful:
 //
 //   - not a terminal (piped, redirected, CI) — the bytes must not change
+//   - a terminal that cannot render ANSI (TERM=dumb or unset, NO_COLOR) — the
+//     spinner is nothing BUT ANSI: without an interpreter, \r never returns and
+//     \x1b[2K never erases, so every tick lands as another line of escape-code
+//     litter. TERM=dumb is what Emacs M-x shell and some CI runners set.
 //   - --quiet — the user asked for errors only
 //   - --no-progress — the user said so explicitly
 //
@@ -29,7 +33,10 @@ var stderr *os.File = os.Stderr
 // the spinner line, prints cleanly, and lets the next tick redraw. The previous
 // logger is restored on stop.
 func startProgress(cfg *Config, target string) (*engine.Live, func()) {
-	enabled := !cfg.Quiet && !cfg.NoProgress && tui.IsTTY(stderr)
+	// ColorEnabled carries the "can this terminal interpret ANSI at all?"
+	// question (NO_COLOR, TERM=dumb), which governs the spinner as much as it
+	// governs the palette — hence both checks, not just IsTTY.
+	enabled := !cfg.Quiet && !cfg.NoProgress && tui.IsTTY(stderr) && tui.ColorEnabled(stderr)
 	if !enabled {
 		return nil, func() {}
 	}
@@ -82,9 +89,17 @@ func currentLogLevel() slog.Level {
 // humanCount renders a count with thousands separators: 1284 -> "1,284".
 func humanCount(n int64) string {
 	s := strconv.FormatInt(n, 10)
-	if len(s) <= 3 {
-		return s
+	// Group the digits only. Counting the sign as one would put it in its own
+	// leading group, rendering -123 as "-,123".
+	sign := ""
+	if strings.HasPrefix(s, "-") {
+		sign, s = "-", s[1:]
 	}
+	if len(s) <= 3 {
+		return sign + s
+	}
+	// The sign stays out of the builder: the loop uses b.Len() to mean "a group
+	// is already written", and a "-" sitting there reads as one.
 	var b strings.Builder
 	lead := len(s) % 3
 	if lead > 0 {
@@ -96,7 +111,7 @@ func humanCount(n int64) string {
 		}
 		b.WriteString(s[i : i+3])
 	}
-	return b.String()
+	return sign + b.String()
 }
 
 // shortenPath keeps a long target readable on one line, keeping the tail (the

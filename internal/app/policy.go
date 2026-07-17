@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -15,20 +16,19 @@ import (
 //	expr    = clause *( "|" clause )        ; OR of clauses
 //	clause  = term   *( "&" term )          ; AND of terms
 //	term    = ident | comparison
-//	ident   = lowercase kebab identifier    ; a ComponentKind ("hosted-llm"),
-//	                                        ; detector tag, or risk signal
-//	                                        ; ("pickle-risk")
+//	ident   = a ComponentKind ("hosted-llm") or a risk signal ("pickle-risk")
 //	comparison = "confidence" op number     ; op: >= <= > < =
 //
 // "&" binds tighter than "|". Whitespace around tokens is ignored.
 // Examples: "hosted-llm", "pickle-risk", "hosted-llm&confidence>=0.9",
 // "local-model-file|hosted-llm&confidence>=0.8".
 //
-// Identifier terms are validated syntactically here; semantic validation
-// against the ComponentKind enum and detector tags happens when the domain
-// model lands (Phase 5), so an unknown kind fails loudly at parse time then
-// rather than silently never matching. Evaluation against an assembled
-// Inventory also lands in Phase 5 alongside the domain types.
+// Identifiers are validated against knownIdents at parse time, so an unknown
+// term fails loudly instead of silently never matching.
+//
+// Detector tags are NOT terms. Components record the kind they are, not the
+// detector that found them, so a tag has nothing to match against here; the
+// grammar once advertised tags and they never worked.
 type Policy struct {
 	raw   string
 	anyOf []conjunction
@@ -105,9 +105,45 @@ func parseTerm(raw string) (term, error) {
 		return term{}, fmt.Errorf("bad confidence comparison %q (want e.g. confidence>=0.9)", s)
 	}
 	if !identRe.MatchString(s) {
-		return term{}, fmt.Errorf("bad term %q (want a kind/tag like hosted-llm, or confidence>=N)", s)
+		return term{}, fmt.Errorf("bad term %q (want a kind like hosted-llm, or confidence>=N)", s)
+	}
+	if !knownIdents[s] {
+		return term{}, fmt.Errorf("unknown term %q; want one of: %s, or a comparison like confidence>=0.9",
+			s, strings.Join(knownIdentList(), ", "))
 	}
 	return term{Ident: s}, nil
+}
+
+// knownIdents are the identifier terms that can actually match: every
+// ComponentKind, plus the risk signals termMatches understands.
+//
+// Validating against this is the difference between a CI gate and CI theater.
+// `--fail-on hosted-llmm` used to parse happily and then never match, so the
+// gate passed forever and said nothing — the one place in this CLI where silence
+// is dangerous. It is also the contract the rest of the tool already keeps:
+// `--select` rejects an unknown detector ID loudly (engine/catalog.go).
+//
+// KindApplication is deliberately absent: Matches skips the scan root, so
+// `--fail-on application` could never fire and admitting it would recreate the
+// very bug this map exists to prevent.
+var knownIdents = func() map[string]bool {
+	m := map[string]bool{"pickle-risk": true}
+	for _, k := range airom.Kinds() {
+		if k != airom.KindApplication {
+			m[string(k)] = true
+		}
+	}
+	return m
+}()
+
+// knownIdentList returns the valid identifiers, sorted, for error messages.
+func knownIdentList() []string {
+	out := make([]string, 0, len(knownIdents))
+	for k := range knownIdents {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // String returns the original, trimmed expression.

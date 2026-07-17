@@ -26,11 +26,23 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.String("max-file-size", formatSize(app.DefaultMaxFileSize), "full-content read cap for text detectors (k/m/g suffixes)")
 	fs.Float64("min-confidence", 0, "presentation-layer confidence filter, 0-1")
 	fs.StringArray("ignore", nil, "additional ignore glob; repeatable; applied on top of .gitignore/.airomignore")
-	fs.String("cache-dir", "", "scan cache location (default: <user cache dir>/airom)")
-	fs.Bool("no-cache", false, "disable cache reads and writes for this run")
+	// The two-tier cache (internal/cache) is not implemented yet, so these
+	// configure nothing. Say so rather than describing behavior the binary does
+	// not have — `airom clean` does still use --cache-dir.
+	// No backquotes in usage strings: pflag reads backquoted text as the flag's
+	// placeholder name, so "`airom clean`" renders as "--cache-dir airom clean".
+	fs.String("cache-dir", "", "scan cache location (default: <user cache dir>/airom); used by 'airom clean' — caching itself is not implemented yet")
+	fs.Bool("no-cache", false, "disable cache reads and writes (no-op: caching is not implemented yet, every scan is cold)")
 	fs.String("cdx-version", app.DefaultCDXVersion, "CycloneDX spec version: 1.6 or 1.7")
 	fs.Bool("sarif-strict-kinds", false, `emit spec-pure kind:"informational" instead of level:"note"`)
 	fs.Int("exit-code", exitCodeUnset, "exit status when --fail-on matches (default 1 when a policy is active; 0 reports matches without failing)")
+	// exitCodeUnset is a sentinel, not a default. pflag renders any non-zero
+	// default as "(default -1)", which is not a valid exit status and flatly
+	// contradicts the sentence above it. DefValue is display-only — parsing and
+	// Changed() read the Value — so clearing it to the type's zero suppresses the
+	// line and leaves the real defaults where they are already stated: in the
+	// help text.
+	fs.Lookup("exit-code").DefValue = "0"
 	fs.String("fail-on", "", `CI policy expression, e.g. "hosted-llm&confidence>=0.9" (see docs/cli.md)`)
 	fs.Bool("offline", false, "assert no network access for the entire run")
 	fs.String("pprof", "", "serve net/http/pprof (bare flag: localhost:6060; custom addr must be attached: --pprof=host:port)")

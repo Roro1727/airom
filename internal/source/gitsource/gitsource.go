@@ -19,6 +19,11 @@ import (
 // the underlying directory scan (the worktree, cloned or local).
 type Options struct {
 	IgnoreGlobs []string
+
+	// Offline forbids the network. A local worktree still scans; a remote URL
+	// fails fast, before the clone, rather than after it has already reached
+	// the network — which is the whole point of asserting it up front.
+	Offline bool
 }
 
 // Provenance records what revision was scanned, for the inventory root. All
@@ -55,6 +60,12 @@ var remoteURLRe = regexp.MustCompile(`^(https?://|ssh://|git://|git@)`)
 // errNoGitBinary signals that no git binary is on PATH.
 var errNoGitBinary = errors.New("git binary not found on PATH")
 
+// ErrOfflineViolation reports that an operation needed the network while
+// --offline was asserted. Exported so the CLI can present it as a usage error:
+// the user asked for a guarantee we cannot keep for this target, which is a
+// question about the request, not a failure of the scan.
+var ErrOfflineViolation = errors.New("--offline was asserted")
+
 // New prepares a git source. If target is an existing local path it is scanned
 // as a directory (best-effort git provenance is captured). If target is a
 // remote URL it is shallow-cloned into a temp dir which is scanned and removed
@@ -70,6 +81,9 @@ func New(target string, opts Options) (*Source, error) {
 		return newLocal(target, opts)
 	}
 	if remoteURLRe.MatchString(target) {
+		if opts.Offline {
+			return nil, fmt.Errorf("%w: cloning %q needs the network; scan a local worktree path instead", ErrOfflineViolation, target)
+		}
 		return newRemote(target, opts)
 	}
 	return nil, fmt.Errorf("git source %q: not an existing local path or a recognized remote URL (https, ssh, git://, or git@host:path)", target)

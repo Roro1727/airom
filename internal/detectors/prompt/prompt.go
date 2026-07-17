@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/airomhq/airom/pkg/airom"
@@ -53,17 +54,74 @@ var systemMarkers = []string{
 	"### instruction",
 }
 
+// chatMarkers are chat-template machinery with no meaning outside an LLM: the
+// HuggingFace chat_template vocabulary and the common special tokens.
+var chatMarkers = []string{
+	"add_generation_prompt", "bos_token", "eos_token",
+	"<|im_start|>", "<|im_end|>", "<|system|>", "<|user|>", "<|assistant|>",
+	"[inst]", "<<sys>>",
+}
+
+// chatRoleTest matches a role BOUND or COMPARED to a chat role literal:
+// `role == "system"`, `"role": "user"`, `- role: assistant`. That pairing is the
+// chat-completion shape itself.
+var chatRoleTest = regexp.MustCompile(`\brole\b["']?\s*(?:==|!=|=|:|\bin\b)\s*[\[("']*\s*(?:system|user|assistant)\b`)
+
 // chatShaped reports whether a template carries chat-completion structure.
 //
-// Requiring the SHAPE, not a single word, is what separates an LLM prompt from a
-// code generator's template. `{% if role == "system" %}` is a chat prompt; an
-// OpenTelemetry codegen template (metric.go.j2) may well contain the word
-// "system" on its own, and matching that alone reported it as a prompt.
+// This must test the SHAPE, not a bag of words. Asking only whether the words
+// "role" and "system" both appear somewhere reports every RBAC, permissions and
+// Kubernetes-manifest generator on earth as a prompt — and substring matching
+// makes it worse still, since "systemd" contains "system" and "roles" contains
+// "role". What actually distinguishes a chat template is a role bound to a chat
+// role literal, a loop over `messages`, or the special tokens above; a codegen
+// template mentions the same words as unrelated identifiers and forms none of
+// those.
 func chatShaped(lower string) bool {
-	if strings.Contains(lower, "assistant") {
+	if containsAny(lower, chatMarkers) || chatRoleTest.MatchString(lower) {
 		return true
 	}
-	return strings.Contains(lower, "role") && strings.Contains(lower, "system")
+	// "assistant" names a chat role and little else.
+	if hasWord(lower, "assistant") {
+		return true
+	}
+	// The transformers chat_template shape: `{% for message in messages %}
+	// {{ message['role'] }}`. Note `messages` is a strong dataset field in this
+	// codebase's own vocabulary (dataset/signals.go) for the same reason.
+	return hasWord(lower, "messages") && hasWord(lower, "role")
+}
+
+// hasWord reports whether the (already lowercased) text holds tok as a whole
+// word. Substring matching is not good enough here: "subsystem" and "systemd"
+// must not answer a test for "system", nor "roles" one for "role".
+func hasWord(lower, tok string) bool {
+	for i := 0; i+len(tok) <= len(lower); {
+		j := strings.Index(lower[i:], tok)
+		if j < 0 {
+			return false
+		}
+		j += i
+		if wordEdge(lower, j-1) && wordEdge(lower, j+len(tok)) {
+			return true
+		}
+		i = j + 1
+	}
+	return false
+}
+
+// wordEdge reports whether index i falls outside the text or on a byte that
+// cannot continue an identifier.
+func wordEdge(lower string, i int) bool {
+	if i < 0 || i >= len(lower) {
+		return true
+	}
+	return !identByte(lower[i])
+}
+
+// identByte reports whether c can continue an identifier. The text is already
+// lowercased, so the letter range is a-z only.
+func identByte(c byte) bool {
+	return c == '_' || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
 }
 
 // promptExts are the extensions a standalone prompt ASSET can carry.
@@ -75,10 +133,13 @@ func chatShaped(lower string) bool {
 // exists only to judge whether a whole TEXT file is a prompt. So code is refused
 // here regardless of where it sits. The empty string admits extensionless files
 // (a bare `system-prompt`).
+// `.json`/`.toml` belong here for the same reason `.yaml` does: a prompt stored
+// as data is data, not code, and prompts/greeting.json is no more a program than
+// the prompts/greeting.yaml beside it.
 var promptExts = map[string]bool{
 	"": true, ".prompt": true, ".txt": true, ".md": true,
 	".jinja": true, ".jinja2": true, ".j2": true,
-	".yaml": true, ".yml": true, ".tmpl": true,
+	".yaml": true, ".yml": true, ".json": true, ".toml": true, ".tmpl": true,
 }
 
 // namedAsPrompt reports whether the PATH claims the file is a prompt: a

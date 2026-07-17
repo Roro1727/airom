@@ -1,16 +1,22 @@
 # AIROM CLI Reference
 
-> **Status: implemented as of Phase 4** — the full command surface, config layering, the
-> exit-code contract, and the `--fail-on` grammar ([ARCHITECTURE.md §12](./ARCHITECTURE.md#12-cli),
-> decisions D15/D17). `scan <dir>` and `fs` run **real scans** (walking, classification,
-> read-once pipeline); detectors land in Phase 5 and output writers in Phase 7, so scans
-> currently report honest counters. `repo`, `image`, and `k8s` fail fast with a clear error
-> until their sources land (Phase 6). `--cache-dir`/`--no-cache` are accepted but inert
-> until `internal/cache` lands. As of Phase 6 the full detector set, 47 embedded rule packs (98 rules),
-> and the `detectors`/`rules`/`dev` command groups are live. Source coverage: `fs` and
-> `repo` (local worktrees; remote clone via an installed `git`) are complete; `image` scans
-> docker-save/OCI archives and OCI layouts (live registry/daemon pull is a follow-up); `k8s
-> --manifests` enumerates workload images offline (live-cluster scanning is a follow-up).
+> **Status** — the command surface, config layering, the exit-code contract, and the
+> `--fail-on` grammar are implemented ([ARCHITECTURE.md §12](./ARCHITECTURE.md#12-cli),
+> decisions D15/D17), as are the full detector set, the 47 embedded rule packs (98 rules),
+> the five output writers, and the `detectors`/`rules`/`dev` command groups.
+>
+> Source coverage: `fs` and `repo` are complete (local worktrees, plus remote clone via an
+> installed `git`). `image` scans docker-save/OCI archives and OCI layouts. `k8s --manifests`
+> enumerates workload images from manifest YAML or rendered Helm output.
+>
+> **Not implemented yet**, and the affected flags say so in their own `--help`:
+>
+> - **Caching** (`internal/cache`) — every scan is cold. `--no-cache` is a no-op;
+>   `--cache-dir` is used only by `airom clean`.
+> - **Live registry/daemon image pulls** — `airom image <ref>` fails with a clear error;
+>   use `--input <archive>`. `--platform` therefore has nothing to select from.
+> - **Live-cluster scanning** — `airom k8s` without `--manifests` fails with a clear error.
+>   `--parallel-images` is a no-op, since manifest mode lists images rather than pulling them.
 
 Stack: cobra (command tree) + koanf (configuration) + stdlib `slog` (logging). One static
 binary, `CGO_ENABLED=0`, no daemon, no network unless the target requires it.
@@ -68,8 +74,8 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--cdx-version <v>` | string | `1.6` | CycloneDX spec version: `1.6` (default) or `1.7` (modelCard shape is identical in both). |
 | `--sarif-strict-kinds` | bool | `false` | Emit spec-pure `kind:"informational"` instead of the GitHub-Code-Scanning-compatible default `level:"note"`. |
 | `--exit-code N` | int | `1` (when policy active) | Exit status to return when `--fail-on` matches. Setting `--exit-code` without `--fail-on` implies failing on **any** component. An explicit `--exit-code 0` with `--fail-on` means "evaluate and report matches, but never fail the build". |
-| `--fail-on <expr>` | string | — | CI policy expression evaluated over the assembled inventory. Grammar (finalized in Phase 3): OR-of-AND clauses — `expr = clause *("\|" clause)`, `clause = term *("&" term)`; a term is a kind/tag identifier (`hosted-llm`, `pickle-risk`) or `confidence OP n` with OP ∈ `>= <= > < =` and n ∈ [0,1]. `&` binds tighter than `\|`. Examples: `"hosted-llm"`, `"hosted-llm&confidence>=0.9"`, `"local-model-file\|hosted-llm&confidence>=0.8"`. Identifier terms are validated against the kind/tag vocabulary when the domain model lands (Phase 5). |
-| `--offline` | bool | `false` | Assert no network access for the entire run; any operation that would touch the network fails fast instead. (`fs`, local `repo`, and `image --input` scans perform no network access regardless.) |
+| `--fail-on <expr>` | string | — | CI policy expression evaluated over the assembled inventory. Grammar (finalized in Phase 3): OR-of-AND clauses — `expr = clause *("\|" clause)`, `clause = term *("&" term)`; a term is a component kind (`hosted-llm`) or a risk signal (`pickle-risk`), or `confidence OP n` with OP ∈ `>= <= > < =` and n ∈ [0,1]. `&` binds tighter than `\|`. Examples: `"hosted-llm"`, `"hosted-llm&confidence>=0.9"`, `"local-model-file\|hosted-llm&confidence>=0.8"`. Identifiers are validated at parse time: an unknown term is a usage error, never a silently-passing gate. Detector tags are **not** terms — components record the kind they are, not the detector that found them. |
+| `--offline` | bool | `false` | Assert no network access for the entire run; an operation that would touch the network fails fast **before** reaching it, rather than erroring after the fact. In practice the one such operation is cloning a remote `repo` URL — `fs`, local `repo`, `image --input`, and `k8s --manifests` never touch the network, and live registry pulls / live-cluster scanning are not implemented (they fail regardless). |
 | `--pprof[=addr]` | string | disabled | Serve `net/http/pprof`; bare flag binds `localhost:6060`. A custom address must be attached with `=` (`--pprof=localhost:7070`) — the space-separated form is rejected with a pointer to this rule. |
 | `--trace <file>` | path | — | Write a Go execution trace with per-phase regions (walk / detect / phase-2 / assemble / write). |
 | `--stats` | bool | `false` | Emit the full `ScanStats` block (files walked/skipped, bytes read vs bytes in tree, cache hit rates, per-detector timings, selection explanation). Always collected; this controls emission. |
@@ -153,7 +159,7 @@ until then every scan is cold.
 
 ```console
 $ airom fs . -o table -o cyclonedx=aibom.cdx.json
-$ airom fs /srv/models --select "+modelfile/gguf,-dataset" --stats
+$ airom fs /srv/models --select "+modelfile/gguf,-dataset/file" --stats
 $ airom fs . --min-confidence 0.6 -q
 ```
 
@@ -216,15 +222,16 @@ $ airom detectors list --select "rules,+modelfile/gguf"
 $ airom detectors explain modelfile/gguf
 ```
 
-Illustrative `explain` output (final layout may differ):
+`explain` output:
 
-```
+```console
+$ airom detectors explain modelfile/gguf
 id:        modelfile/gguf
-version:   3
-type:      code (FileDetector, phase 1)
-selects:   ext .gguf · magic "GGUF" @0 · need: header · max-size: unlimited
-emits:     local-model-file (ModelFacet: architecture, param-count, quantization, context-length)
-method:    binary-analysis
+version:   1
+phase:     file
+selects:   ext:.gguf · magic:1 signature(s)
+need:      content
+selected:  selected by "default"
 ```
 
 ### `airom rules {list | lint <file> | test <file>}`
@@ -297,7 +304,7 @@ $ airom image --input dist/app-image.tar --offline -o json=aibom.json
 **Try an unmerged rule pack against your codebase:**
 
 ```console
-$ airom scan . --rules ./fireworks.yaml --select "+rules/fireworks"
+$ airom scan . --rules ./fireworks.yaml --select "rules"
 ```
 
 **Profile a slow scan:**

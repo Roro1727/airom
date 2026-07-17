@@ -40,6 +40,20 @@ const (
 	KindApplication    ComponentKind = "application" // the scan root
 )
 
+// Kinds returns every ComponentKind, in declaration order.
+//
+// It exists so that code validating user input against the enum — `--fail-on`
+// today — has one authoritative list to consult instead of a hand-copied second
+// one. Keep it in step with the constants above; TestKindsIsComplete guards the
+// count.
+func Kinds() []ComponentKind {
+	return []ComponentKind{
+		KindHostedLLM, KindLocalModelFile, KindEmbeddingModel, KindFramework,
+		KindLibrary, KindVectorDB, KindPrompt, KindDataset, KindAIConfig,
+		KindInfra, KindService, KindRAGPipeline, KindApplication,
+	}
+}
+
 // DetectionMethod aligns 1:1 with the CycloneDX evidence technique enum
 // (§5), so the CycloneDX writer is a cast, not a mapping table.
 type DetectionMethod string

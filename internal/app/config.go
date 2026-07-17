@@ -201,6 +201,9 @@ func (c *Config) Validate() error {
 	if c.Source == SourceImage && c.Target != "" && c.ImageInput != "" {
 		return fmt.Errorf("image: a reference and --input are mutually exclusive")
 	}
+	if c.Source == SourceK8s && c.K8sNamespace != "" && c.K8sAllNamespaces {
+		return fmt.Errorf("k8s: --namespace and --all-namespaces are mutually exclusive")
+	}
 	if c.Parallel < 0 {
 		return fmt.Errorf("--parallel must be >= 0, got %d", c.Parallel)
 	}

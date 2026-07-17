@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -36,6 +38,10 @@ func newDevRulePackCmd() *cobra.Command {
 			if !nameRe.MatchString(name) {
 				return &app.UsageError{Err: fmt.Errorf("pack name %q must match [a-z0-9-]+", name)}
 			}
+			if !ruleCategories[category] {
+				return &app.UsageError{Err: fmt.Errorf("category %q must be one of: %s",
+					category, strings.Join(ruleCategoryList(), "|"))}
+			}
 			dir := filepath.Join("rules", category)
 			packPath := filepath.Join(dir, name+".yaml")
 			fixtureDir := filepath.Join(dir, "testdata", name)
@@ -59,8 +65,30 @@ func newDevRulePackCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&category, "category", "models",
-		"rule category dir: models|embeddings|frameworks|vectordb|infra|params|prompts|datasets")
+		"rule category dir: "+strings.Join(ruleCategoryList(), "|"))
 	return cmd
+}
+
+// ruleCategories are the rule-pack category directories under rules/.
+//
+// The name arg was validated and this was not, so it reached
+// filepath.Join("rules", category) unchecked: `--category ../../escaped` wrote
+// the scaffold outside the tree, and a plain typo silently created a category
+// dir that does not exist. The flag's help already promised a closed set — this
+// is that set, and it feeds the help string so the two cannot drift.
+var ruleCategories = map[string]bool{
+	"models": true, "embeddings": true, "frameworks": true, "vectordb": true,
+	"infra": true, "params": true, "prompts": true, "datasets": true,
+}
+
+// ruleCategoryList returns the categories in a stable, documented order.
+func ruleCategoryList() []string {
+	out := make([]string, 0, len(ruleCategories))
+	for c := range ruleCategories {
+		out = append(out, c)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func newDevDetectorCmd() *cobra.Command {

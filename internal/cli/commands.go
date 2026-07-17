@@ -139,7 +139,7 @@ func newImageCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().String("input", "", "scan a saved image tarball (docker save / OCI archive); no network")
-	cmd.Flags().String("platform", "", "platform to select from a multi-arch index (e.g. linux/arm64)")
+	cmd.Flags().String("platform", "", "platform to select from a multi-arch index, e.g. linux/arm64 (no-op: needs live registry pulls, which are not available in this build)")
 	return cmd
 }
 
@@ -166,10 +166,10 @@ func newK8sCmd() *cobra.Command {
 			return runScan(cmd.Context(), cfg)
 		},
 	}
-	cmd.Flags().String("namespace", "", "restrict to one namespace")
-	cmd.Flags().BoolP("all-namespaces", "A", false, "all namespaces")
+	cmd.Flags().String("namespace", "", "restrict to one namespace; a manifest without metadata.namespace counts as \"default\"")
+	cmd.Flags().BoolP("all-namespaces", "A", false, "all namespaces (the default in --manifests mode; mutually exclusive with --namespace)")
 	cmd.Flags().String("manifests", "", "offline mode: extract image refs from manifest YAML in dir")
-	cmd.Flags().Bool("parallel-images", false, "scan images concurrently (serial by default)")
+	cmd.Flags().Bool("parallel-images", false, "scan images concurrently (no-op: workload images are listed, not pulled — needs live registry pulls)")
 	return cmd
 }
 

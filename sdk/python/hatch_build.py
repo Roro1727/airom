@@ -104,13 +104,16 @@ class AiromBuildHook(BuildHookInterface):
         # NB: the `version` argument of initialize() is the BUILD TARGET version
         # ("standard"/"editable"), not the package version — that is
         # self.metadata.version.
-        ldflags = [
-            "-s",
-            "-w",
-            f"-X main.version={self.metadata.version}",
-            f"-X main.commit={_git('rev-parse', '--short', 'HEAD') or 'unknown'}",
-            f"-X main.date={_git('show', '-s', '--format=%cI', 'HEAD') or 'unknown'}",
-        ]
+        # Only stamp what we actually know. An sdist carries no .git, and
+        # stamping a placeholder there would be worse than stamping nothing:
+        # main.go treats the unset sentinels ("dev"/"none"/"unknown") as its cue
+        # to recover the values from the Go build info, so a made-up "unknown"
+        # commit suppresses the very fallback that exists to answer this case.
+        ldflags = ["-s", "-w", f"-X main.version={self.metadata.version}"]
+        if commit := _git("rev-parse", "--short", "HEAD"):
+            ldflags.append(f"-X main.commit={commit}")
+        if date := _git("show", "-s", "--format=%cI", "HEAD"):
+            ldflags.append(f"-X main.date={date}")
 
         cmd = [
             "go", "build", "-trimpath",
