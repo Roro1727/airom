@@ -9,11 +9,25 @@ The published documentation for AIROM, built with [Mintlify](https://mintlify.co
 
 ## Preview locally
 
+> **Node must be an LTS release.** Mintlify refuses to run on odd/current Node
+> majors — on Node 25+ it exits with
+> `mintlify is not supported on node versions 25+ … Please downgrade to an LTS
+> node version`. Use an Active LTS (Node 24 or 22).
+
 ```bash
-npm i -g mint      # or: npx mint dev
+# If your default node is non-LTS (check with `node --version`), install an LTS
+# alongside it. Homebrew's node@24 is keg-only, so it does not replace your node:
+brew install node@24
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"   # Apple Silicon
+# export PATH="/usr/local/opt/node@24/bin:$PATH"    # Intel
+node --version                                      # expect v24.x
+
 cd docs-site
-mint dev           # serves http://localhost:3000
+npx mint dev       # serves http://localhost:3000
 ```
+
+Prefer a version manager for this? `brew install fnm`, then `fnm install --lts &&
+fnm use lts-latest`.
 
 ## Relationship to `docs/`
 
