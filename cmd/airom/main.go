@@ -7,9 +7,11 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/airomhq/airom/internal/cli"
 )
@@ -95,6 +97,15 @@ func resolve(v, c, d string, bi *debug.BuildInfo, ok bool) cli.BuildInfo {
 		}
 	}
 
+	// A module fetched from the proxy arrives as a zip, not a checkout, so it
+	// carries no vcs.* stamps — but a pseudo-version spells the revision and the
+	// commit time into the version string itself. Reading them back beats
+	// printing "commit none, built unknown" directly beside a string that
+	// contains both.
+	if rev == "" && when == "" {
+		rev, when = parsePseudoVersion(v)
+	}
+
 	if c == unsetCommit && rev != "" {
 		c = shortRev(rev)
 		if dirty {
@@ -113,6 +124,33 @@ func resolve(v, c, d string, bi *debug.BuildInfo, ok bool) cli.BuildInfo {
 		}
 	}
 	return cli.BuildInfo{Version: v, Commit: c, Date: d}
+}
+
+// pseudoVersionRe matches the tail every Go pseudo-version ends with: a UTC
+// build timestamp and a 12-hex commit prefix.
+//
+// The leading separator is [-.], not "-": of the three documented forms
+// (golang.org/ref/mod#pseudo-versions) only the base-less one puts a dash there.
+//
+//	v0.0.0-20260717115955-5ab297f08f99         no base version   -> "-" + ts
+//	v0.2.0-beta.0.20260717115955-5ab297f08f99  after a prerelease -> "." + ts
+//	v0.1.1-0.20260101000000-abcdefabcdef       after a release    -> "." + ts
+var pseudoVersionRe = regexp.MustCompile(`[-.](\d{14})-([0-9a-f]{12})$`)
+
+// parsePseudoVersion recovers the revision and commit time encoded in a Go
+// pseudo-version, or "" for a real tag like v0.1.0 — which names a release and
+// genuinely says nothing about a commit.
+func parsePseudoVersion(v string) (rev, when string) {
+	m := pseudoVersionRe.FindStringSubmatch(v)
+	if m == nil {
+		return "", ""
+	}
+	// The timestamp is UTC by construction (golang.org/ref/mod#pseudo-versions).
+	t, err := time.Parse("20060102150405", m[1])
+	if err != nil {
+		return m[2], "" // a revision we can trust, a timestamp we cannot
+	}
+	return m[2], t.UTC().Format(time.RFC3339)
 }
 
 // shortRev abbreviates a git revision the way git itself does.
