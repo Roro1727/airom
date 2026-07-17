@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // TestNpmDepsLayoutIndependent locks the fix for the single-line/minified miss:

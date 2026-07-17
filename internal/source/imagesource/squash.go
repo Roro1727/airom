@@ -18,7 +18,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Roro1727/airom/internal/classify"
+	"github.com/airomhq/airom/internal/classify"
 )
 
 const (

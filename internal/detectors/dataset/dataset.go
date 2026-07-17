@@ -8,8 +8,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Magic prefixes for the self-describing binary dataset formats.

@@ -27,8 +27,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // aiSignalEnv are the environment variable names treated as AI signals.

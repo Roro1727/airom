@@ -38,7 +38,7 @@ jobs:
           go-version: '1.25'
 
       - name: Install AIROM
-        run: go install github.com/Roro1727/airom/cmd/airom@latest
+        run: go install github.com/airomhq/airom/cmd/airom@latest
 
       - name: Scan
         run: |
@@ -183,7 +183,7 @@ Precedence is flags > `AIROM_*` > `.airom.yaml` > defaults. Unknown keys and unk
 
     ```yaml
       - name: Scan a remote repo
-        run: airom repo https://github.com/Roro1727/airom -o table
+        run: airom repo https://github.com/airomhq/airom -o table
     ```
   </Tab>
   <Tab title="Container image">
@@ -230,7 +230,7 @@ explicitly in the job, which is worth doing in an air-gapped or egress-restricte
 pin a commit now:
 
 ```bash title="Pin the install"
-go install github.com/Roro1727/airom/cmd/airom@<commit-or-tag>
+go install github.com/airomhq/airom/cmd/airom@<commit-or-tag>
 ```
 
 `airom version` prints the version, commit, and build date — the same `ToolInfo` recorded

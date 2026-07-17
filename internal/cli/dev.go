@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Roro1727/airom/internal/app"
+	"github.com/airomhq/airom/internal/app"
 )
 
 var nameRe = regexp.MustCompile(`^[a-z0-9-]+$`)

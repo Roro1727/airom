@@ -55,17 +55,17 @@
     "links": [
       {
         "label": "Architecture",
-        "href": "https://github.com/Roro1727/airom/blob/main/docs/ARCHITECTURE.md"
+        "href": "https://github.com/airomhq/airom/blob/main/docs/ARCHITECTURE.md"
       }
     ],
     "primary": {
       "type": "github",
-      "href": "https://github.com/Roro1727/airom"
+      "href": "https://github.com/airomhq/airom"
     }
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/Roro1727/airom"
+      "github": "https://github.com/airomhq/airom"
     }
   }
 }

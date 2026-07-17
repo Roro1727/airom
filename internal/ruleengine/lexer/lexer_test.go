@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/classify"
+	"github.com/airomhq/airom/internal/classify"
 )
 
 // allLangs is every language with a real lexer.

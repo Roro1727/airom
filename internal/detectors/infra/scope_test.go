@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // fileDetector is the shared shape of the infra file detectors.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/Roro1727/airom/internal/classify"
+	"github.com/airomhq/airom/internal/classify"
 )
 
 // Kind identifies a source implementation (ARCHITECTURE.md §7).

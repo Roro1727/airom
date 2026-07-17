@@ -7,7 +7,7 @@
 // internal/source/imagesource, client-go with internal/source/k8ssource,
 // bbolt with internal/cache). pkg/airom and pkg/airom/detect stay stdlib-only
 // forever — that constraint is lint-enforced in .golangci.yml.
-module github.com/Roro1727/airom
+module github.com/airomhq/airom
 
 go 1.25.0
 

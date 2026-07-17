@@ -1,6 +1,6 @@
 package lexer
 
-import "github.com/Roro1727/airom/internal/classify"
+import "github.com/airomhq/airom/internal/classify"
 
 // RegionType is the classification of one byte range of source text.
 type RegionType uint8

@@ -26,8 +26,8 @@ import (
 	"github.com/charlievieth/fastwalk"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // defaultIgnoreLines are the always-on skips (docs/cli.md ".airomignore"):

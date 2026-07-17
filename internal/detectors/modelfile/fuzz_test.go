@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // The fuzz targets assert the two invariants every binary parser here must

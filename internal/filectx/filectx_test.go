@@ -11,8 +11,8 @@ import (
 
 	"github.com/zeebo/xxh3"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/xio"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/xio"
 )
 
 // countingOpener wraps content and counts opens — the read-once proof.

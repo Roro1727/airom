@@ -54,8 +54,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // ErrNotSeekable is returned by Entry.ReaderAt: image files are served from a

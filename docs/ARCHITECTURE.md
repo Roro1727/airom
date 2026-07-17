@@ -122,7 +122,7 @@ anything needing multi-stage reasoning belongs in the assembler.
 ## 4. Repository layout
 
 One Go module (Trivy's premature-repo-split lesson: split nothing until external demand
-exists). Module path: `github.com/Roro1727/airom`.
+exists). Module path: `github.com/airomhq/airom`.
 
 The `pkg/` vs `internal/` line **is** the extensibility contract: `pkg/airom/...` is the
 plugin SDK — semver-guarded (apidiff in CI), shipped as v0.x until the interfaces survive

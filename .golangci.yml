@@ -76,7 +76,7 @@ linters:
           files:
             - "**/pkg/airom/**"
           deny:
-            - pkg: github.com/Roro1727/airom/internal
+            - pkg: github.com/airomhq/airom/internal
               desc: >-
                 pkg/airom is the public plugin SDK and must never depend on
                 internal/ (ARCHITECTURE.md §4: "internal/* may import
@@ -99,11 +99,11 @@ linters:
             - "**/pkg/airom/detect/**"
           allow:
             - $gostd
-            - github.com/Roro1727/airom/pkg/airom
+            - github.com/airomhq/airom/pkg/airom
           deny:
             # Redundant with strict mode, but yields a precise message for
             # the most likely violation instead of a generic denial.
-            - pkg: github.com/Roro1727/airom/internal
+            - pkg: github.com/airomhq/airom/internal
               desc: >-
                 pkg/airom and pkg/airom/detect are stdlib-only (§4) and may
                 never import internal/.
@@ -135,7 +135,7 @@ formatters:
       # Groups AIROM's own imports after stdlib/third-party — keeps the
       # SDK-vs-internal boundary visible at the top of every file.
       local-prefixes:
-        - github.com/Roro1727/airom
+        - github.com/airomhq/airom
   exclusions:
     paths:
       - testdata

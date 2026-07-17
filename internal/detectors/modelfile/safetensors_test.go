@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 func TestSafetensorsContract(t *testing.T) {

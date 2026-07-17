@@ -14,7 +14,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // Options parameterize format-specific behavior (docs/cli.md flags).

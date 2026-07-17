@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Tagger is optionally implemented by detectors to declare selection tags

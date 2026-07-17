@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // GoSource is the Go AST detector: it reads import specs and obvious

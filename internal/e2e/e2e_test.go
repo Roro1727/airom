@@ -27,16 +27,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/app"
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/app"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 
 	// Register every writer format via its init().
-	_ "github.com/Roro1727/airom/internal/writer/cdx"
-	_ "github.com/Roro1727/airom/internal/writer/nativejson"
-	_ "github.com/Roro1727/airom/internal/writer/sarifw"
-	_ "github.com/Roro1727/airom/internal/writer/tablew"
-	_ "github.com/Roro1727/airom/internal/writer/yamlw"
+	_ "github.com/airomhq/airom/internal/writer/cdx"
+	_ "github.com/airomhq/airom/internal/writer/nativejson"
+	_ "github.com/airomhq/airom/internal/writer/sarifw"
+	_ "github.com/airomhq/airom/internal/writer/tablew"
+	_ "github.com/airomhq/airom/internal/writer/yamlw"
 )
 
 // update regenerates the golden files instead of comparing against them.

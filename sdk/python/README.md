@@ -1,6 +1,6 @@
 # airom — Python SDK
 
-Python SDK for [AIROM](https://github.com/Roro1727/airom), the open-source **AI Bill of
+Python SDK for [AIROM](https://github.com/airomhq/airom), the open-source **AI Bill of
 Materials (AIBOM) scanner**. Discover AI assets — models, prompts, datasets, embeddings,
 vector databases, frameworks, serving infrastructure — across code, containers, and
 Kubernetes, and get them back as typed Python objects.
@@ -136,7 +136,7 @@ order:
 
 Platform wheels bundle the binary, so `pip install airom` is self-contained. Installing
 from an sdist does not — put `airom` on your `PATH`
-(`go install github.com/Roro1727/airom/cmd/airom@latest`) or set `$AIROM_BINARY`.
+(`go install github.com/airomhq/airom/cmd/airom@latest`) or set `$AIROM_BINARY`.
 
 ## Development
 
@@ -167,7 +167,7 @@ On [pypi.org/manage/account/publishing](https://pypi.org/manage/account/publishi
 | Field | Value |
 |---|---|
 | PyPI project name | `airom` |
-| Owner | `Roro1727` |
+| Owner | `airomhq` |
 | Repository name | `airom` |
 | Workflow name | `release-pypi.yml` |
 | Environment | *(leave blank)* |

@@ -8,12 +8,12 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/Roro1727/airom/internal/metrics"
-	"github.com/Roro1727/airom/internal/source/dirsource"
-	"github.com/Roro1727/airom/internal/source/gitsource"
-	"github.com/Roro1727/airom/internal/source/imagesource"
-	"github.com/Roro1727/airom/internal/source/k8ssource"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/metrics"
+	"github.com/airomhq/airom/internal/source/dirsource"
+	"github.com/airomhq/airom/internal/source/gitsource"
+	"github.com/airomhq/airom/internal/source/imagesource"
+	"github.com/airomhq/airom/internal/source/k8ssource"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // UsageError marks configuration and flag errors: the CLI maps it (like any

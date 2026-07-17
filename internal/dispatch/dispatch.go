@@ -20,11 +20,11 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/filectx"
-	"github.com/Roro1727/airom/internal/source"
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/filectx"
+	"github.com/airomhq/airom/internal/source"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Result is the per-file (phase 1) or per-scan (phase 2) payload flowing to

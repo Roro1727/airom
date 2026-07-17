@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Roro1727/airom/internal/app"
-	"github.com/Roro1727/airom/internal/ruleengine/ruletest"
+	"github.com/airomhq/airom/internal/app"
+	"github.com/airomhq/airom/internal/ruleengine/ruletest"
 )
 
 // newRulesCmd is the rule-pack toolbox (docs/cli.md): inspect the effective

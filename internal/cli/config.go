@@ -16,7 +16,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/spf13/pflag"
 
-	"github.com/Roro1727/airom/internal/app"
+	"github.com/airomhq/airom/internal/app"
 )
 
 // configFileName is discovered in the working directory (docs/cli.md).

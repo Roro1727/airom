@@ -3,8 +3,8 @@ package project
 import (
 	"context"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // RAGLink synthesizes a rag-pipeline composite from phase-1 findings alone —

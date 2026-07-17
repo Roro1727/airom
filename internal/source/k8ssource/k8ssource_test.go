@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/source"
 )
 
 func write(t *testing.T, dir, name, content string) {

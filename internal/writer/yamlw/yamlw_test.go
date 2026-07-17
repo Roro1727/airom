@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/writer/writertest"
-	"github.com/Roro1727/airom/internal/writer/yamlw"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer/writertest"
+	"github.com/airomhq/airom/internal/writer/yamlw"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 var update = flag.Bool("update", false, "update golden files")

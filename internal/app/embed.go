@@ -1,6 +1,6 @@
 package app
 
-import "github.com/Roro1727/airom/rules"
+import "github.com/airomhq/airom/rules"
 
 // Wire the embedded rule packs into the composition root. Kept in its own
 // file so the SDK-facing app types stay free of the go:embed dependency and

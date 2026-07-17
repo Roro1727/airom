@@ -7,7 +7,7 @@ package writertest
 import (
 	"time"
 
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // occ builds an occurrence.

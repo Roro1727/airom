@@ -11,8 +11,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // ConfigBind attaches a separated generation/model config to the model it

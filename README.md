@@ -4,10 +4,10 @@
 
 AIROM is an open-source scanner that discovers AI assets — including models, prompts, datasets, embeddings, vector databases, and AI frameworks — and generates AI Bills of Materials (AIBOMs). It runs as a single static binary over a filesystem, source repository, container image, or Kubernetes cluster, and puts `file:line` evidence behind every entry.
 
-[![CI](https://github.com/Roro1727/airom/actions/workflows/ci.yml/badge.svg)](https://github.com/Roro1727/airom/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/Roro1727/airom?include_prereleases)](https://github.com/Roro1727/airom/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Roro1727/airom)](https://goreportcard.com/report/github.com/Roro1727/airom)
-[![Go Reference](https://pkg.go.dev/badge/github.com/Roro1727/airom.svg)](https://pkg.go.dev/github.com/Roro1727/airom)
+[![CI](https://github.com/airomhq/airom/actions/workflows/ci.yml/badge.svg)](https://github.com/airomhq/airom/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/airomhq/airom?include_prereleases)](https://github.com/airomhq/airom/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/airomhq/airom)](https://goreportcard.com/report/github.com/airomhq/airom)
+[![Go Reference](https://pkg.go.dev/badge/github.com/airomhq/airom.svg)](https://pkg.go.dev/github.com/airomhq/airom)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 > **Pre-release.** AIROM is under active development (v0.1.0-dev, unpublished). The design below is fixed; see [Project status](#project-status) for what is implemented today versus in flight.
@@ -61,13 +61,13 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 ```bash
 # From source (requires Go 1.25+). Builds the latest commit today;
 # resolves to the newest release tag once one is published.
-go install github.com/Roro1727/airom/cmd/airom@latest
+go install github.com/airomhq/airom/cmd/airom@latest
 
 # The binary lands in `$(go env GOPATH)/bin` — make sure that's on your PATH:
 #   export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
-Prebuilt, cosign-signed binaries will ship on the [releases page](https://github.com/Roro1727/airom/releases) with each tagged release (no Go toolchain required); a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
+Prebuilt, cosign-signed binaries will ship on the [releases page](https://github.com/airomhq/airom/releases) with each tagged release (no Go toolchain required); a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
 
 ### Scan
 

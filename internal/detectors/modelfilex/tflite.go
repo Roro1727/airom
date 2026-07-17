@@ -3,7 +3,7 @@ package modelfilex
 import (
 	"context"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // tfliteMagic is the FlatBuffer file identifier at offset 4 of a .tflite model.

@@ -62,9 +62,9 @@ def find_binary(explicit: str | os.PathLike[str] | None = None) -> str:
         "not on PATH.\n"
         "Fix it with any of:\n"
         "  • install a wheel that bundles the binary for your platform\n"
-        "  • go install github.com/Roro1727/airom/cmd/airom@latest   "
+        "  • go install github.com/airomhq/airom/cmd/airom@latest   "
         "(then ensure $(go env GOPATH)/bin is on PATH)\n"
-        "  • download a release binary from https://github.com/Roro1727/airom/releases\n"
+        "  • download a release binary from https://github.com/airomhq/airom/releases\n"
         f"  • point {_ENV_VAR} at an existing binary\n"
         "  • pass binary='/path/to/airom' to the scan call"
     )

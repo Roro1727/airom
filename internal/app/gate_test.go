@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // TestPolicyMatches locks the gate semantics: OR-of-conjunctions where each

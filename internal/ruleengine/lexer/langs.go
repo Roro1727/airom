@@ -1,6 +1,6 @@
 package lexer
 
-import "github.com/Roro1727/airom/internal/classify"
+import "github.com/airomhq/airom/internal/classify"
 
 // configs maps each supported language to its lexical configuration. Built
 // once at package init and never mutated afterwards — read-only data, safe

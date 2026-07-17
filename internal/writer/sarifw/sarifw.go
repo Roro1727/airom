@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 func init() {
@@ -25,8 +25,8 @@ const (
 	schemaURI      = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
 	sarifVersion   = "2.1.0"
 	columnKind     = "utf16CodeUnits"
-	informationURI = "https://github.com/Roro1727/airom"
-	helpURI        = "https://github.com/Roro1727/airom/blob/main/docs/"
+	informationURI = "https://github.com/airomhq/airom"
+	helpURI        = "https://github.com/airomhq/airom/blob/main/docs/"
 	srcRootID      = "SRCROOT"
 	fingerprintKey = "airomComponentIdentity/v1"
 )

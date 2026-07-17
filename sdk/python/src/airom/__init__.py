@@ -14,7 +14,7 @@ third-party dependencies.
 The binary is resolved from, in order: the ``binary=`` argument, a copy bundled
 in this wheel, ``$AIROM_BINARY``, then ``airom`` on ``PATH``.
 
-See https://github.com/Roro1727/airom for the scanner itself.
+See https://github.com/airomhq/airom for the scanner itself.
 """
 
 from __future__ import annotations

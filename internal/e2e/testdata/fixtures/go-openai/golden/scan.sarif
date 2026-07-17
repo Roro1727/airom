@@ -7,7 +7,7 @@
         "driver": {
           "name": "airom",
           "semanticVersion": "dev",
-          "informationUri": "https://github.com/Roro1727/airom",
+          "informationUri": "https://github.com/airomhq/airom",
           "rules": [
             {
               "id": "gosrc/ast",
@@ -18,7 +18,7 @@
               "defaultConfiguration": {
                 "level": "note"
               },
-              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
               "properties": {
                 "airom:method": "ast-fingerprint"
               }
@@ -32,7 +32,7 @@
               "defaultConfiguration": {
                 "level": "note"
               },
-              "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
               "properties": {
                 "airom:method": "manifest-analysis"
               }

@@ -3,8 +3,8 @@ package manifest
 import (
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 func TestRequirements(t *testing.T) {

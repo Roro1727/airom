@@ -3,23 +3,23 @@
 package all
 
 import (
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 
-	"github.com/Roro1727/airom/internal/detectors/dataset"
+	"github.com/airomhq/airom/internal/detectors/dataset"
 
-	"github.com/Roro1727/airom/internal/detectors/gosrc"
+	"github.com/airomhq/airom/internal/detectors/gosrc"
 
-	"github.com/Roro1727/airom/internal/detectors/infra"
+	"github.com/airomhq/airom/internal/detectors/infra"
 
-	"github.com/Roro1727/airom/internal/detectors/manifest"
+	"github.com/airomhq/airom/internal/detectors/manifest"
 
-	"github.com/Roro1727/airom/internal/detectors/modelfile"
+	"github.com/airomhq/airom/internal/detectors/modelfile"
 
-	"github.com/Roro1727/airom/internal/detectors/modelfilex"
+	"github.com/airomhq/airom/internal/detectors/modelfilex"
 
-	"github.com/Roro1727/airom/internal/detectors/project"
+	"github.com/airomhq/airom/internal/detectors/project"
 
-	"github.com/Roro1727/airom/internal/detectors/prompt"
+	"github.com/airomhq/airom/internal/detectors/prompt"
 )
 
 // Builtin returns every built-in detector, sorted by import path then

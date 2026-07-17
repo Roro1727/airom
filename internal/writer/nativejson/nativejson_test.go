@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/writer/nativejson"
-	"github.com/Roro1727/airom/internal/writer/writertest"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer/nativejson"
+	"github.com/airomhq/airom/internal/writer/writertest"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 var update = flag.Bool("update", false, "update golden files")

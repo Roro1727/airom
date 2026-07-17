@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // walkPaths runs a Walk and returns the sorted list of emitted paths. A local

@@ -12,8 +12,8 @@ import (
 
 	cyclonedx "github.com/CycloneDX/cyclonedx-go"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // Official CycloneDX regex constraints (identical in bom-1.6 and bom-1.7). Kept

@@ -6,8 +6,8 @@ import (
 	"path"
 	"sort"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // AdapterLink turns a PEFT/LoRA adapter_config.json into a local-model-file

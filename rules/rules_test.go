@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/ruleengine"
-	"github.com/Roro1727/airom/internal/ruleengine/ruletest"
+	"github.com/airomhq/airom/internal/ruleengine"
+	"github.com/airomhq/airom/internal/ruleengine/ruletest"
 )
 
 // categories are the embedded rule-pack directories.

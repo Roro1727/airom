@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // TestConfidenceCanonicalForm pins the §6.2 serialization of the sample value:

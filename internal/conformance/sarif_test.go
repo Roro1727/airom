@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/writer"
+	"github.com/airomhq/airom/internal/writer"
 )
 
 // SARIF envelope constants the writer commits to (docs/mapping.md §7.3).

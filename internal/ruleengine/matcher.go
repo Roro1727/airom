@@ -13,10 +13,10 @@ import (
 
 	"github.com/cloudflare/ahocorasick"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/ruleengine/lexer"
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/ruleengine/lexer"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // maxMatchesPerRulePerFile bounds pathological inputs (a generated file with

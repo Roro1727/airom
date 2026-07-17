@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/classify"
+	"github.com/airomhq/airom/internal/classify"
 )
 
 // FuzzClassify asserts the structural contract on arbitrary bytes for all

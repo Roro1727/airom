@@ -3,8 +3,8 @@ package manifest
 import (
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // confDeclared is the per-sighting confidence for a declared dependency: a

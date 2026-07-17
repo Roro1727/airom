@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/filectx"
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/filectx"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // fakeFD is a scripted FileDetector.

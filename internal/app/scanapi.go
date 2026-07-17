@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Roro1727/airom/internal/source"
-	"github.com/Roro1727/airom/internal/source/dirsource"
-	"github.com/Roro1727/airom/internal/source/gitsource"
-	"github.com/Roro1727/airom/internal/source/imagesource"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/source"
+	"github.com/airomhq/airom/internal/source/dirsource"
+	"github.com/airomhq/airom/internal/source/gitsource"
+	"github.com/airomhq/airom/internal/source/imagesource"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // Scan runs the full pipeline for a single non-k8s source and returns the

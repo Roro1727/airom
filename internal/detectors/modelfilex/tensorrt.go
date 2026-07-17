@@ -3,7 +3,7 @@ package modelfilex
 import (
 	"context"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // minEngineBytes is the smallest header we treat as a plausible engine — small

@@ -3,7 +3,7 @@ package modelfilex
 import (
 	"context"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // hdf5Magic is the 8-byte HDF5 superblock signature. Keras (legacy .h5/.keras)

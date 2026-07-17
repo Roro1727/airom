@@ -11,7 +11,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // buildFixture creates:

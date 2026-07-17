@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/internal/writer/tablew"
-	"github.com/Roro1727/airom/internal/writer/writertest"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/internal/writer/tablew"
+	"github.com/airomhq/airom/internal/writer/writertest"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 func render(t *testing.T, opts writer.Options, inv *airom.Inventory) string {

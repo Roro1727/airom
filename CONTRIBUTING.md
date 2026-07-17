@@ -11,7 +11,7 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 You need **Go 1.26+**. Everything else is a `make` target.
 
 ```sh
-git clone https://github.com/Roro1727/airom
+git clone https://github.com/airomhq/airom
 cd airom
 make build      # static binary at ./airom (CGO_ENABLED=0)
 make test       # full suite under the race detector

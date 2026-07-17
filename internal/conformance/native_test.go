@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/schemas"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/schemas"
 )
 
 // knownNativeViolation is the single point where the current

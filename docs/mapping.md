@@ -491,7 +491,7 @@ partialFingerprints["airomComponentIdentity/v1"] =
   results are reserved for actual sightings.
 - Envelope constants: `$schema` = the OASIS 2.1.0 errata01 schema URI, `version: "2.1.0"`,
   `originalUriBaseIds.SRCROOT`, `columnKind: "utf16CodeUnits"`,
-  `tool.driver.informationUri` = `https://github.com/Roro1727/airom`.
+  `tool.driver.informationUri` = `https://github.com/airomhq/airom`.
 
 ---
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Dockerfile detects AI serving infrastructure declared in a Dockerfile:

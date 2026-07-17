@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Roro1727/airom/internal/app"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/app"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // newDetectorsCmd is the explainability view (§6.2, docs/cli.md):

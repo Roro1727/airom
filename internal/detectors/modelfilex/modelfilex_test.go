@@ -3,8 +3,8 @@ package modelfilex
 import (
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 // Each detector is exercised through the public contract harness: golden

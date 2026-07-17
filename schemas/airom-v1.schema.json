@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Roro1727/airom/schemas/airom-v1.schema.json",
+  "$id": "https://github.com/airomhq/airom/schemas/airom-v1.schema.json",
   "title": "AIROM native AIBOM (schema version 1)",
   "description": "The canonical, lossless AIROM AI Bill of Materials. This is the superset format every other output (CycloneDX, SARIF, YAML, table) projects from. Tri-state fields serialize as the value (Known), null (Unknown, applies-but-undetermined), or are omitted (Absent).",
   "type": "object",

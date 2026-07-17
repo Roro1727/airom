@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Roro1727/airom/internal/cli"
+	"github.com/airomhq/airom/internal/cli"
 )
 
 // Build metadata, stamped at release time by goreleaser:

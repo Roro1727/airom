@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/internal/writer/sarifw"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/internal/writer/sarifw"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 var update = flag.Bool("update", false, "update golden files")
@@ -193,7 +193,7 @@ func TestEnvelope(t *testing.T) {
 	if run.ColumnKind != "utf16CodeUnits" {
 		t.Errorf("columnKind = %q", run.ColumnKind)
 	}
-	if run.Tool.Driver.Name != "airom" || run.Tool.Driver.InformationURI != "https://github.com/Roro1727/airom" {
+	if run.Tool.Driver.Name != "airom" || run.Tool.Driver.InformationURI != "https://github.com/airomhq/airom" {
 		t.Errorf("driver = %+v", run.Tool.Driver)
 	}
 	if got := run.OriginalURIBaseIDs["SRCROOT"].URI; got != "file:///home/user/proj/" {

@@ -16,10 +16,10 @@
 # routed per provider with no merge conflicts. When provider maintainer teams
 # exist, add entries below the fallback, e.g.:
 #
-#   /rules/models/openai.yaml            @Roro1727/openai-rules
-#   /rules/models/anthropic.yaml         @Roro1727/anthropic-rules
-#   /rules/frameworks/langchain.yaml     @Roro1727/langchain-rules
-#   /rules/vectordb/qdrant.yaml          @Roro1727/qdrant-rules
+#   /rules/models/openai.yaml            @airomhq/openai-rules
+#   /rules/models/anthropic.yaml         @airomhq/anthropic-rules
+#   /rules/frameworks/langchain.yaml     @airomhq/langchain-rules
+#   /rules/vectordb/qdrant.yaml          @airomhq/qdrant-rules
 #
 # Actual team entries arrive when maintainers exist; until then all rule-pack
 # changes route to the core maintainer. Reminder for reviewers: every rule PR

@@ -20,7 +20,7 @@ release. Until 1.0, only the most recent release is supported.
 
 Report privately through GitHub Security Advisories:
 
-- Go to the [Security tab](https://github.com/Roro1727/airom/security/advisories/new) and open a draft advisory, **or**
+- Go to the [Security tab](https://github.com/airomhq/airom/security/advisories/new) and open a draft advisory, **or**
 - email **rohan872784@gmail.com** with the details.
 
 Please include:

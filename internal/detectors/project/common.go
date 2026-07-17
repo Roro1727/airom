@@ -5,7 +5,7 @@ import (
 	"io"
 	"path"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // maxConfigBytes caps how much of any config file the project detectors read

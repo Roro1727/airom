@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/mod/modfile"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // GoMod detects AI module dependencies declared in a go.mod file.

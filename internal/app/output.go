@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 
 	// Register the built-in writers (init() side effects).
-	_ "github.com/Roro1727/airom/internal/writer/cdx"
-	_ "github.com/Roro1727/airom/internal/writer/nativejson"
-	_ "github.com/Roro1727/airom/internal/writer/sarifw"
-	_ "github.com/Roro1727/airom/internal/writer/tablew"
-	_ "github.com/Roro1727/airom/internal/writer/yamlw"
+	_ "github.com/airomhq/airom/internal/writer/cdx"
+	_ "github.com/airomhq/airom/internal/writer/nativejson"
+	_ "github.com/airomhq/airom/internal/writer/sarifw"
+	_ "github.com/airomhq/airom/internal/writer/tablew"
+	_ "github.com/airomhq/airom/internal/writer/yamlw"
 )
 
 // formatNames maps CLI output formats to writer registry names.

@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Roro1727/airom/internal/source"
-	"github.com/Roro1727/airom/internal/source/dirsource"
+	"github.com/airomhq/airom/internal/source"
+	"github.com/airomhq/airom/internal/source/dirsource"
 )
 
 // Options configures a git source. IgnoreGlobs is passed straight through to

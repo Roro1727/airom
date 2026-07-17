@@ -42,8 +42,8 @@ package %[1]s
 import (
 	"context"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // New returns the %[2]s detector. The composition root wires it explicitly
@@ -96,8 +96,8 @@ func detectorTestTemplate(pkg, name string) string {
 import (
 	"testing"
 
-	"github.com/Roro1727/airom/internal/detectors/%[1]s"
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/internal/detectors/%[1]s"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 func Test%[2]s(t *testing.T) {

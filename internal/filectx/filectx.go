@@ -14,8 +14,8 @@ import (
 
 	"github.com/zeebo/xxh3"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/xio"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/xio"
 )
 
 // HeaderSize is the shared header sample length: large enough for magic

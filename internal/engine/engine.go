@@ -25,10 +25,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/filectx"
-	"github.com/Roro1727/airom/internal/source"
-	"github.com/Roro1727/airom/internal/xio"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/filectx"
+	"github.com/airomhq/airom/internal/source"
+	"github.com/airomhq/airom/internal/xio"
 )
 
 // Processor runs all interested consumers for one file (the Phase-5

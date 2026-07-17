@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/app"
+	"github.com/airomhq/airom/internal/app"
 )
 
 func TestParseOutputSpecs(t *testing.T) {

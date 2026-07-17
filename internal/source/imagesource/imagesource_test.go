@@ -13,8 +13,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // tf is one tar entry in a layer.

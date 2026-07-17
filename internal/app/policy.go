@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // Policy is a compiled --fail-on expression: the opt-in CI gate from the

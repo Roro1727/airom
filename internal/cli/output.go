@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Roro1727/airom/internal/app"
+	"github.com/airomhq/airom/internal/app"
 )
 
 // parseOutputSpecs parses repeatable "-o fmt[=path]" values into OutputSpecs

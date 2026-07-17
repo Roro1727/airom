@@ -8,8 +8,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // fakeResolver serves an in-memory path→bytes map, matching FilesByGlob

@@ -13,7 +13,7 @@
 
 BINARY    = airom
 MAIN_PKG  = ./cmd/airom
-MODULE    = github.com/Roro1727/airom
+MODULE    = github.com/airomhq/airom
 
 # ── Version stamp ─────────────────────────────────────────────────────────────
 # Injected into the main package (cmd/airom declares `var version, commit,

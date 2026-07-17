@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/writer"
+	"github.com/airomhq/airom/internal/writer"
 	// Blank imports register the format writers via their init() side effects,
 	// so writer.New("cyclonedx"|"sarif"|"json") resolves.
-	_ "github.com/Roro1727/airom/internal/writer/cdx"
-	_ "github.com/Roro1727/airom/internal/writer/nativejson"
-	_ "github.com/Roro1727/airom/internal/writer/sarifw"
-	"github.com/Roro1727/airom/internal/writer/writertest"
-	"github.com/Roro1727/airom/pkg/airom"
+	_ "github.com/airomhq/airom/internal/writer/cdx"
+	_ "github.com/airomhq/airom/internal/writer/nativejson"
+	_ "github.com/airomhq/airom/internal/writer/sarifw"
+	"github.com/airomhq/airom/internal/writer/writertest"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // render writes the shared fixture through the named writer and returns the

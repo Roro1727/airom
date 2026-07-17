@@ -5,8 +5,8 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // GGUF value type tags (the gguf_metadata_value_type enum). Only scalars and

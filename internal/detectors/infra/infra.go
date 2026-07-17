@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // imageSignatures maps a base-image substring to the serving tool it names.

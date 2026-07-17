@@ -4,5 +4,5 @@
 //
 //	go generate ./internal/detectors/all
 //
-//go:generate go run github.com/Roro1727/airom/tools/detectors-gen
+//go:generate go run github.com/airomhq/airom/tools/detectors-gen
 package all

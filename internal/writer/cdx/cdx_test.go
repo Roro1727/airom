@@ -11,8 +11,8 @@ import (
 
 	cyclonedx "github.com/CycloneDX/cyclonedx-go"
 
-	"github.com/Roro1727/airom/internal/writer"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/writer"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 var update = flag.Bool("update", false, "update golden files")

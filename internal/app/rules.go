@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Roro1727/airom/internal/ruleengine"
-	"github.com/Roro1727/airom/internal/ruleengine/ruletest"
+	"github.com/airomhq/airom/internal/ruleengine"
+	"github.com/airomhq/airom/internal/ruleengine/ruletest"
 )
 
 // EmbeddedRules is the built-in rule-pack filesystem (rules/**). It is set

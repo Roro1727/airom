@@ -15,8 +15,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Roro1727/airom/internal/app"
-	"github.com/Roro1727/airom/pkg/airom"
+	"github.com/airomhq/airom/internal/app"
+	"github.com/airomhq/airom/pkg/airom"
 )
 
 // BuildInfo carries the ldflags-stamped build metadata from cmd/airom.

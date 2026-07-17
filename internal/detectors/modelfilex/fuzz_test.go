@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // FuzzTorchPickle drives the static pickle opcode walker with arbitrary bytes.

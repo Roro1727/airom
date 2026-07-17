@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
-	"github.com/Roro1727/airom/pkg/airom/purl"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/purl"
 )
 
 // Options parameterizes one assembly.

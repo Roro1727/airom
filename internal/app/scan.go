@@ -9,14 +9,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Roro1727/airom/internal/assemble"
-	"github.com/Roro1727/airom/internal/detectors/all"
-	"github.com/Roro1727/airom/internal/dispatch"
-	"github.com/Roro1727/airom/internal/engine"
-	"github.com/Roro1727/airom/internal/ruleengine"
-	"github.com/Roro1727/airom/internal/source"
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/assemble"
+	"github.com/airomhq/airom/internal/detectors/all"
+	"github.com/airomhq/airom/internal/dispatch"
+	"github.com/airomhq/airom/internal/engine"
+	"github.com/airomhq/airom/internal/ruleengine"
+	"github.com/airomhq/airom/internal/source"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Tool identifies this build in every produced AIBOM; the CLI stamps it

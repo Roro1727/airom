@@ -353,8 +353,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // New returns the detector. No init() magic, no globals: the composition root
@@ -487,8 +487,8 @@ package keras_test
 import (
 	"testing"
 
-	"github.com/Roro1727/airom/internal/detectors/keras"
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/internal/detectors/keras"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 func TestKeras(t *testing.T) {

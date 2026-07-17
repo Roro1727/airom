@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // HFDir assembles a HuggingFace / diffusers model DIRECTORY (a config plus its

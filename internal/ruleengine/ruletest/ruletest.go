@@ -19,8 +19,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Roro1727/airom/internal/ruleengine"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/ruleengine"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Expectation is one annotated line.

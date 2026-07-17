@@ -1,6 +1,6 @@
 package detect
 
-import "github.com/Roro1727/airom/pkg/airom"
+import "github.com/airomhq/airom/pkg/airom"
 
 // ModelClaim is the partial model facet a detector may assert. Plain values
 // — the assembler converts to tri-state facet fields, merges across

@@ -30,7 +30,7 @@ default level is `note` — see [Levels](#levels-note-vs-informational).
         "driver": {
           "name": "airom",
           "semanticVersion": "1.2.3",
-          "informationUri": "https://github.com/Roro1727/airom",
+          "informationUri": "https://github.com/airomhq/airom",
           "rules": [ "…" ],
           "properties": { "airom:tool.commit": "deadbeef" }
         }
@@ -60,7 +60,7 @@ runs and releases.
     "text": "Components identified by the rules/openai/model-literal detector."
   },
   "defaultConfiguration": { "level": "note" },
-  "helpUri": "https://github.com/Roro1727/airom/blob/main/docs/",
+  "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
   "properties": { "airom:method": "source-code-analysis" }
 }
 ```
@@ -266,7 +266,7 @@ jobs:
         with:
           go-version: '1.25'
 
-      - run: go install github.com/Roro1727/airom/cmd/airom@latest
+      - run: go install github.com/airomhq/airom/cmd/airom@latest
 
       - run: airom scan . -o sarif=airom.sarif --min-confidence 0.8
 

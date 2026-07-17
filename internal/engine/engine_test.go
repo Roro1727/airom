@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/classify"
-	"github.com/Roro1727/airom/internal/filectx"
-	"github.com/Roro1727/airom/internal/source"
+	"github.com/airomhq/airom/internal/classify"
+	"github.com/airomhq/airom/internal/filectx"
+	"github.com/airomhq/airom/internal/source"
 )
 
 // memSource is an in-memory source.Source for controlled pipeline tests.

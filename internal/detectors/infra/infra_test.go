@@ -3,7 +3,7 @@ package infra
 import (
 	"testing"
 
-	"github.com/Roro1727/airom/pkg/airom/detectortest"
+	"github.com/airomhq/airom/pkg/airom/detectortest"
 )
 
 func TestDockerfile(t *testing.T) {

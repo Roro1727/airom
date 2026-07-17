@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	modulePath  = "github.com/Roro1727/airom"
+	modulePath  = "github.com/airomhq/airom"
 	detectPath  = modulePath + "/pkg/airom/detect"
 	scanPattern = modulePath + "/internal/detectors/..."
 	selfPkg     = modulePath + "/internal/detectors/all"

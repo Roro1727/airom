@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Roro1727/airom/internal/app"
+	"github.com/airomhq/airom/internal/app"
 )
 
 // captureScan substitutes the app.Run seam and returns a pointer that will

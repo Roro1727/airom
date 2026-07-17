@@ -11,7 +11,7 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // Language identifies the source language of a file for detector routing

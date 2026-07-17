@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Roro1727/airom/internal/app"
-	"github.com/Roro1727/airom/internal/assemble"
-	"github.com/Roro1727/airom/pkg/airom"
-	"github.com/Roro1727/airom/pkg/airom/detect"
+	"github.com/airomhq/airom/internal/app"
+	"github.com/airomhq/airom/internal/assemble"
+	"github.com/airomhq/airom/pkg/airom"
+	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
 // heavyEnv opts into the heavy trees (10x files + a 200 MB model file). Kept
