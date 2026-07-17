@@ -84,6 +84,13 @@ Exit codes: 0 = scan completed (findings are NOT failures); use
 		},
 	}
 	root.SetVersionTemplate("airom {{.Version}}\n")
+	root.Example = example(
+		[2]string{"Scan the current directory — auto-detects dir, git URL, or image ref", "airom scan ."},
+		[2]string{"Cut the noise: only high-confidence findings", "airom fs ./my-app --min-confidence 0.8"},
+		[2]string{"One scan, several formats", "airom scan . -o table -o cyclonedx=bom.json -o sarif=scan.sarif"},
+		[2]string{"Fail CI when a local model file shows up", `airom scan . --fail-on "local-model-file&confidence>=0.9"`},
+	)
+	installHelp(root)
 
 	// Flag-parse errors keep a usage hint despite SilenceUsage — a typo'd
 	// flag must never produce a single terse line with no way forward.

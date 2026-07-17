@@ -289,6 +289,7 @@ every command carries: `-h`/`--help`, and `--version` on the root.
 | `--sarif-strict-kinds` | bool | `false` | Emit spec-pure `kind:"informational"` instead of `level:"note"`. |
 | `--select` | string | — | Detector selection expression, e.g. `"rules,+modelfile/gguf,-dataset/file"`. |
 | `--stats` | bool | `false` | Emit the full `ScanStats` block in the output. |
+| `--no-progress` | bool | `false` | Disable the scan progress spinner. Auto-off when stderr is not a terminal, and under `-q`. Progress is stderr-only and never affects the emitted AIBOM. |
 | `--trace` | string | — | Write a Go execution trace to file. |
 | `-v, --verbose` | count | `0` | Increase log verbosity. Repeatable; `-vv` adds source locations. |
 

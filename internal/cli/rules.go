@@ -14,8 +14,9 @@ import (
 // ruleset and validate/run user packs without a Go toolchain.
 func newRulesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rules",
-		Short: "Inspect, lint, and test rule packs",
+		Use:     "rules",
+		GroupID: groupInspect,
+		Short:   "Inspect, lint, and test rule packs",
 	}
 	cmd.AddCommand(newRulesListCmd(), newRulesLintCmd(), newRulesTestCmd())
 	return cmd

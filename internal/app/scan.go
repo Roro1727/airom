@@ -63,12 +63,18 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 		return nil, err
 	}
 
+	// Progress is presentation-only and stderr-only: it never reaches stdout,
+	// so the emitted AIBOM stays byte-identical (P7). Disabled off a terminal.
+	live, stopProgress := startProgress(cfg, cfg.Target)
+
 	eng := engine.New(engine.Options{
 		Parallel:    cfg.Parallel,
 		IOBudget:    cfg.IOBudget,
 		MaxFileSize: cfg.MaxFileSize,
+		Live:        live,
 	})
 	out, err := eng.Scan(ctx, src, disp)
+	stopProgress()
 	if err != nil {
 		return nil, fmt.Errorf("scan %q: %w", cfg.Target, err)
 	}

@@ -17,8 +17,9 @@ var nameRe = regexp.MustCompile(`^[a-z0-9-]+$`)
 // pack or a code detector skeleton with fixtures and a test.
 func newDevCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "dev",
-		Short: "Contributor scaffolding for new rule packs and detectors",
+		Use:     "dev",
+		GroupID: groupDev,
+		Short:   "Contributor scaffolding for new rule packs and detectors",
 	}
 	cmd.AddCommand(newDevRulePackCmd(), newDevDetectorCmd())
 	return cmd

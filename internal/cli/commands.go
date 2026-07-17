@@ -52,8 +52,9 @@ func runWith(cmd *cobra.Command, src app.SourceKind, target string) error {
 
 func newScanCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "scan <target>",
-		Short: "Scan a target with scheme auto-detection (dir | git URL | image ref)",
+		Use:     "scan <target>",
+		GroupID: groupScan,
+		Short:   "Scan a target with scheme auto-detection (dir | git URL | image ref)",
 		Long: `Scan auto-detects the target scheme in order: existing local path -> git URL
 -> image reference. Explicit prefixes force interpretation: dir:, repo:, image:.`,
 		Args: exactArgs("exactly one <target>"),
@@ -78,9 +79,10 @@ func newScanCmd() *cobra.Command {
 
 func newFSCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "fs <path>",
-		Short: "Scan a directory tree",
-		Args:  exactArgs("exactly one <path>"),
+		Use:     "fs <path>",
+		GroupID: groupScan,
+		Short:   "Scan a directory tree",
+		Args:    exactArgs("exactly one <path>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if _, err := os.Stat(args[0]); err != nil {
 				return &app.UsageError{Err: fmt.Errorf("cannot scan %q: %w", args[0], err)}
@@ -92,9 +94,10 @@ func newFSCmd() *cobra.Command {
 
 func newRepoCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "repo <url|path>",
-		Short: "Scan a git repository (remote URL: shallow clone; local path: worktree)",
-		Args:  exactArgs("exactly one <url|path>"),
+		Use:     "repo <url|path>",
+		GroupID: groupScan,
+		Short:   "Scan a git repository (remote URL: shallow clone; local path: worktree)",
+		Args:    exactArgs("exactly one <url|path>"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runWith(cmd, app.SourceRepo, args[0])
 		},
@@ -103,9 +106,10 @@ func newRepoCmd() *cobra.Command {
 
 func newImageCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "image [ref]",
-		Short: "Scan a container image (registry, daemon, tarball, or OCI layout)",
-		Args:  maxArgs(1, "at most one [ref]"),
+		Use:     "image [ref]",
+		GroupID: groupScan,
+		Short:   "Scan a container image (registry, daemon, tarball, or OCI layout)",
+		Args:    maxArgs(1, "at most one [ref]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var ref string
 			if len(args) == 1 {
@@ -141,9 +145,10 @@ func newImageCmd() *cobra.Command {
 
 func newK8sCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "k8s [context]",
-		Short: "Scan the images of Kubernetes workloads (or manifest files with --manifests)",
-		Args:  maxArgs(1, "at most one [context]"),
+		Use:     "k8s [context]",
+		GroupID: groupScan,
+		Short:   "Scan the images of Kubernetes workloads (or manifest files with --manifests)",
+		Args:    maxArgs(1, "at most one [context]"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			wd, err := os.Getwd()
 			if err != nil {

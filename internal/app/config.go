@@ -117,6 +117,11 @@ type Config struct {
 	Policy   *Policy
 	ExitCode int
 
+	// Presentation. Quiet mirrors -q; NoProgress suppresses the scan spinner.
+	// Both are stderr-only concerns and never affect the emitted AIBOM.
+	Quiet      bool
+	NoProgress bool
+
 	// Run environment
 	Offline   bool
 	PProfAddr string

@@ -74,6 +74,7 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--trace <file>` | path | — | Write a Go execution trace with per-phase regions (walk / detect / phase-2 / assemble / write). |
 | `--stats` | bool | `false` | Emit the full `ScanStats` block (files walked/skipped, bytes read vs bytes in tree, cache hit rates, per-detector timings, selection explanation). Always collected; this controls emission. |
 | `-v` / `-q` | count / bool | — | Verbose (repeatable; raises log detail — `-vv` adds source locations) / quiet (errors only). |
+| `--no-progress` | bool | `false` | Disable the scan progress indicator. It is already auto-disabled when stderr is not a terminal (pipes, redirects, CI) and under `-q`, so this is only for suppressing it on an interactive terminal. Progress renders to **stderr only** — it never touches the AIBOM on stdout. |
 
 ## Configuration
 

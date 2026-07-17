@@ -44,6 +44,33 @@ type Options struct {
 	Parallel    int   // workers; default GOMAXPROCS
 	IOBudget    int64 // byte-weighted I/O semaphore budget; default 256 MiB
 	MaxFileSize int64 // full-content read cap; default 1 MiB
+	// Live, when non-nil, receives in-flight counters so a caller can render
+	// progress while the scan runs. Nil (the default) costs nothing.
+	Live *Live
+}
+
+// Live carries a scan's in-flight counters. Read the fields from any goroutine
+// while Scan runs — they are atomics, deliberately decoupled from Outcome.Stats,
+// which is only complete once Scan returns.
+//
+// This is presentation-only: nothing in the pipeline reads it back, so it can
+// never influence the assembled graph or the bytes any writer emits (P7).
+type Live struct {
+	Walked    atomic.Int64 // entries emitted by the source (post-ignore)
+	Processed atomic.Int64 // files a processor has finished
+}
+
+// add increments a counter when live accounting is enabled.
+func (e *Engine) liveWalked() {
+	if e.opts.Live != nil {
+		e.opts.Live.Walked.Add(1)
+	}
+}
+
+func (e *Engine) liveProcessed() {
+	if e.opts.Live != nil {
+		e.opts.Live.Processed.Add(1)
+	}
 }
 
 // Payload is one file's processor output, ordered by path in the Outcome.
@@ -140,6 +167,7 @@ func (e *Engine) Scan(ctx context.Context, src source.Source, proc Processor) (*
 			select {
 			case tasks <- en:
 				walked.Add(1)
+				e.liveWalked()
 				return nil
 			case <-ctx.Done():
 				return ctx.Err()
@@ -182,6 +210,7 @@ func (e *Engine) Scan(ctx context.Context, src source.Source, proc Processor) (*
 			out.Stats.ContentBytes += r.contentBytes
 			if r.processed {
 				out.Stats.FilesProcessed++
+				e.liveProcessed()
 			}
 			if len(r.unknowns) > 0 {
 				out.Stats.FilesFailed++

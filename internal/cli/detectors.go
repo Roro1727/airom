@@ -15,8 +15,9 @@ import (
 // capability-as-data makes the scanner self-documenting.
 func newDetectorsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "detectors",
-		Short: "Inspect the detector catalog (the self-documenting capability view)",
+		Use:     "detectors",
+		GroupID: groupInspect,
+		Short:   "Inspect the detector catalog (the self-documenting capability view)",
 	}
 	cmd.AddCommand(
 		&cobra.Command{
