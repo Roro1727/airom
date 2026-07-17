@@ -68,11 +68,36 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+      # The P2 memory gates skip themselves under -race and are enforced by the
+      # `perf` job below instead; -race legitimately makes heap accounting
+      # meaningless. Everything else in the suite runs here.
       - name: Test with the race detector
         run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
       - name: Coverage summary
         if: matrix.os == 'ubuntu-latest'
         run: go tool cover -func=coverage.out | tail -1
+
+  perf:
+    name: Perf gates (P2 memory bounds)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      # Proves invariant P2: peak heap is a function of configuration, not
+      # input size. This job is the ONLY place those assertions actually
+      # execute — TestPeakMemoryConfigBound and TestHeavyPeakMemory gate on
+      # `raceEnabled` and skip in the -race job above, so without this job P2
+      # is unguarded in CI. Do NOT add -race here; that is what disarms them.
+      #
+      # Runs alone (its own job, one package) so the scans are not competing
+      # with other packages' tests for CPU — memory sampling is measurably
+      # noisier under that contention. -v keeps the observed peak-memory ratio
+      # visible in the log even when the gate passes, so the trend is readable.
+      - name: P2 memory bounds (no -race)
+        run: go test -count=1 -v ./internal/perf/
 
   build-matrix:
     name: Cross-compile (CGO_ENABLED=0)

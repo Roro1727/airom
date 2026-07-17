@@ -327,11 +327,20 @@ func syntheticFindings(n int) []detect.Finding {
 
 // ── Measurement + small helpers ─────────────────────────────────────────────
 
-// peakHeapInuse runs fn while sampling runtime.MemStats.HeapInuse and returns
-// the peak observed above a freshly-GC'd baseline. HeapInuse (bytes in in-use
-// spans) is the closest cheap proxy for the live working set; a ratio of two
-// such deltas is far more portable than any absolute RSS number, which is why
-// the P2 assertion is expressed as a ratio.
+// peakReps is how many times each measurement is repeated. Every error in this
+// measurement is one-sided: both an undersampled peak and an unsettled baseline
+// can only make the observed delta too SMALL, never too large. So the maximum
+// across repetitions converges upward on the true peak, and three cheap reps
+// (a scan is tens of milliseconds) buy far more stability than loosening the
+// assertion would. Raising K or the floor instead would hide the very
+// regression this gate exists to catch.
+const peakReps = 3
+
+// peakHeapInuse returns the largest peak-above-baseline observed across
+// peakReps runs of fn. HeapInuse (bytes in in-use spans) is the closest cheap
+// proxy for the live working set; a ratio of two such deltas is far more
+// portable than any absolute RSS number, which is why the P2 assertion is
+// expressed as a ratio.
 //
 // GC is tightened to 25% for the duration so the peak tracks the *live*
 // working set rather than floating garbage. Floating garbage (allocated but
@@ -344,7 +353,30 @@ func peakHeapInuse(t *testing.T, fn func()) uint64 {
 
 	defer debug.SetGCPercent(debug.SetGCPercent(25))
 
+	var best uint64
+	for i := 0; i < peakReps; i++ {
+		if d := peakHeapInuseOnce(fn); d > best {
+			best = d
+		}
+	}
+	return best
+}
+
+// peakHeapInuseOnce is a single measurement: settle the heap, sample HeapInuse
+// across one run of fn, and report the peak above the settled floor.
+func peakHeapInuseOnce(fn func()) uint64 {
+	// Two collections, not one. runtime.GC returns once the mark phase is
+	// done, but in-use spans are handed back by the *sweeper*, which runs on
+	// concurrently afterward. Reading HeapInuse straight after a single GC can
+	// therefore catch the heap mid-sweep, still holding the previous
+	// workload's garbage — here, the generated trees and the 32 MB model file.
+	// That inflates the baseline, which deflates `peak - base`: if the scan
+	// fits inside the not-yet-released spans, the measurement reads 0 and the
+	// ratio explodes. A second GC cannot begin until the first cycle's sweep
+	// has finished, so it pins HeapInuse to a genuine idle floor.
 	runtime.GC()
+	runtime.GC()
+
 	var base runtime.MemStats
 	runtime.ReadMemStats(&base)
 	peak := base.HeapInuse
