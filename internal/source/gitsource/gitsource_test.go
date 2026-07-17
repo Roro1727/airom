@@ -7,17 +7,26 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/Roro1727/airom/internal/source"
 )
 
-// walkPaths runs a Walk and returns the sorted list of emitted paths.
+// walkPaths runs a Walk and returns the sorted list of emitted paths. A local
+// path delegates to dirsource's parallel fastwalk, so the WalkFunc is invoked
+// from multiple goroutines (the source.Source contract) and the append must be
+// synchronized.
 func walkPaths(t *testing.T, s source.Source) []string {
 	t.Helper()
-	var got []string
+	var (
+		mu  sync.Mutex
+		got []string
+	)
 	if err := s.Walk(context.Background(), func(e source.Entry) error {
+		mu.Lock()
 		got = append(got, e.Ref.Path)
+		mu.Unlock()
 		return nil
 	}); err != nil {
 		t.Fatalf("Walk: %v", err)
@@ -95,7 +104,8 @@ func TestLocalPathDelegation(t *testing.T) {
 func gitCmd(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
-	cmd.Env = append(os.Environ(),
+	cmd.Env = append(
+		os.Environ(),
 		"GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@example.com",
 		"GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@example.com",
 		"GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_SYSTEM=/dev/null",
