@@ -10,7 +10,7 @@ AIROM is an open-source scanner that discovers AI assets — including models, p
 [![Go Reference](https://pkg.go.dev/badge/github.com/airomhq/airom.svg)](https://pkg.go.dev/github.com/airomhq/airom)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-> **Pre-release.** AIROM is under active development (v0.1.0-dev, unpublished). The design below is fixed; see [Project status](#project-status) for what is implemented today versus in flight.
+> **v0.1.0 — first release.** Early but real: the pipeline, detectors, rule packs, and all five writers are implemented and tested. See [Project status](#project-status) for the honest ledger of what ships today versus what is deferred.
 
 ---
 
@@ -62,8 +62,7 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 # pip — no Go toolchain needed. Installs the `airom` command AND the Python SDK.
 pip install airom        # or: pipx install airom  (isolated, always on PATH)
 
-# From source (requires Go 1.25+). Builds the latest commit today;
-# resolves to the newest release tag once one is published.
+# From source (requires Go 1.25+). Resolves to the newest release tag.
 go install github.com/airomhq/airom/cmd/airom@latest
 ```
 
@@ -83,7 +82,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"     # add to ~/.zshrc or ~/.bashrc
 Check where it went with `command -v airom`, `pip show -f airom`, or `go env GOPATH`.
 </details>
 
-Prebuilt, cosign-signed binaries will ship on the [releases page](https://github.com/airomhq/airom/releases) with each tagged release; a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
+Prebuilt, cosign-signed binaries for all six targets are on the [releases page](https://github.com/airomhq/airom/releases), each with a checksum and an SBOM; a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
 
 ### Scan
 
@@ -203,13 +202,13 @@ Rules can even declare relationships and capture generation parameters at the ca
 
 ## Project status
 
-AIROM is **pre-release (v0.1.0-dev)**, feature-complete against the 10-phase plan — architecture through a multi-agent production review — and building toward its first tagged release. Honest ledger:
+AIROM is at **v0.1.0**, its first tagged release: feature-complete against the 10-phase plan, architecture through a multi-agent production review. Early software — expect rough edges, and see the deferred row below for what it deliberately does not do yet. Honest ledger:
 
 | Area | Status |
 |---|---|
 | Architecture, domain model, decision log ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)) | **Complete** — accepted v1 baseline |
 | Repository scaffolding on the §4 layout (packages and their contracts, build files, docs) | **Complete** — Phase 2 |
-| CLI ([docs/cli.md](docs/cli.md)): scan/fs/repo/image/k8s/clean/version, config layering (flags > env > file > defaults), exit-code contract, `--fail-on` grammar, pprof/trace bootstrap | **Complete** — Phase 3. Scan commands fail fast with a clear error until the engine lands (Phase 4); `detectors`/`rules`/`dev` command groups arrive with their subsystems (Phases 5–6) |
+| CLI ([docs/cli.md](docs/cli.md)): scan/fs/repo/image/k8s/clean/version, config layering (flags > env > file > defaults), exit-code contract, `--fail-on` grammar, pprof/trace bootstrap | **Complete** — Phase 3, plus grouped/styled help and a live scan progress indicator that degrades to nothing off a terminal |
 | Filesystem scanner: dir source (nested `.gitignore`/`.airomignore` stack, default skips, symlink safety), classification (language/binary/magic), read-once tee-hashed file context, phase-1 streaming pipeline (bounded channels, clamped I/O budget, panic isolation, deterministic output) | **Complete** — Phase 4 |
 | Plugin framework: public SDK (`pkg/airom` domain graph with tri-state fields, `pkg/airom/detect` contracts + dispatch index, `purl` discipline, `detectortest` harness), dispatcher with per-detector isolation and accounting, explicit catalog + Syft-style `--select`, assembler (CanonicalKey identity, keep-and-relate merge, grouped noisy-OR confidence, refusal-first relations), rule-engine compiler (full [rule-schema.md](docs/rule-schema.md) lint contract, three-layer merge, self-invalidating ruleset hash, Aho–Corasick prefilter, region lexers for all 8 languages), `detectors-gen`, `airom detectors list/explain` | **Complete** — Phase 5. `airom fs . --rules pack.yaml` runs user rule packs end-to-end today |
 | Detectors & rule packs: binary model-file parsers (GGUF, safetensors, ONNX, Torch + static pickle-opcode security scan, SavedModel, TFLite, HDF5, TensorRT — fuzzed), 8-ecosystem manifest detectors, Go AST detector, prompt/dataset/infra detectors, phase-2 project detectors (HF-dir assembly, adapter lineage, config binding, RAG synthesis), 47 embedded rule packs / 98 rules across all 8 categories, `rules list/lint/test` + `dev` scaffolding | **Complete** — Phase 6. Scans a real AI project into a rich AIBOM (models, embeddings, vector DBs, frameworks, weights, prompts, infra, RAG pipelines) |
@@ -220,7 +219,7 @@ AIROM is **pre-release (v0.1.0-dev)**, feature-complete against the 10-phase pla
 | Production hardening: whole-tree adversarial review (10 dimensions, per-finding verification) that found and fixed 17 verified defects — an OCI-layout path-traversal escape, a static-pickle scan evasion via memo/GET, the unwired `--fail-on` CI gate, a P7 stack-trace leak, YAML int64 corruption, non-canonical purls, and detector/rule-prefilter gaps — each with a regression test. Confirmed the empty CycloneDX `dependencies[]` (no substantiated `depends-on` edges) and the deferred live registry/daemon/cluster modes (fail cleanly) are deliberate, not defects | **Complete** — Phase 10 |
 | SPDX 3.0.1 AI profile, attestation verification, per-layer attribution, OCI rule registry, live-cluster/registry source modes, root→dependency edge synthesis | Deferred to v2 by design (reserved slots — see [ARCHITECTURE §16](docs/ARCHITECTURE.md)) |
 
-Until v0.1.0 is tagged, the release badge and prebuilt binaries are unavailable; `go install …@latest` still works, building from the latest commit.
+Known gaps, each surfaced in the affected flag's own `--help` rather than only here: caching is not implemented (every scan is cold, `--no-cache` is a no-op), live registry/daemon image pulls are not available (use `airom image --input <archive>`), and live-cluster scanning is not available (use `airom k8s --manifests <dir>`).
 
 ## Comparison
 

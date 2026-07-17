@@ -22,7 +22,11 @@ builds:
     ldflags:
       - -s -w
       - -X main.version={{ .Version }}
-      - -X main.commit={{ .Commit }}
+      # ShortCommit, not Commit: the Makefile stamps `git rev-parse --short` and
+      # the build-info fallback abbreviates too, so a full 40-char SHA here would
+      # make the release binary the odd one out — in the one string every user
+      # reads, and the one embedded in every AIBOM it emits.
+      - -X main.commit={{ .ShortCommit }}
       - -X main.date={{ .Date }}
     goos: [linux, darwin, windows]
     goarch: [amd64, arm64]
@@ -39,7 +43,11 @@ archives:
       - LICENSE
       - NOTICE
       - README.md
-      - docs/**/*
+      # docs/* , not docs/**/* : the ** requires at least one directory level, so
+      # against a flat docs/ it matched nothing and the archives silently shipped
+      # without a single doc. `goreleaser release --snapshot` logs "no files
+      # matched" for this and exits 0, so it never failed anything.
+      - docs/*
 
 checksum:
   name_template: "checksums.txt"
