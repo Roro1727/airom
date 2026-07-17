@@ -164,7 +164,7 @@ source (fs / repo / image / k8s)
     config⇄model binding, RAG stitching) over an immutable phase-1 view
   → Assembler: canonical identity, keep-and-relate merge, confidence calculus,
     parameter binding — detectors emit claims, never components
-  → Writers: pure functions from one graph to every output format
+  → Writers: pure functions from one graph to every output format.
 ```
 
 The properties that make it production-grade are invariants, not aspirations: peak memory is a function of configuration, never input size; a corrupt file degrades to an honest `Unknown` record instead of killing the scan; identical inputs produce byte-identical output at any parallelism; a 40 GB GGUF inside a container image costs a 32 KB header parse and a hashing pass — zero memory growth, zero disk. Each of these gets a dedicated CI enforcement test as the test matrix lands (Phase 8).
