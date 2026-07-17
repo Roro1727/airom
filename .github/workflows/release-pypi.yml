@@ -128,16 +128,25 @@ jobs:
           pip install build
           python -m build --wheel
 
-      - name: Verify it bundles the binary
+      # The binary must ship as a SCRIPT (.data/scripts/), not package data:
+      # that is what puts `airom` on PATH after `pip install airom`, rather than
+      # leaving it reachable only via `import airom`.
+      - name: Verify it installs the airom command
         working-directory: sdk/python
         run: |
           python - <<'PY'
           import glob, sys, zipfile
           whl = glob.glob("dist/*.whl")[0]
-          binaries = [n for n in zipfile.ZipFile(whl).namelist() if "/_bin/airom" in n]
-          if not binaries:
-              sys.exit(f"{whl} bundles no airom binary")
-          print(f"ok: {whl} -> {binaries}")
+          names = zipfile.ZipFile(whl).namelist()
+          scripts = [
+              n for n in names
+              if ".data/scripts/" in n and n.rsplit("/", 1)[-1].startswith("airom")
+          ]
+          if not scripts:
+              sys.exit(f"{whl} installs no airom script -> `pip install` gives no command")
+          if [n for n in names if "/_bin/" in n]:
+              sys.exit(f"{whl} also ships the binary as package data (duplicated)")
+          print(f"ok: {whl} -> {scripts}")
           PY
 
       - uses: actions/upload-artifact@v4

@@ -127,18 +127,27 @@ jobs:
         run: |
           ruff check .
           mypy
-      - name: Build a wheel (bundles the CGO-free binary)
+      # The binary ships as a SCRIPT (.data/scripts/), which is what puts `airom`
+      # on PATH after `pip install airom` instead of leaving it reachable only
+      # via `import airom`.
+      - name: Build a wheel (installs the CGO-free binary as the airom command)
         working-directory: sdk/python
         run: |
           pip install build
           python -m build --wheel
           python - <<'PY'
-          import glob, zipfile, sys
+          import glob, sys, zipfile
           whl = glob.glob("dist/*.whl")[0]
           names = zipfile.ZipFile(whl).namelist()
-          if not [n for n in names if "_bin/airom" in n]:
-              sys.exit(f"{whl} did not bundle the airom binary")
-          print(f"ok: {whl} bundles the binary")
+          scripts = [
+              n for n in names
+              if ".data/scripts/" in n and n.rsplit("/", 1)[-1].startswith("airom")
+          ]
+          if not scripts:
+              sys.exit(f"{whl} installs no airom script -> `pip install` gives no command")
+          if [n for n in names if "/_bin/" in n]:
+              sys.exit(f"{whl} also ships the binary as package data (duplicated)")
+          print(f"ok: {whl} -> {scripts}")
           PY
 
   fuzz:
