@@ -9,6 +9,16 @@ Kubernetes, and get them back as typed Python objects.
 pip install airom
 ```
 
+This installs **both** the `airom` command and the Python library — the wheel ships the
+scanner binary itself into your environment's `bin/`, so there is nothing else to install:
+
+```console
+$ airom --version
+airom 0.1.1
+
+$ airom fs ./my-app -o table          # the CLI, globally
+```
+
 ## Quick start
 
 ```python
@@ -134,9 +144,19 @@ order:
 3. `$AIROM_BINARY`
 4. `airom` on `PATH`
 
-Platform wheels bundle the binary, so `pip install airom` is self-contained. Installing
-from an sdist does not — put `airom` on your `PATH`
-(`go install github.com/airomhq/airom/cmd/airom@latest`) or set `$AIROM_BINARY`.
+Platform wheels bundle the binary as a **script**, so pip installs it into the
+environment's `bin/` (`Scripts\` on Windows): `pip install airom` gives you a working
+`airom` command on PATH *and* the importable library, with no Python shim in between. In a
+virtualenv it is on PATH as soon as the venv is active; `pipx install airom` or
+`pip install --user airom` puts it on PATH globally.
+
+The library resolves the binary without relying on PATH at all (it consults the
+environment's scripts dir directly), so `import airom` works even from an unactivated
+venv's interpreter.
+
+Installing from an **sdist** ships no binary — put `airom` on your `PATH`
+(`go install github.com/airomhq/airom/cmd/airom@latest`, then ensure
+`$(go env GOPATH)/bin` is on PATH) or set `$AIROM_BINARY`.
 
 ## Development
 

@@ -1,14 +1,20 @@
 """Build hook: compile the ``airom`` binary into the wheel.
 
-Wheels are platform-specific because they carry a compiled Go binary, so this
-hook also stamps the wheel tag. It needs the Go toolchain and the repository
-checkout (the module root is three levels up from this file).
+The binary is installed as a **script**, not as package data: hatchling places it
+in ``<name>-<version>.data/scripts/``, which pip copies into the environment's
+``bin/`` (``Scripts\\`` on Windows) and marks executable. So ``pip install airom``
+gives you a real ``airom`` command on PATH — the actual Go binary, with no Python
+shim and no interpreter startup — as well as the importable library.
 
-Opt out with ``AIROM_SKIP_BUNDLE=1`` — the resulting wheel is pure-Python and
-falls back to ``$AIROM_BINARY`` or ``airom`` on ``PATH`` at runtime.
+Wheels are therefore platform-specific, and this hook stamps the wheel tag. It
+needs the Go toolchain and the repository checkout (the module root is two levels
+up from this file).
 
-Cross-compile by setting ``GOOS``/``GOARCH`` (both are forwarded to ``go
-build``); set ``AIROM_WHEEL_TAG`` to override the platform tag when doing so.
+Opt out with ``AIROM_SKIP_BUNDLE=1`` — the resulting wheel is pure-Python and the
+SDK falls back to ``$AIROM_BINARY`` or ``airom`` on ``PATH`` at runtime.
+
+Cross-compile by setting ``GOOS``/``GOARCH`` (both are forwarded to ``go build``);
+set ``AIROM_WHEEL_TAG`` to override the platform tag when doing so.
 """
 
 from __future__ import annotations
@@ -25,12 +31,28 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 HERE = Path(__file__).parent
 # sdk/python/hatch_build.py -> sdk/python -> sdk -> <repo root>
 REPO_ROOT = HERE.parent.parent
-BIN_DIR = HERE / "src" / "airom" / "_bin"
+# Staged outside the package: the binary ships as a script, not package data.
+BUILD_DIR = HERE / "build" / "bin"
 
 
 def _exe_name() -> str:
     goos = os.environ.get("GOOS") or sys.platform
     return "airom.exe" if goos in ("win32", "windows") else "airom"
+
+
+def _git(*args: str) -> str:
+    """Run a git command in the checkout, or return "" if it is unavailable.
+
+    Building from an exported tarball (no .git) must still work, so a failure
+    here is never fatal — the field just falls back to "unknown".
+    """
+    try:
+        r = subprocess.run(
+            ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True
+        )
+        return r.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return ""
 
 
 def _wheel_tag() -> str:
@@ -67,13 +89,34 @@ class AiromBuildHook(BuildHookInterface):
             )
             return
 
-        BIN_DIR.mkdir(parents=True, exist_ok=True)
-        out = BIN_DIR / _exe_name()
+        BUILD_DIR.mkdir(parents=True, exist_ok=True)
+        out = BUILD_DIR / _exe_name()
 
         env = dict(os.environ)
         env["CGO_ENABLED"] = "0"  # invariant P8: the release binary is always static
 
-        cmd = ["go", "build", "-trimpath", "-ldflags", "-s -w", "-o", str(out), "./cmd/airom"]
+        # Stamp the version, exactly as the Makefile and goreleaser do. Without
+        # this the binary reports "dev" — and since ToolInfo is embedded in every
+        # AIBOM it produces, a pip-installed airom would emit documents whose
+        # provenance claims tool.version "dev". The wheel and the binary are
+        # released together, so the package version is the honest answer.
+        #
+        # NB: the `version` argument of initialize() is the BUILD TARGET version
+        # ("standard"/"editable"), not the package version — that is
+        # self.metadata.version.
+        ldflags = [
+            "-s",
+            "-w",
+            f"-X main.version={self.metadata.version}",
+            f"-X main.commit={_git('rev-parse', '--short', 'HEAD') or 'unknown'}",
+            f"-X main.date={_git('show', '-s', '--format=%cI', 'HEAD') or 'unknown'}",
+        ]
+
+        cmd = [
+            "go", "build", "-trimpath",
+            "-ldflags", " ".join(ldflags),
+            "-o", str(out), "./cmd/airom",
+        ]
         self.app.display_info(f"bundling airom: {' '.join(cmd)} (in {REPO_ROOT})")
         try:
             subprocess.run(cmd, cwd=REPO_ROOT, env=env, check=True)
@@ -83,4 +126,5 @@ class AiromBuildHook(BuildHookInterface):
         out.chmod(0o755)
         build_data["pure_python"] = False
         build_data["tag"] = _wheel_tag()
-        build_data["artifacts"].append("src/airom/_bin/*")
+        # -> <name>-<version>.data/scripts/airom -> the environment's bin/ dir.
+        build_data["shared_scripts"] = {str(out): _exe_name()}

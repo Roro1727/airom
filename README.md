@@ -59,15 +59,31 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 ### Install
 
 ```bash
+# pip — no Go toolchain needed. Installs the `airom` command AND the Python SDK.
+pip install airom        # or: pipx install airom  (isolated, always on PATH)
+
 # From source (requires Go 1.25+). Builds the latest commit today;
 # resolves to the newest release tag once one is published.
 go install github.com/airomhq/airom/cmd/airom@latest
-
-# The binary lands in `$(go env GOPATH)/bin` — make sure that's on your PATH:
-#   export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
-Prebuilt, cosign-signed binaries will ship on the [releases page](https://github.com/airomhq/airom/releases) with each tagged release (no Go toolchain required); a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
+Then `airom --version` should work from any directory.
+
+<details>
+<summary><b><code>airom: command not found</code>?</b> — it's on PATH, or it isn't.</summary>
+
+The wheel installs `airom` into your environment's `bin/`, so **pip** puts it on PATH
+automatically inside an active virtualenv (`pipx` does so globally). **`go install`**
+writes to `$(go env GOPATH)/bin`, which Go does *not* add to PATH for you:
+
+```bash
+export PATH="$PATH:$(go env GOPATH)/bin"     # add to ~/.zshrc or ~/.bashrc
+```
+
+Check where it went with `command -v airom`, `pip show -f airom`, or `go env GOPATH`.
+</details>
+
+Prebuilt, cosign-signed binaries will ship on the [releases page](https://github.com/airomhq/airom/releases) with each tagged release; a Homebrew tap is planned. AIROM releases as a single static binary (`CGO_ENABLED=0`) — no runtime, no dependencies.
 
 ### Scan
 

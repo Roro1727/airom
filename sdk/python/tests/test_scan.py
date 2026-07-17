@@ -149,3 +149,73 @@ def test_raw_escape_hatch(airom_binary):
     proc = airom.raw(["detectors", "list"], binary=airom_binary)
     assert proc.returncode == 0
     assert "ruleengine" in proc.stdout
+
+
+def test_wheel_puts_airom_on_path(tmp_path):
+    """`pip install airom` must give a real `airom` COMMAND, not just an
+    importable library: the binary ships in the wheel's .data/scripts/, which
+    pip copies into the environment's bin/. Regression test for shipping a
+    wheel whose binary is only reachable via `import airom`."""
+    import subprocess
+    import sys
+    import zipfile
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    out = tmp_path / "dist"
+    subprocess.run(
+        [sys.executable, "-m", "build", "--wheel", "-o", str(out)],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    )
+    whl = next(out.glob("*.whl"))
+    names = zipfile.ZipFile(whl).namelist()
+
+    scripts = [
+        n for n in names
+        if ".data/scripts/" in n and n.rsplit("/", 1)[-1].startswith("airom")
+    ]
+    assert scripts, (
+        f"{whl.name} installs no airom script -> `pip install airom` would not put "
+        f"`airom` on PATH. Entries: {names[:20]}"
+    )
+    # And it must not ALSO ship as package data: that would duplicate ~12 MB.
+    assert not [n for n in names if "/_bin/" in n], "binary duplicated as package data"
+
+
+def test_bundled_binary_is_version_stamped(tmp_path):
+    """The wheel's binary must carry the package version, not "dev".
+
+    ToolInfo is embedded in every AIBOM the binary emits, so an unstamped build
+    makes a pip-installed airom produce documents whose provenance claims
+    tool.version "dev". (hatchling gotcha: initialize()'s `version` arg is the
+    build-target version, "standard"/"editable" — the package version is
+    self.metadata.version.)"""
+    import subprocess
+    import sys
+    import zipfile
+    from pathlib import Path
+
+    import airom as _airom
+
+    root = Path(__file__).resolve().parents[1]
+    out = tmp_path / "dist"
+    subprocess.run(
+        [sys.executable, "-m", "build", "--wheel", "-o", str(out)],
+        cwd=root, check=True, capture_output=True,
+    )
+    whl = next(out.glob("*.whl"))
+    z = zipfile.ZipFile(whl)
+    script = next(n for n in z.namelist() if ".data/scripts/" in n)
+
+    exe = tmp_path / "airom"
+    exe.write_bytes(z.read(script))
+    exe.chmod(0o755)
+
+    info = _airom.version(binary=str(exe))
+    assert info.version == _airom.__version__, (
+        f"wheel binary reports version {info.version!r}, expected the package version "
+        f"{_airom.__version__!r} — the ldflags stamp is not being applied"
+    )
+    assert info.version != "dev"
