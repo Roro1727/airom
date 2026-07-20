@@ -1,33 +1,52 @@
 ---
 title: "Installation"
-description: "Install AIROM with go install or build it from source."
+description: "Install AIROM with pip, go install, a prebuilt binary, or from source."
 icon: "download"
 ---
 
 AIROM is a single static binary — `CGO_ENABLED=0`, no runtime dependencies, no
 shared libraries to chase.
 
-<Warning>
-  **AIROM is pre-release.** The current version is `v0.1.0-dev` and no release
-  has been tagged yet. That has one practical consequence: **there are no
-  prebuilt binaries to download**, and no Homebrew tap. Install with
-  `go install` or build from source.
+<Note>
+  **AIROM is at `v0.1.0`** — its first tagged release. Early but real; expect
+  rough edges. The `airom` command is on [PyPI](https://pypi.org/project/airom/),
+  and cosign-signed static binaries for every supported platform ship on the
+  [releases page](https://github.com/airomhq/airom/releases) with each tagged
+  release. A Homebrew tap is planned.
+</Note>
 
-  Cosign-signed static binaries ship on the [releases
-  page](https://github.com/airomhq/airom/releases) with each *tagged* release.
-  None exist yet.
-</Warning>
+## pip
+
+The easiest path — **no Go toolchain required**. The wheel bundles the static
+`airom` binary *and* installs the Python SDK, so one command gives you both the
+CLI and `import airom`. Requires **Python 3.10 or newer**.
+
+```bash title="Install the CLI + SDK"
+pip install airom
+```
+
+Prefer an isolated install that is always on your `PATH`? Use
+[pipx](https://pipx.pypa.io):
+
+```bash title="Isolated install"
+pipx install airom
+```
+
+pip places `airom` on your `PATH` automatically inside an active virtualenv;
+pipx does so globally. Then `airom --version` works from any directory. Wheels
+are published for macOS (Intel + Apple Silicon), Linux (x86-64 + arm64, glibc +
+musl), and Windows (x86-64).
 
 ## go install
 
-Requires **Go 1.25 or newer**.
+Requires **Go 1.25 or newer** — reach for this if you already have a Go
+toolchain.
 
 ```bash title="Install"
 go install github.com/airomhq/airom/cmd/airom@latest
 ```
 
-Because no release is tagged yet, `@latest` builds the latest commit on the
-default branch. Once a tag exists, `@latest` resolves to that release instead.
+`@latest` resolves to the newest release tag (`v0.1.0` today).
 
 ### Put it on your PATH
 
@@ -65,6 +84,14 @@ fish_add_path (go env GOPATH)/bin
   If you have set `GOBIN`, the binary goes there instead of `$(go env
   GOPATH)/bin`. Check with `go env GOBIN` and put that directory on your `PATH`.
 </Note>
+
+## Prebuilt binaries
+
+Every tagged release publishes cosign-signed, `CGO_ENABLED=0` static binaries for
+all supported platforms on the [releases
+page](https://github.com/airomhq/airom/releases), each with a checksum and its own
+SBOM. Download, verify, and drop the binary on your `PATH` — no runtime, no shared
+libraries to install.
 
 ## Build from source
 
@@ -122,6 +149,19 @@ airom version
 What you see depends on how you installed:
 
 <Tabs>
+  <Tab title="pip / pipx">
+    ```text
+    airom 0.1.2
+      commit: 513e251
+      built:  2026-07-17T18:31:13+05:30
+      go:     go1.26.5 (darwin/arm64)
+    ```
+
+    The wheel ships a fully version-stamped binary, so a pip or pipx install
+    reports the exact release it came from. (The SDK carries its own version —
+    `pip show airom` — which can lead the tagged CLI release.)
+  </Tab>
+
   <Tab title="go install">
     ```text
     airom dev
@@ -154,11 +194,18 @@ exactly the `ToolInfo` block AIROM embeds in every AIBOM it writes, which is
 what lets a document be traced back to the build that produced it.
 
 <Accordion title="airom: command not found">
-  The binary built fine; your shell cannot find it. Run `go env GOPATH`, confirm
-  the binary exists at `$(go env GOPATH)/bin/airom`, and add that directory to
-  your `PATH` — see [Put it on your PATH](#put-it-on-your-path) above. If you
-  built from source with `make build`, the binary is at `./airom` in the repo
-  root and is not on your `PATH` at all until you move it.
+  It installed fine; your shell cannot find it. Where it went depends on how you
+  installed:
+
+  - **pip** — the binary is in your environment's `bin/`, on `PATH` automatically
+    inside an active virtualenv. Outside one, activate the environment (or use
+    `pipx`, which is always global). `pip show -f airom` lists the installed files.
+  - **pipx** — always on `PATH`; if not, run `pipx ensurepath` and restart your shell.
+  - **go install** — run `go env GOPATH`, confirm `$(go env GOPATH)/bin/airom`
+    exists, and add that directory to your `PATH` (see [Put it on your
+    PATH](#put-it-on-your-path) above).
+  - **make build** — the binary is at `./airom` in the repo root and is not on your
+    `PATH` at all until you move it.
 </Accordion>
 
 ## Next
