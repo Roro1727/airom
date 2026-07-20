@@ -33,11 +33,12 @@ type OutputFormat string
 
 // The five v1 writer formats (§11); SPDX is a reserved v2 slot.
 const (
-	FormatTable     OutputFormat = "table"
-	FormatJSON      OutputFormat = "json"
-	FormatCycloneDX OutputFormat = "cyclonedx"
-	FormatSARIF     OutputFormat = "sarif"
-	FormatYAML      OutputFormat = "yaml"
+	FormatTable      OutputFormat = "table"
+	FormatJSON       OutputFormat = "json"
+	FormatCycloneDX  OutputFormat = "cyclonedx"
+	FormatSARIF      OutputFormat = "sarif"
+	FormatYAML       OutputFormat = "yaml"
+	FormatCompliance OutputFormat = "compliance"
 )
 
 // Formats lists every valid output format, sorted, for error messages and
@@ -45,7 +46,7 @@ const (
 func Formats() []string {
 	fs := []string{
 		string(FormatTable), string(FormatJSON), string(FormatCycloneDX),
-		string(FormatSARIF), string(FormatYAML),
+		string(FormatSARIF), string(FormatYAML), string(FormatCompliance),
 	}
 	sort.Strings(fs)
 	return fs
@@ -68,6 +69,8 @@ func ParseFormat(s string) (OutputFormat, error) {
 		return FormatSARIF, nil
 	case FormatYAML:
 		return FormatYAML, nil
+	case FormatCompliance:
+		return FormatCompliance, nil
 	default:
 		return "", fmt.Errorf("unknown output format %q (valid: %s)", s, strings.Join(Formats(), ", "))
 	}
@@ -225,6 +228,11 @@ func (c *Config) Validate() error {
 	}
 	if c.CDXVersion != "1.6" && c.CDXVersion != "1.7" {
 		return fmt.Errorf("--cdx-version must be 1.6 or 1.7, got %q", c.CDXVersion)
+	}
+	// Gating on compliance you never evaluated is CI theater: the gate would
+	// silently never fire. Require --compliance whenever --fail-on names it.
+	if c.Policy.ReferencesCompliance() && len(c.Compliance) == 0 {
+		return fmt.Errorf("--fail-on references compliance but no --compliance framework was given")
 	}
 	stdout := 0
 	for _, o := range c.Outputs {

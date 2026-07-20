@@ -1,0 +1,59 @@
+# OWASP Agentic AI — Threats and Mitigations (Agentic Security Initiative).
+#
+# HONESTY CONTRACT: these threats are overwhelmingly RUNTIME and BEHAVIORAL —
+# an agent's memory, tool use, privileges, goals, and multi-agent interactions —
+# which a static AIBOM scan cannot observe. AIROM does not (yet) detect agents,
+# tools, or MCP endpoints, so nearly every threat here is `manual`. The one it
+# speaks to directly is code execution in the model supply chain (T11), which is
+# exactly what the artifact-risk overlay detects (poisoned pickle, Keras Lambda,
+# unsafe torch.load). That single, honest link is the point — and the breadth of
+# `manual` here is a truthful signal of where static analysis stops.
+id: owasp-agentic
+name: "OWASP Agentic AI — Threats and Mitigations"
+version: "1.0"
+url: "https://genai.owasp.org/initiatives/#agenticsecurity"
+controls:
+  - id: T1
+    title: "Memory Poisoning — malicious data corrupts an agent's short- or long-term memory"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T2
+    title: "Tool Misuse — an agent is manipulated into abusing its authorized tools"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T3
+    title: "Privilege Compromise — an agent escalates or misuses its permissions"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T4
+    title: "Resource Overload — compute/memory/service exhaustion via the agent"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T5
+    title: "Cascading Hallucination Attacks — false information propagates through agent actions"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T6
+    title: "Intent Breaking & Goal Manipulation — an agent's objectives are subverted"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T8
+    title: "Repudiation & Untraceability — agent actions cannot be attributed or audited"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T9
+    title: "Identity Spoofing & Impersonation — an actor impersonates an agent or user"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T10
+    title: "Overwhelming Human-in-the-Loop — approval fatigue defeats human oversight"
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    manual: true
+  - id: T11
+    title: "Unexpected RCE and Code Attacks — code execution through the model/artifact supply chain"
+    text: >-
+      A statically-detected model-artifact or unsafe-load risk (poisoned pickle,
+      Keras Lambda, unsafe torch.load) is exactly this threat's supply-chain
+      surface; its presence is a gap until evaluated and remediated.
+    ref: "https://genai.owasp.org/initiatives/#agenticsecurity"
+    gap_if: "risk"

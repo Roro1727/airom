@@ -34,9 +34,29 @@ func TestEmbeddedSpecsLoad(t *testing.T) {
 	if len(fws) == 0 {
 		t.Fatal("no frameworks embedded")
 	}
-	if _, ok := fws["nist-ai-rmf"]; !ok {
-		t.Errorf("nist-ai-rmf not embedded; got %v", IDs())
+	for _, want := range []string{"nist-ai-rmf", "owasp-agentic"} {
+		if _, ok := fws[want]; !ok {
+			t.Errorf("%s not embedded; got %v", want, IDs())
+		}
 	}
+}
+
+// TestOWASPAgenticMapsRCE: the one auto-evaluable OWASP threat (T11, code
+// execution) maps to the risk overlay — a risk present makes it a gap.
+func TestOWASPAgenticMapsRCE(t *testing.T) {
+	res, err := Evaluate(inv(), []string{"owasp-agentic"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range res[0].Controls {
+		if c.ID == "T11" {
+			if c.State != airom.ControlGap { // inv() has an unsafe-load risk
+				t.Errorf("T11 = %s, want gap (risk present)", c.State)
+			}
+			return
+		}
+	}
+	t.Fatal("T11 not found in owasp-agentic")
 }
 
 // TestEvaluateStates: met (evidence found), gap (a risk present), and manual

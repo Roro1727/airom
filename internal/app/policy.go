@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/airomhq/airom/internal/compliance"
 	"github.com/airomhq/airom/pkg/airom"
 )
 
@@ -57,6 +58,12 @@ var (
 	// (by severity), or "risk:pickle-import" (by catalog slug). ':' is outside
 	// the ident charset, so these need their own token form.
 	riskRe = regexp.MustCompile(`^risk(?::([a-z][a-z0-9-]*))?$`)
+	// complianceRe matches the compliance-gap selectors: "compliance" /
+	// "compliance:gap" (any gap), "compliance:<framework>" (a gap in that
+	// framework), or "compliance:<framework>:<control>" (that control is a gap).
+	// The selector carries uppercase and dots (control ids like MAP-2.1), so it
+	// gets a permissive capture that parseComplianceSel then validates.
+	complianceRe = regexp.MustCompile(`^compliance(?::(.+))?$`)
 )
 
 // MatchAny is the policy used when --exit-code is set without --fail-on:
@@ -82,9 +89,30 @@ func ParsePolicy(expr string) (*Policy, error) {
 			}
 			conj.terms = append(conj.terms, t)
 		}
+		// A compliance selector is inventory-level, not per-component, so it
+		// cannot be AND-combined with a component term in one clause — a single
+		// component can never satisfy both. Reject the mix rather than let it
+		// silently never fire. It composes fine across clauses with "|".
+		if hasComplianceTerm(conj) && len(conj.terms) > 1 {
+			return nil, fmt.Errorf("--fail-on: a compliance selector cannot be combined with '&'; use '|' to OR it with other terms")
+		}
 		p.anyOf = append(p.anyOf, conj)
 	}
 	return p, nil
+}
+
+// hasComplianceTerm reports whether a clause contains a compliance selector.
+func hasComplianceTerm(conj conjunction) bool {
+	for _, t := range conj.terms {
+		if isComplianceIdent(t.Ident) {
+			return true
+		}
+	}
+	return false
+}
+
+func isComplianceIdent(id string) bool {
+	return id == "compliance" || strings.HasPrefix(id, "compliance:")
 }
 
 func parseTerm(raw string) (term, error) {
@@ -107,6 +135,14 @@ func parseTerm(raw string) (term, error) {
 		if sel := m[1]; sel != "" && !validRiskSelector(sel) {
 			return term{}, fmt.Errorf("unknown risk selector %q; want a severity (%s) or a slug (%s)",
 				sel, strings.Join(riskSeverityList(), ", "), strings.Join(riskSlugList(), ", "))
+		}
+		return term{Ident: s}, nil
+	}
+	// Compliance-gap selectors ("compliance", "compliance:gap",
+	// "compliance:<framework>[:<control>]").
+	if m := complianceRe.FindStringSubmatch(s); m != nil {
+		if _, err := parseComplianceSel(m[1]); err != nil {
+			return term{}, err
 		}
 		return term{Ident: s}, nil
 	}
@@ -178,12 +214,96 @@ func (p *Policy) Matches(inv *airom.Inventory) bool {
 		return false
 	}
 	for _, conj := range p.anyOf {
+		// A compliance clause is inventory-level (its selector was parse-time
+		// guaranteed to be the clause's only term), evaluated against the
+		// compliance overlay rather than any single component.
+		if len(conj.terms) == 1 && isComplianceIdent(conj.terms[0].Ident) {
+			if complianceMatches(conj.terms[0].Ident, inv) {
+				return true
+			}
+			continue
+		}
 		for i := range inv.Components {
 			c := &inv.Components[i]
 			if c.Kind == airom.KindApplication {
 				continue
 			}
 			if conjunctionMatches(conj, c) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// complianceSel is a parsed compliance-gap selector. Empty Framework matches
+// any framework; empty Control matches any control in the framework.
+type complianceSel struct {
+	Framework string
+	Control   string
+}
+
+// parseComplianceSel parses the selector after "compliance:" (or "" for bare
+// "compliance"), validating any framework/control names against the embedded
+// specs so a typo fails loudly instead of never firing.
+func parseComplianceSel(raw string) (complianceSel, error) {
+	switch raw {
+	case "", "gap":
+		return complianceSel{}, nil // any gap, any framework
+	}
+	fw, control, hasControl := strings.Cut(raw, ":")
+	if !compliance.HasFramework(fw) {
+		return complianceSel{}, fmt.Errorf("unknown compliance framework %q; valid: %s",
+			fw, strings.Join(compliance.IDs(), ", "))
+	}
+	if hasControl {
+		if !compliance.HasControl(fw, control) {
+			return complianceSel{}, fmt.Errorf("compliance framework %q has no control %q", fw, control)
+		}
+	}
+	return complianceSel{Framework: fw, Control: control}, nil
+}
+
+// complianceMatches reports whether the inventory has a gap matching the
+// selector — the gate fires on a GAP (a manual control is not a failure, and a
+// met is a pass). Like every --fail-on term it runs over the FULL assembled
+// inventory: --min-confidence reshapes the emitted report but never the gate,
+// so filtering low-confidence components cannot bypass a CI compliance gate.
+func complianceMatches(ident string, inv *airom.Inventory) bool {
+	raw := ""
+	if strings.HasPrefix(ident, "compliance:") {
+		raw = strings.TrimPrefix(ident, "compliance:")
+	}
+	sel, err := parseComplianceSel(raw)
+	if err != nil {
+		return false // validated at parse time; unreachable in practice
+	}
+	for _, fw := range inv.Compliance {
+		if sel.Framework != "" && fw.Framework != sel.Framework {
+			continue
+		}
+		for _, c := range fw.Controls {
+			if sel.Control != "" && c.ID != sel.Control {
+				continue
+			}
+			if c.State == airom.ControlGap {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ReferencesCompliance reports whether the policy gates on a compliance
+// selector — so config validation can reject gating on compliance that was
+// never evaluated (--fail-on compliance:gap without --compliance).
+func (p *Policy) ReferencesCompliance() bool {
+	if p == nil {
+		return false
+	}
+	for _, conj := range p.anyOf {
+		for _, t := range conj.terms {
+			if isComplianceIdent(t.Ident) {
 				return true
 			}
 		}

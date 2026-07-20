@@ -60,7 +60,39 @@ overlay](./risks.md) via `gap_if: risk`.
 | Format | Where |
 |--------|-------|
 | CycloneDX | `definitions.standards[]` (the framework + its `requirements[]`) and `declarations` — AIROM as a first-party `assessor`, one `claim` + `attestation.map[]` entry per control, with a graded `conformance.score` (omitted for manual). Evidence points at the component `bom-ref`s. |
+| Compliance report (`-o compliance`) | A human-readable Markdown report: per framework a summary line (`N controls — X met, Y gap, Z manual`) and a table of every control with its state and evidence. |
 | Native JSON / YAML | `inventory.compliance[]` — `{framework, name, version, controls[]}`, each control `{id, title, state, score, rationale, evidence[], counterEvidence[]}`. |
+
+```bash
+# The Markdown report alongside the machine-readable BOM
+airom scan . --compliance nist-ai-rmf -o compliance=report.md -o cyclonedx=bom.json
+```
+
+## Gating in CI
+
+`--fail-on` gates on a **gap** (a manual control is not a failure; a met is a pass):
+
+| Selector | Fires when |
+|----------|-----------|
+| `compliance:gap` | any control in any evaluated framework is a gap |
+| `compliance:<framework>` | any control in that framework is a gap |
+| `compliance:<framework>:<control>` | that specific control is a gap |
+
+```bash
+airom scan . --compliance nist-ai-rmf --exit-code 1 --fail-on "compliance:gap"
+```
+
+A compliance selector is inventory-level, so it cannot be `&`-combined with a
+component term (use `|`), and `--fail-on` referencing compliance requires
+`--compliance` to have been given — gating on a framework you never evaluated is
+a configuration error, not a silent pass.
+
+> **The gate evaluates the full assembly.** Like every `--fail-on` selector,
+> `compliance:*` is evaluated over the whole assembled inventory — `--min-confidence`
+> does **not** relax it. The emitted report *does* honor `--min-confidence` (it is
+> presentation), so under a high `--min-confidence` a run can fail on a gap the
+> report shows as met. That asymmetry is deliberate: a CI gate you could bypass by
+> hiding low-confidence components would be no gate at all.
 
 The mapping stays **deterministic and offline** — the frameworks are static
 data, no LLM, no network.
@@ -76,6 +108,12 @@ filter dropped.
   subset: the inventory/documentation subcategories (MAP) are auto-evaluated
   from the AIBOM, security/resilience (MEASURE-2.7) maps to the risk overlay,
   and the governance subcategories (GOVERN, MANAGE) are `manual`.
+- **`owasp-agentic`** — OWASP Agentic AI, Threats and Mitigations. These threats
+  are overwhelmingly runtime/behavioral (agent memory, tools, privileges, goals),
+  which a static scan cannot observe, so nearly all are `manual`. The one AIROM
+  speaks to directly is **T11 (Unexpected RCE and Code Attacks)**, mapped to the
+  artifact-risk overlay — the honest breadth of `manual` marks where static
+  analysis stops (AIROM does not yet detect agents, tools, or MCP endpoints).
 
-_More frameworks (OWASP Agentic Top 10, the EU AI Act) and a human-readable
-compliance report are tracked in [ROADMAP.md](./ROADMAP.md)._
+_More frameworks (the EU AI Act) and richer agentic detection are tracked in
+[ROADMAP.md](./ROADMAP.md)._

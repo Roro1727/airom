@@ -83,6 +83,11 @@ func validate(fw *framework) error {
 	if fw.ID == "" || fw.Name == "" || fw.Version == "" {
 		return fmt.Errorf("framework id, name, and version are required")
 	}
+	// "gap" is reserved: the --fail-on grammar reads `compliance:gap` as
+	// "any gap", so a framework with that id would be unreachable by name.
+	if fw.ID == "gap" {
+		return fmt.Errorf("framework id %q is reserved (collides with the compliance:gap selector)", fw.ID)
+	}
 	if len(fw.Controls) == 0 {
 		return fmt.Errorf("framework %q has no controls", fw.ID)
 	}
@@ -138,6 +143,36 @@ func IDs() []string {
 	}
 	sort.Strings(ids)
 	return ids
+}
+
+// HasFramework reports whether id names an embedded framework — for
+// --fail-on compliance:<framework> validation.
+func HasFramework(id string) bool {
+	fws, err := loadFrameworks()
+	if err != nil {
+		return false
+	}
+	_, ok := fws[id]
+	return ok
+}
+
+// HasControl reports whether framework id defines control controlID — for
+// --fail-on compliance:<framework>:<control> validation.
+func HasControl(id, controlID string) bool {
+	fws, err := loadFrameworks()
+	if err != nil {
+		return false
+	}
+	fw, ok := fws[id]
+	if !ok {
+		return false
+	}
+	for i := range fw.Controls {
+		if fw.Controls[i].ID == controlID {
+			return true
+		}
+	}
+	return false
 }
 
 // Evaluate maps each requested framework onto inv, returning one
