@@ -38,6 +38,7 @@ func (d *Dockerfile) DetectFile(_ context.Context, f *detect.File) ([]detect.Fin
 	}
 
 	var hits []*hit
+	var extra []detect.Finding
 	seen := map[string]bool{}
 	var cur *hit
 
@@ -64,6 +65,11 @@ func (d *Dockerfile) DetectFile(_ context.Context, f *detect.File) ([]detect.Fin
 				cur.endpoint = firstPort(arg)
 			}
 		case "ENV":
+			// A MODEL_ID env var names a served model regardless of the base
+			// image, so it stands alone rather than attaching to a hit.
+			if v, ok := envModelID(arg); ok {
+				extra = append(extra, modelEnvFinding(v, i+1))
+			}
 			// OLLAMA_HOST is specific enough to stand alone when no base
 			// image named Ollama has matched.
 			if cur == nil && strings.Contains(line, "OLLAMA_HOST") && !seen["ollama"] {
@@ -77,5 +83,5 @@ func (d *Dockerfile) DetectFile(_ context.Context, f *detect.File) ([]detect.Fin
 		}
 	}
 
-	return findings(hits), nil
+	return append(findings(hits), extra...), nil
 }

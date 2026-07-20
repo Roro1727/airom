@@ -26,16 +26,20 @@ func runInfra(t *testing.T, det fileDetector, path, content string) []detect.Fin
 	return got
 }
 
-// assertNoLeak checks the single AI finding did not absorb a later unrelated
-// service's endpoint or env keys.
+// assertNoLeak checks the named AI infra finding did not absorb a later
+// unrelated service's endpoint or env keys. A standalone MODEL_ID model
+// finding may also be present (the unrelated service's env, surfaced as its
+// own component) — that is not a leak and is ignored here.
 func assertNoLeak(t *testing.T, got []detect.Finding, wantTool string) {
 	t.Helper()
-	if len(got) != 1 {
-		t.Fatalf("want exactly one finding (%s), got %d: %+v", wantTool, len(got), got)
+	var f *detect.Finding
+	for i := range got {
+		if got[i].Claim.Name == wantTool {
+			f = &got[i]
+		}
 	}
-	f := got[0]
-	if f.Claim.Name != wantTool {
-		t.Errorf("finding name = %q, want %q", f.Claim.Name, wantTool)
+	if f == nil {
+		t.Fatalf("want a finding named %q, got %+v", wantTool, got)
 	}
 	if f.Claim.Infra != nil && f.Claim.Infra.Endpoint != "" {
 		t.Errorf("%s absorbed an unrelated service's endpoint %q", wantTool, f.Claim.Infra.Endpoint)

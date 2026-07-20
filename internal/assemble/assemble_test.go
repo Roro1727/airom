@@ -76,6 +76,55 @@ func TestClassCollision(t *testing.T) {
 	}
 }
 
+// TestModelFoldProviderless: a model surfaced from a config string (MODEL_ID
+// env, no provider) folds into the same-name code/manifest sighting that names
+// the vendor — one component, both occurrences, provider retained.
+func TestModelFoldProviderless(t *testing.T) {
+	code := finding(airom.KindHostedLLM, "gpt-4o", "openai", "rules/openai/model-literal", airom.MethodSourceCode, 0.85, "app.py", 3)
+	cfg := finding(airom.KindHostedLLM, "gpt-4o", "", "infra/compose", airom.MethodConfig, 0.6, "docker-compose.yml", 5)
+
+	inv := Build([]detect.Finding{code, cfg}, nil, airom.ScanStats{}, opts())
+
+	models := 0
+	for _, c := range inv.Components {
+		if c.Kind == airom.KindHostedLLM {
+			models++
+		}
+	}
+	if models != 1 {
+		t.Fatalf("hosted-llm components = %d, want 1 (config folds into code): %+v", models, inv.Components)
+	}
+	c := componentByName(t, inv, "gpt-4o")
+	if len(c.Evidence.Occurrences) != 2 {
+		t.Errorf("occurrences = %d, want 2 (code + config)", len(c.Evidence.Occurrences))
+	}
+	for _, p := range c.Props {
+		if p.Name == "airom:model.provider" && p.Value != "openai" {
+			t.Errorf("provider prop = %q, want openai", p.Value)
+		}
+	}
+}
+
+// TestModelFoldRefusesAmbiguousVendor: a providerless model does NOT fold when
+// two vendors share the name — the home is ambiguous, so it stays split rather
+// than guessing which vendor's model the config meant.
+func TestModelFoldRefusesAmbiguousVendor(t *testing.T) {
+	a := finding(airom.KindHostedLLM, "mixtral", "mistral", "rules/mistral/model-literal", airom.MethodSourceCode, 0.85, "a.py", 1)
+	b := finding(airom.KindHostedLLM, "mixtral", "groq", "rules/groq/model-literal", airom.MethodSourceCode, 0.85, "b.py", 1)
+	cfg := finding(airom.KindHostedLLM, "mixtral", "", "infra/compose", airom.MethodConfig, 0.6, "compose.yml", 1)
+
+	inv := Build([]detect.Finding{a, b, cfg}, nil, airom.ScanStats{}, opts())
+	models := 0
+	for _, c := range inv.Components {
+		if c.Kind == airom.KindHostedLLM {
+			models++
+		}
+	}
+	if models != 3 {
+		t.Errorf("hosted-llm components = %d, want 3 (ambiguous vendor: no fold)", models)
+	}
+}
+
 // TestWeightsIdentityIsContentHash: same hash at two paths = ONE component;
 // different hashes sharing a basename = TWO (§9.1).
 func TestWeightsIdentityIsContentHash(t *testing.T) {

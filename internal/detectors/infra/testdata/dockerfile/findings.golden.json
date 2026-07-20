@@ -68,6 +68,32 @@
         }
       },
       "Relations": null
+    },
+    {
+      "Claim": {
+        "Kind": "hosted-llm",
+        "Name": "meta-llama/Llama-3-8B",
+        "Group": "",
+        "Version": "",
+        "Provider": "",
+        "Licenses": null,
+        "Hashes": null,
+        "DownloadLocation": "",
+        "Model": null,
+        "Data": null,
+        "Infra": null,
+        "Package": null
+      },
+      "Occurrence": {
+        "location": {
+          "path": "",
+          "line": 3
+        },
+        "detectorId": "",
+        "method": "config-analysis",
+        "confidence": 0.6
+      },
+      "Relations": null
     }
   ]
 }

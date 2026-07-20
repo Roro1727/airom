@@ -42,6 +42,7 @@ func (c *Compose) DetectFile(_ context.Context, f *detect.File) ([]detect.Findin
 	}
 
 	var hits []*hit
+	var extra []detect.Finding
 	seen := map[string]bool{}
 	var cur *hit
 
@@ -49,6 +50,11 @@ func (c *Compose) DetectFile(_ context.Context, f *detect.File) ([]detect.Findin
 		line := strings.TrimSpace(strings.TrimSuffix(raw, "\r"))
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
+		}
+		// A MODEL_ID env var names a served model regardless of the service's
+		// image, so it is scanned on every line — not attributed to a hit.
+		if v, ok := envModelID(strings.TrimSpace(strings.TrimPrefix(line, "-"))); ok {
+			extra = append(extra, modelEnvFinding(v, i+1))
 		}
 		if ref, ok := composeImage(line); ok {
 			// Any image line opens a new service: stop attributing ports/env to
@@ -75,7 +81,7 @@ func (c *Compose) DetectFile(_ context.Context, f *detect.File) ([]detect.Findin
 		cur.addEnv(line)
 	}
 
-	return findings(hits), nil
+	return append(findings(hits), extra...), nil
 }
 
 // composeImage returns the value of an `image:` key, if the line is one.

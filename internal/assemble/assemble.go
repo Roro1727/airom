@@ -45,6 +45,7 @@ func Build(findings []detect.Finding, unknowns []airom.Unknown, stats airom.Scan
 		a.absorb(f)
 	}
 	a.foldPackages()
+	a.foldModels()
 
 	root := a.mintRoot(opts)
 	a.resolveRelations(findings)
@@ -417,15 +418,55 @@ func (a *assembly) foldPackages() {
 		if len(targets) != 1 || len(discless) == 0 {
 			continue // no unique home, or nothing to fold
 		}
-		into := targets[0]
-		for _, d := range discless {
-			a.mergeDraft(into, d)
-			delete(a.byID, d.id)
-			if a.redirects == nil {
-				a.redirects = map[airom.ID]airom.ID{}
-			}
-			a.redirects[d.id] = into.id
+		a.foldInto(targets[0], discless)
+	}
+}
+
+// foldModels merges a provider-less hosted/embedding-model draft into the
+// same-name sibling that DOES name a provider. A model surfaced from a config
+// string — MODEL_ID: gpt-4o in a compose/Dockerfile env — knows the id but not
+// the vendor; the code/manifest sighting that does is the same model, not a
+// second one. Folds only when exactly one provider-bearing sibling exists;
+// two vendors sharing a model name is left split rather than guessed. This is
+// the hosted-model analog of foldPackages (§9.1).
+func (a *assembly) foldModels() {
+	groups := map[string][]*draft{}
+	for _, d := range a.byID {
+		if d.key.Class != "hosted-model" {
+			continue
 		}
+		groups[d.key.Name] = append(groups[d.key.Name], d)
+	}
+
+	for _, ds := range groups {
+		if len(ds) < 2 {
+			continue
+		}
+		var targets, providerless []*draft
+		for _, d := range ds {
+			if d.key.Provider == "" {
+				providerless = append(providerless, d)
+			} else {
+				targets = append(targets, d)
+			}
+		}
+		if len(targets) != 1 || len(providerless) == 0 {
+			continue // no unique home, or nothing to fold
+		}
+		a.foldInto(targets[0], providerless)
+	}
+}
+
+// foldInto merges each src draft into dst, deletes it, and records the fold
+// redirect so relation endpoints minted from the pre-fold id retarget cleanly.
+func (a *assembly) foldInto(dst *draft, srcs []*draft) {
+	for _, d := range srcs {
+		a.mergeDraft(dst, d)
+		delete(a.byID, d.id)
+		if a.redirects == nil {
+			a.redirects = map[airom.ID]airom.ID{}
+		}
+		a.redirects[d.id] = dst.id
 	}
 }
 

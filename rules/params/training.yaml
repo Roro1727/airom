@@ -1,0 +1,44 @@
+# rules/params/training.yaml — training / fine-tuning hyperparameters.
+#
+# The inference-time knobs (temperature, max_tokens, ...) live in aiconfig.yaml.
+# This pack covers the *training lifecycle* — learning rate, epochs, batch and
+# schedule sizing — that a fine-tune config or a Hugging Face TrainingArguments
+# block declares. It closes the gap where AIROM's ai-config recognized only
+# inference params: a `learning_rate` or `num_train_epochs` was invisible.
+#
+# Same standalone-config fallback shape and confidence (~0.5) as aiconfig: one
+# param per line, ':' or '=' separator, a numeric value. Like aiconfig, the
+# `languages` gate admits only the eight lexer-backed source languages, so a
+# *multiline* TrainingArguments(...) / jobs.create(...) block in code is read
+# verbatim (each kwarg on its own line matches) but a standalone .yaml/.json
+# config is not reached. The comma-separated tail of a single-line call is a
+# non-goal, exactly as in aiconfig — the precise same-call-site story is
+# Go-side capture_params (§9.5).
+#
+# Names are chosen to carry meaning on their own. Ambiguous names that also
+# denote ordinary non-training config — `lr`, `epochs`, `batch_size`, and the
+# generic loop bounds `max_steps` / `warmup_steps` (a BFS cap, a load-test
+# counter) — are deliberately excluded: they trade signal for noise, the same
+# reason `seed`/`stop` were dropped from aiconfig, and stay capturable at an AI
+# call site via capture_params. Longer alternatives are listed first so a
+# prefix (learning_rate) never shadows its extension (learning_rate_multiplier).
+pack: training
+version: 1
+rules:
+  # Optimizer knobs: learning rate, decay, clipping.
+  - id: training/optimization
+    kind: ai-config
+    keywords: ["learning_rate_multiplier", "learning_rate", "weight_decay", "max_grad_norm", "adam_epsilon"]
+    pattern: '(?m)^[ \t]*["'']?(?P<param>learning_rate_multiplier|learning_rate|weight_decay|max_grad_norm|adam_epsilon)["'']?\s*[:=]\s*[0-9]'
+    regions: [code, string]
+    claim: { name: "${param}" }
+    confidence: 0.5
+
+  # Schedule / sizing: epochs, warmup ratio, accumulation, per-device batch.
+  - id: training/schedule
+    kind: ai-config
+    keywords: ["num_train_epochs", "n_epochs", "warmup_ratio", "gradient_accumulation_steps", "per_device_train_batch_size"]
+    pattern: '(?m)^[ \t]*["'']?(?P<param>num_train_epochs|n_epochs|warmup_ratio|gradient_accumulation_steps|per_device_train_batch_size)["'']?\s*[:=]\s*[0-9]'
+    regions: [code, string]
+    claim: { name: "${param}" }
+    confidence: 0.5
