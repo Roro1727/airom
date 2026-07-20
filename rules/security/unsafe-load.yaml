@@ -1,0 +1,24 @@
+# rules/security/unsafe-load.yaml — unsafe model-deserialization call sites.
+#
+# A source risk (docs/risks.md), not a component: the `risk:` field attaches
+# AIROM-RISK-UNSAFE-LOAD to the library the call site uses, with the call's
+# file:line as evidence. The category is deliberately high-precision — it flags
+# an EXPLICIT opt-out of a safe deserialization path, never a bare call.
+pack: unsafe-load
+version: 1
+rules:
+  # torch.load(..., weights_only=False): explicitly opting out of the safe
+  # weights-only path, so a malicious checkpoint's pickle executes on load.
+  # A bare torch.load(...) is NOT flagged — torch >= 2.6 defaults weights_only
+  # to True, so only the explicit opt-out is unambiguously unsafe. The pattern
+  # tolerates one level of nested parens, e.g. torch.load(open(p), weights_only=False).
+  - id: unsafe-load/torch-weights-only-false
+    kind: library
+    provider: pytorch
+    languages: [python]
+    keywords: ["torch.load"]
+    pattern: '\btorch\.load\s*\((?:[^()]|\([^()]*\))*\bweights_only\s*=\s*False\b'
+    regions: [code]
+    claim: { name: "torch" }
+    risk: AIROM-RISK-UNSAFE-LOAD
+    confidence: 0.8

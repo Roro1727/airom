@@ -14,7 +14,7 @@ import (
 // categories are the embedded rule-pack directories.
 var categories = []string{
 	"models", "embeddings", "frameworks", "vectordb",
-	"infra", "params", "prompts", "datasets",
+	"infra", "params", "prompts", "datasets", "security",
 }
 
 // TestEmbeddedRulesetLoads compiles the ENTIRE embedded set exactly as the

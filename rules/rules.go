@@ -10,7 +10,7 @@ import (
 	"io/fs"
 )
 
-//go:embed models/*.yaml embeddings/*.yaml frameworks/*.yaml vectordb/*.yaml infra/*.yaml params/*.yaml prompts/*.yaml datasets/*.yaml
+//go:embed models/*.yaml embeddings/*.yaml frameworks/*.yaml vectordb/*.yaml infra/*.yaml params/*.yaml prompts/*.yaml datasets/*.yaml security/*.yaml
 var packs embed.FS
 
 // FS returns the embedded rule-pack filesystem, rooted so that entries are

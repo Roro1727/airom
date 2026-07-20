@@ -44,6 +44,7 @@ loop, a parser, cross-file correlation — is a Go detector, not a rule
 | `claim` | map | yes | Templated component claim |
 | `relations` | list | no | Templated relationship claims |
 | `capture_params` | map | no | Same-call-site generation-parameter capture |
+| `risk` | string | no | Catalog `RiskID` to attach to the claimed component (see [risks.md](./risks.md)); lint-rejected if not a known id |
 | `confidence` | float | yes | Per-sighting confidence, `0 < c ≤ 0.99` |
 | `disable` | bool | overlay only | Disables an existing rule by ID (see [Merge semantics](#the-three-rule-layers-and-merge-semantics)) |
 

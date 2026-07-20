@@ -156,6 +156,44 @@ func TestKeywordPrefilterGates(t *testing.T) {
 	}
 }
 
+// TestRiskFieldEmitsRiskClaim: a rule with a `risk:` field attaches a
+// catalog RiskClaim to the component it claims, carrying the call-site
+// occurrence as evidence. Exercises the shipped unsafe-load rule.
+func TestRiskFieldEmitsRiskClaim(t *testing.T) {
+	pack := `
+pack: test
+version: 1
+rules:
+  - id: test/unsafe
+    kind: library
+    provider: pytorch
+    languages: [python]
+    keywords: ["torch.load"]
+    pattern: '\btorch\.load\s*\((?:[^()]|\([^()]*\))*\bweights_only\s*=\s*False\b'
+    regions: [code]
+    claim: { name: "torch" }
+    risk: AIROM-RISK-UNSAFE-LOAD
+    confidence: 0.8
+`
+	m := loadTestPack(t, pack)
+	got := detectOn(t, m, "load.py", "import torch\nx = torch.load(p, weights_only=False)\n")
+	if len(got) != 1 {
+		t.Fatalf("findings = %d, want 1", len(got))
+	}
+	risks := got[0].Claim.Risks
+	if len(risks) != 1 || risks[0].ID != airom.RiskUnsafeLoad {
+		t.Fatalf("Risks = %+v, want one AIROM-RISK-UNSAFE-LOAD", risks)
+	}
+	if got[0].Occurrence.Location.Line != 2 {
+		t.Errorf("occurrence line = %d, want 2 (the call site)", got[0].Occurrence.Location.Line)
+	}
+	// The safe path must not fire.
+	safe := detectOn(t, m, "ok.py", "import torch\nx = torch.load(p, weights_only=True)\n")
+	if len(safe) != 0 {
+		t.Errorf("safe torch.load flagged: %+v", safe)
+	}
+}
+
 // TestLanguageGate: rules with a language list never fire on other
 // languages.
 func TestLanguageGate(t *testing.T) {
@@ -224,6 +262,7 @@ rules:
 		{"bad language", strings.Replace(base(""), `kind: hosted-llm`, "kind: hosted-llm\n    languages: [cobol]", 1), "unsupported language"},
 		{"bad region", strings.Replace(base(""), `kind: hosted-llm`, "kind: hosted-llm\n    regions: [comment]", 1), "subset of [code, string]"},
 		{"unknown yaml key", strings.Replace(base(""), "confidence: 0.8", "confidence: 0.8\n    surprise: true", 1), "field surprise not found"},
+		{"unknown risk id", strings.Replace(base(""), "confidence: 0.8", "confidence: 0.8\n    risk: AIROM-RISK-NOPE", 1), "not a known catalog id"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

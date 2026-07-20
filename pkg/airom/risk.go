@@ -33,6 +33,10 @@ const (
 	// RiskSavedModelPyFunc is raised when a TensorFlow SavedModel graph
 	// contains a PyFunc-family op, which invokes arbitrary Python.
 	RiskSavedModelPyFunc RiskID = "AIROM-RISK-SAVEDMODEL-PYFUNC"
+	// RiskUnsafeLoad is raised at a source call site that deserializes a model
+	// through an unsafe path (e.g. torch.load with weights_only=False), so a
+	// malicious checkpoint would execute code on load.
+	RiskUnsafeLoad RiskID = "AIROM-RISK-UNSAFE-LOAD"
 )
 
 // RiskSeverity is the deterministic severity bucket for a risk.
@@ -85,6 +89,14 @@ var RiskCatalog = map[RiskID]RiskMeta{
 		Description: "The SavedModel graph contains a PyFunc-family op, which " +
 			"invokes arbitrary Python during inference.",
 	},
+	RiskUnsafeLoad: {
+		Severity: RiskMedium,
+		Slug:     "unsafe-load",
+		Title:    "Unsafe model deserialization",
+		Description: "A source call site deserializes a model through an unsafe " +
+			"path (e.g. torch.load with weights_only=False); a malicious " +
+			"checkpoint would execute code on load.",
+	},
 }
 
 // RiskByID returns the catalog entry, falling back to a low-severity unknown
@@ -119,6 +131,13 @@ func unknownSlug(id RiskID) string {
 		return "x"
 	}
 	return s
+}
+
+// IsKnownRisk reports whether id is a catalog entry — the validation gate for
+// a rule pack's `risk:` field.
+func IsKnownRisk(id RiskID) bool {
+	_, ok := RiskCatalog[id]
+	return ok
 }
 
 // RiskSlugToID inverts the catalog slug → id, for the --fail-on grammar.

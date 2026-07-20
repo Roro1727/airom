@@ -342,6 +342,11 @@ func (d *Detector) finding(r *compiledRule, buf, capBuf, content []byte, match [
 		Version:  expand(r.Claim.Version, fields),
 		Provider: r.Provider,
 	}
+	if r.Risk != "" {
+		// The risk rides on the component this rule claims; the match's
+		// occurrence (file:line of the call site) is its evidence.
+		claim.Risks = []detect.RiskClaim{{ID: airom.RiskID(r.Risk)}}
+	}
 
 	var rels []detect.RelationClaim
 	for _, cr := range r.relations {

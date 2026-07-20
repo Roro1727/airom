@@ -47,7 +47,11 @@ type Rule struct {
 	Relations     []RelationTmpl `yaml:"relations" json:"relations,omitempty"`
 	CaptureParams *CaptureParams `yaml:"capture_params" json:"captureParams,omitempty"`
 	Confidence    float64        `yaml:"confidence" json:"confidence"`
-	Disable       bool           `yaml:"disable" json:"disable,omitempty"` // overlay only
+	// Risk, when set, attaches an artifact-risk (docs/risks.md) to the
+	// component this rule claims — the mechanism for code-level risks such as
+	// an unsafe deserialization call site. Must be a known catalog RiskID.
+	Risk    string `yaml:"risk" json:"risk,omitempty"`
+	Disable bool   `yaml:"disable" json:"disable,omitempty"` // overlay only
 }
 
 // ClaimTmpl is the templated component claim (${group} substitution).
@@ -316,6 +320,9 @@ func validateRule(r Rule) error {
 	}
 	if r.Claim.Name == "" {
 		return fmt.Errorf("claim.name is required")
+	}
+	if r.Risk != "" && !airom.IsKnownRisk(airom.RiskID(r.Risk)) {
+		return fmt.Errorf("risk %q is not a known catalog id (see docs/risks.md)", r.Risk)
 	}
 
 	// Named-group / template cross-referencing (lint rule 5).

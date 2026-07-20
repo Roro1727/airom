@@ -104,5 +104,25 @@ Detected by scanning the `saved_model.pb` protobuf the detector already reads
 the op is a legitimate TensorFlow primitive, but an unexpected one in a
 distributed artifact warrants review.
 
+<a id="unsafe-load"></a>
+
+### AIROM-RISK-UNSAFE-LOAD — Unsafe model deserialization · **medium**
+
+`--fail-on` slug: `unsafe-load`
+
+A source call site deserializes a model through an unsafe path, so a malicious
+checkpoint would execute code on load. Unlike the other catalog entries (which
+inspect an artifact), this is a **code** risk: it rides on the library the call
+uses, with the call's file:line as evidence.
+
+The v1 rule flags `torch.load(..., weights_only=False)` — an explicit opt-out of
+PyTorch's safe weights-only path. A **bare** `torch.load(...)` is deliberately
+NOT flagged: torch ≥ 2.6 defaults `weights_only` to `True`, so only the explicit
+opt-out is unambiguously unsafe.
+
+This risk is emitted by the rule engine, not a binary detector — any rule pack
+can attach a catalog risk via a `risk:` field (see
+[rule-schema.md](./rule-schema.md)), which is how code-level risks extend.
+
 _Planned additions (`.keras`-zip Lambda, TFLite custom ops, pickle memo-evasion
-surfacing) are tracked in [ROADMAP.md](./ROADMAP.md)._
+surfacing, more unsafe-load call shapes) are tracked in [ROADMAP.md](./ROADMAP.md)._
