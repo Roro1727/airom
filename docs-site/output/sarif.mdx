@@ -159,6 +159,21 @@ strict flag sets `kind` and omits `level`.
 `--sarif-strict-kinds` changes the encoding of results only.
 </Note>
 
+## Risk results
+
+Inventory results are informational, but [artifact risks](/concepts/risks) are not —
+they are the one thing in a SARIF projection meant to fail a review. Each risk becomes a
+dedicated `risk/<slug>` rule (e.g. `risk/pickle-import`) whose result carries a real
+severity `level` — `error` for high, `warning` for medium — and a `security-severity`
+property so GitHub Code Scanning files it under **Security**, not a note. A poisoned
+checkpoint then surfaces as a security alert on the pull request that introduced it,
+anchored at the artifact's `file:line`.
+
+<Info>
+These carry a severity `level` regardless of `--sarif-strict-kinds`: a risk is a finding,
+not an inventory fact, so it is never downgraded to `kind: "informational"`.
+</Info>
+
 ## partialFingerprints
 
 ```json

@@ -140,6 +140,26 @@ Model facts with no native CycloneDX slot become namespaced properties:
 `airom:model.contextLength`, `airom:model.format`, `airom:model.baseModel`, and
 `airom:pickle.risk` / `airom:pickle.imports` for static pickle-walk findings.
 
+## `vulnerabilities[]` — the risk overlay
+
+[Artifact risks](/concepts/risks) — a poisoned pickle, a Keras `Lambda` layer, an
+unsafe-load call site — project into the top-level `vulnerabilities[]` array. Each is a
+non-CVE `id` (e.g. `AIROM-RISK-PICKLE-IMPORT`) with `source.name: airom`,
+`ratings[].method: other` (**AIROM claims no CVSS**), and `affects[].ref` pointing at the
+affected component's `bom-ref`.
+
+```json title="a risk in vulnerabilities[]"
+"vulnerabilities": [
+  {
+    "id": "AIROM-RISK-PICKLE-IMPORT",
+    "source": { "name": "airom" },
+    "ratings": [{ "severity": "high", "method": "other", "source": { "name": "airom" } }],
+    "affects": [{ "ref": "airom:1f3a9b2c4d5e6f70" }],
+    "properties": [{ "name": "airom:risk.detail", "value": "os.system, subprocess.Popen" }]
+  }
+]
+```
+
 ## Evidence
 
 Every component that has evidence carries it natively.
