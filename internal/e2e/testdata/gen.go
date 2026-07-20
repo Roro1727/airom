@@ -77,7 +77,7 @@ func brokenTorchZip() []byte {
 // working exploit.
 func riskyTorchPickle() []byte {
 	var b bytes.Buffer
-	b.Write([]byte{0x80, 0x02}) // PROTO 2
+	b.Write([]byte{0x80, 0x02})    // PROTO 2
 	b.WriteString("cos\nsystem\n") // GLOBAL "os" "system"
 	b.WriteByte('.')               // STOP
 	return b.Bytes()
