@@ -9,6 +9,7 @@ import (
 
 	// Register the built-in writers (init() side effects).
 	_ "github.com/airomhq/airom/internal/writer/cdx"
+	_ "github.com/airomhq/airom/internal/writer/compliancew"
 	_ "github.com/airomhq/airom/internal/writer/nativejson"
 	_ "github.com/airomhq/airom/internal/writer/sarifw"
 	_ "github.com/airomhq/airom/internal/writer/tablew"
@@ -17,11 +18,12 @@ import (
 
 // formatNames maps CLI output formats to writer registry names.
 var formatNames = map[OutputFormat]string{
-	FormatTable:     "table",
-	FormatJSON:      "json",
-	FormatCycloneDX: "cyclonedx",
-	FormatSARIF:     "sarif",
-	FormatYAML:      "yaml",
+	FormatTable:      "table",
+	FormatJSON:       "json",
+	FormatCycloneDX:  "cyclonedx",
+	FormatSARIF:      "sarif",
+	FormatYAML:       "yaml",
+	FormatCompliance: "compliance",
 }
 
 // emit renders the assembled inventory to every configured output
