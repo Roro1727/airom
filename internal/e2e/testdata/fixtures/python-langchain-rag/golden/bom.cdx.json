@@ -126,6 +126,51 @@
       }
     },
     {
+      "bom-ref": "airom:243c3c460eb1aeda",
+      "type": "machine-learning-model",
+      "name": "poisoned.pt",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+        }
+      ],
+      "purl": "pkg:generic/poisoned.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "torch-pickle"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        },
+        {
+          "name": "airom:pickle.imports",
+          "value": "os.system"
+        },
+        {
+          "name": "airom:pickle.risk",
+          "value": "high"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/poisoned.pt"
+          }
+        ]
+      }
+    },
+    {
       "bom-ref": "airom:3c77e68ca5b2bf87",
       "type": "machine-learning-model",
       "name": "text-embedding-3-large",
@@ -491,6 +536,40 @@
           }
         ]
       }
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "AIROM-RISK-PICKLE-IMPORT",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "high",
+          "method": "other"
+        }
+      ],
+      "description": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced.",
+      "affects": [
+        {
+          "ref": "airom:243c3c460eb1aeda"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/poisoned.pt"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "os.system"
+        }
+      ]
     }
   ]
 }

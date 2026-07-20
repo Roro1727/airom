@@ -90,9 +90,10 @@ func (Torch) DetectFile(_ context.Context, f *detect.File) ([]detect.Finding, er
 
 	model := &detect.ModelClaim{Format: format}
 	conf := 0.9
+	var risks []detect.RiskClaim
 	if risky := suspiciousGlobals(globals); len(risky) > 0 {
-		model.PickleRisk = &airom.PickleRisk{Globals: risky}
-		conf = 0.95
+		risks = []detect.RiskClaim{{ID: airom.RiskPickleImport, Detail: risky}}
+		conf = 0.95 // a smuggled os.system corroborates "this is a real pickle"
 	}
 
 	return []detect.Finding{{
@@ -101,6 +102,7 @@ func (Torch) DetectFile(_ context.Context, f *detect.File) ([]detect.Finding, er
 			Name:     f.Base(),
 			Provider: "local",
 			Model:    model,
+			Risks:    risks,
 		},
 		Occurrence: airom.Occurrence{
 			Method:     airom.MethodBinary,

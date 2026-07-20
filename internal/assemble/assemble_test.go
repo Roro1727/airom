@@ -340,6 +340,96 @@ func TestOrderIndependence(t *testing.T) {
 	}
 }
 
+// TestRiskAccumulationOrderIndependent: the same-hash weights file seen at
+// three paths, each flagging the pickle-import risk with different symbols,
+// merges to ONE component with ONE risk whose detail is the sorted union and
+// whose provenance occurrence is the deterministically-smallest path — byte-
+// identical under finding shuffle (P7).
+func TestRiskAccumulationOrderIndependent(t *testing.T) {
+	const hash = "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+	riskFinding := func(path string, detail []string) detect.Finding {
+		return detect.Finding{
+			Claim: detect.ComponentClaim{
+				Kind: airom.KindLocalModelFile, Name: "m.pt", Provider: "local",
+				Hashes: []airom.Hash{{Alg: "SHA-256", Hex: hash}},
+				Risks:  []detect.RiskClaim{{ID: airom.RiskPickleImport, Detail: detail}},
+			},
+			Occurrence: airom.Occurrence{
+				Location: airom.Location{Path: path}, DetectorID: "modelfilex/torch",
+				Method: airom.MethodBinary, Confidence: 0.95,
+			},
+		}
+	}
+	base := []detect.Finding{
+		riskFinding("z/m.pt", []string{"os.system"}),
+		riskFinding("a/m.pt", []string{"subprocess.Popen"}),
+		riskFinding("m/m.pt", []string{"os.system", "builtins.eval"}),
+	}
+	want := Build(base, nil, airom.ScanStats{}, opts())
+
+	// One component, one risk, unioned+sorted detail, smallest-path evidence.
+	var risky *airom.Component
+	for i := range want.Components {
+		if want.Components[i].Kind == airom.KindLocalModelFile {
+			risky = &want.Components[i]
+		}
+	}
+	if risky == nil || len(risky.Risks) != 1 {
+		t.Fatalf("want one local-model-file with one risk, got %+v", want.Components)
+	}
+	r := risky.Risks[0]
+	if r.ID != airom.RiskPickleImport || r.Severity != airom.RiskHigh {
+		t.Errorf("risk id/severity = %s/%s", r.ID, r.Severity)
+	}
+	wantDetail := []string{"builtins.eval", "os.system", "subprocess.Popen"}
+	if !reflect.DeepEqual(r.Detail, wantDetail) {
+		t.Errorf("detail = %v, want %v (sorted union)", r.Detail, wantDetail)
+	}
+	if r.Occurrence == nil || r.Occurrence.Location.Path != "a/m.pt" {
+		t.Errorf("evidence path = %v, want a/m.pt (smallest)", r.Occurrence)
+	}
+
+	rng := rand.New(rand.NewSource(7))
+	for trial := 0; trial < 20; trial++ {
+		sh := append([]detect.Finding(nil), base...)
+		rng.Shuffle(len(sh), func(i, j int) { sh[i], sh[j] = sh[j], sh[i] })
+		if got := Build(sh, nil, airom.ScanStats{}, opts()); !reflect.DeepEqual(want, got) {
+			t.Fatalf("trial %d: shuffled risk findings produced a different inventory", trial)
+		}
+	}
+}
+
+// TestRiskEvidenceTieIsTotalOrder: two sightings of one risk that tie on
+// (path, line, detector) but differ in a later field must still pick the same
+// provenance occurrence under shuffle — occLess is a total order (P7).
+func TestRiskEvidenceTieIsTotalOrder(t *testing.T) {
+	const hash = "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"
+	mk := func(col int) detect.Finding {
+		return detect.Finding{
+			Claim: detect.ComponentClaim{
+				Kind: airom.KindLocalModelFile, Name: "m.pt", Provider: "local",
+				Hashes: []airom.Hash{{Alg: "SHA-256", Hex: hash}},
+				Risks:  []detect.RiskClaim{{ID: airom.RiskPickleImport, Detail: []string{"os.system"}}},
+			},
+			Occurrence: airom.Occurrence{
+				Location:   airom.Location{Path: "m.pt", Line: 1, Column: col},
+				DetectorID: "modelfilex/torch", Method: airom.MethodBinary, Confidence: 0.95,
+			},
+		}
+	}
+	base := []detect.Finding{mk(9), mk(3), mk(7)}
+	want := Build(base, nil, airom.ScanStats{}, opts())
+
+	rng := rand.New(rand.NewSource(11))
+	for trial := 0; trial < 20; trial++ {
+		sh := append([]detect.Finding(nil), base...)
+		rng.Shuffle(len(sh), func(i, j int) { sh[i], sh[j] = sh[j], sh[i] })
+		if got := Build(sh, nil, airom.ScanStats{}, opts()); !reflect.DeepEqual(want, got) {
+			t.Fatalf("trial %d: tie on (path,line,detector) is order-dependent", trial)
+		}
+	}
+}
+
 // TestConfidenceMonotonic: adding evidence never decreases confidence.
 func TestConfidenceMonotonic(t *testing.T) {
 	fs := []detect.Finding{

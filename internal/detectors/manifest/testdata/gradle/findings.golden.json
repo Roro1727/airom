@@ -15,7 +15,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "maven"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -43,7 +44,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "maven"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -73,7 +75,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "maven"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {

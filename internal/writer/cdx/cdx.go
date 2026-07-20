@@ -138,6 +138,9 @@ func (b *builder) build() *cyclonedx.BOM {
 	if deps := buildDependencies(inv); len(deps) > 0 {
 		bom.Dependencies = &deps
 	}
+	if vulns := buildVulnerabilities(inv); len(vulns) > 0 {
+		bom.Vulnerabilities = &vulns
+	}
 	return bom
 }
 
@@ -560,11 +563,16 @@ func (b *builder) properties(c *airom.Component) *[]cyclonedx.Property {
 		for _, bp := range c.Model.GenerationParams {
 			p.add("airom:param."+bp.Name, paramValue(bp))
 		}
-		// Static pickle-walk findings (§3.3).
-		if pr := c.Model.PickleRisk; pr != nil {
-			p.add("airom:pickle.risk", pickleRisk(pr))
-			if len(pr.Globals) > 0 {
-				p.add("airom:pickle.imports", strings.Join(pr.Globals, "|"))
+	}
+
+	// Legacy pickle properties (§3.3), kept for one release as the inline view
+	// of the pickle-import risk; the authoritative home is vulnerabilities[].
+	// Derived from c.Risks so the two never disagree.
+	for _, r := range c.Risks {
+		if r.ID == airom.RiskPickleImport {
+			p.add("airom:pickle.risk", string(r.Severity))
+			if len(r.Detail) > 0 {
+				p.add("airom:pickle.imports", strings.Join(r.Detail, "|"))
 			}
 		}
 	}
@@ -610,14 +618,72 @@ func paramValue(bp airom.BoundParam) string {
 	return fmt.Sprintf("%s @ %s:%d", bp.Value, loc.Path, loc.Line)
 }
 
-// pickleRisk summarizes a PickleRisk into a level string. The current struct
-// carries only the suspicious GLOBAL imports, so the level is derived from
-// their presence (best-effort — no severity field exists yet).
-func pickleRisk(pr *airom.PickleRisk) string {
-	if len(pr.Globals) > 0 {
-		return "suspicious"
+// ── vulnerabilities (§3.12: the artifact-risk overlay) ──────────────────────
+
+// buildVulnerabilities projects the artifact-risk overlay into CycloneDX
+// vulnerabilities[] — one entry per (component, risk). The id is a non-CVE
+// AIROM catalog id with a named source (legal per the CDX schema); ratings use
+// method "other" (no CVSS is claimed); affects points at the component's
+// bom-ref. Deterministic: sorted by (affected bom-ref, risk id).
+func buildVulnerabilities(inv *airom.Inventory) []cyclonedx.Vulnerability {
+	var vulns []cyclonedx.Vulnerability
+	for i := range inv.Components {
+		c := &inv.Components[i]
+		for _, r := range c.Risks {
+			meta := airom.RiskByID(r.ID)
+			v := cyclonedx.Vulnerability{
+				ID:          string(r.ID),
+				Source:      &cyclonedx.Source{Name: "airom", URL: riskDocURL(meta.Slug)},
+				Ratings:     &[]cyclonedx.VulnerabilityRating{{Source: &cyclonedx.Source{Name: "airom"}, Severity: cdxSeverity(r.Severity), Method: cyclonedx.ScoringMethodOther}},
+				Description: meta.Description,
+				Affects:     &[]cyclonedx.Affects{{Ref: string(c.ID)}},
+			}
+			var props propList
+			if r.Occurrence != nil {
+				props.add("airom:risk.evidence", riskEvidence(r.Occurrence))
+			}
+			if len(r.Detail) > 0 {
+				props.add("airom:risk.symbols", strings.Join(r.Detail, "|"))
+			}
+			v.Properties = props.sorted()
+			vulns = append(vulns, v)
+		}
 	}
-	return "none"
+	sort.SliceStable(vulns, func(i, j int) bool {
+		ri := (*vulns[i].Affects)[0].Ref
+		rj := (*vulns[j].Affects)[0].Ref
+		if ri != rj {
+			return ri < rj
+		}
+		return vulns[i].ID < vulns[j].ID
+	})
+	return vulns
+}
+
+// riskDocURL is the stable documentation anchor for a risk slug.
+func riskDocURL(slug string) string {
+	return "https://github.com/airomhq/airom/blob/main/docs/risks.md#" + slug
+}
+
+// riskEvidence renders a risk occurrence as "path:line" (or "path" for a
+// whole-file artifact sighting).
+func riskEvidence(o *airom.Occurrence) string {
+	if o.Location.Line > 0 {
+		return fmt.Sprintf("%s:%d", o.Location.Path, o.Location.Line)
+	}
+	return o.Location.Path
+}
+
+// cdxSeverity maps an AIROM severity bucket onto the CycloneDX enum.
+func cdxSeverity(s airom.RiskSeverity) cyclonedx.Severity {
+	switch s {
+	case airom.RiskHigh:
+		return cyclonedx.SeverityHigh
+	case airom.RiskMedium:
+		return cyclonedx.SeverityMedium
+	default:
+		return cyclonedx.SeverityLow
+	}
 }
 
 // ── dependencies (§3.10) ────────────────────────────────────────────────────

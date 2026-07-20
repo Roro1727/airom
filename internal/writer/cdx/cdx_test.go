@@ -128,8 +128,12 @@ func fixtureInventory() *airom.Inventory {
 			ParamCount:    airom.KnownInt64(8030261248),
 			Quantization:  airom.KnownString("Q4_K_M"),
 			ContextLength: airom.KnownInt64(8192),
-			PickleRisk:    &airom.PickleRisk{Globals: []string{"os.system", "builtins.eval"}},
 		},
+		Risks: []airom.ArtifactRisk{{
+			ID: airom.RiskPickleImport, Severity: airom.RiskHigh,
+			Detail:     []string{"builtins.eval", "os.system"},
+			Occurrence: &airom.Occurrence{Location: airom.Location{Path: "models/llama.gguf"}, DetectorID: "modelfilex/torch", Method: airom.MethodBinary, Confidence: 0.95},
+		}},
 		Evidence: airom.Evidence{
 			Occurrences: []airom.Occurrence{{
 				Location:   airom.Location{Path: "models/llama.gguf", Line: 0},
@@ -418,7 +422,7 @@ func TestEncodesAndReparses(t *testing.T) {
 	if local.Hashes == nil || len(*local.Hashes) != 1 || (*local.Hashes)[0].Algorithm != cyclonedx.HashAlgoSHA256 {
 		t.Errorf("local hashes = %+v, want single SHA-256", local.Hashes)
 	}
-	if v, ok := propVal(local.Properties, "airom:pickle.imports"); !ok || v != "os.system|builtins.eval" {
+	if v, ok := propVal(local.Properties, "airom:pickle.imports"); !ok || v != "builtins.eval|os.system" {
 		t.Errorf("airom:pickle.imports = %q,%v", v, ok)
 	}
 	if _, ok := propVal(local.Properties, "airom:releaseTime"); !ok {
@@ -458,6 +462,32 @@ func TestEncodesAndReparses(t *testing.T) {
 	}
 	if !foundDep {
 		t.Error("depends-on (root→framework) not in dependencies[]")
+	}
+
+	// artifact risk became a vulnerabilities[] entry affecting the model file.
+	if bom.Vulnerabilities == nil {
+		t.Fatal("vulnerabilities[] missing")
+	}
+	var vuln *cyclonedx.Vulnerability
+	for i := range *bom.Vulnerabilities {
+		if (*bom.Vulnerabilities)[i].ID == "AIROM-RISK-PICKLE-IMPORT" {
+			vuln = &(*bom.Vulnerabilities)[i]
+		}
+	}
+	if vuln == nil {
+		t.Fatal("AIROM-RISK-PICKLE-IMPORT vulnerability missing")
+	}
+	if vuln.Source == nil || vuln.Source.Name != "airom" {
+		t.Errorf("vuln source = %+v, want airom", vuln.Source)
+	}
+	if vuln.Ratings == nil || (*vuln.Ratings)[0].Severity != cyclonedx.SeverityHigh || (*vuln.Ratings)[0].Method != cyclonedx.ScoringMethodOther {
+		t.Errorf("vuln rating = %+v, want high/other", vuln.Ratings)
+	}
+	if vuln.Affects == nil || (*vuln.Affects)[0].Ref != string(idLocal) {
+		t.Errorf("vuln affects = %+v, want the model-file ref", vuln.Affects)
+	}
+	if v, ok := propVal(vuln.Properties, "airom:risk.symbols"); !ok || v != "builtins.eval|os.system" {
+		t.Errorf("vuln airom:risk.symbols = %q,%v", v, ok)
 	}
 
 	// vector-db airom:rel.* edge.

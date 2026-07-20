@@ -62,17 +62,20 @@ components:
     kind: local-model-file
     model:
       format: gguf
-      pickleRisk:
-        globals:
-          - os.system
     name: tiny.gguf
-    props:
-      - name: airom:pickle.risk
-        value: high
-      - name: airom:pickle.imports
-        value: os.system
     provider: local
     purl: pkg:generic/tiny.gguf?checksum=sha256:abababababababababababababababababababababababababababababababab
+    risks:
+      - detail:
+          - os.system
+        id: AIROM-RISK-PICKLE-IMPORT
+        occurrence:
+          confidence: 0.95
+          detectorId: modelfilex/torch
+          location:
+            path: models/tiny.gguf
+          method: binary-analysis
+        severity: high
   - confidence: 0.985
     evidence:
       occurrences:

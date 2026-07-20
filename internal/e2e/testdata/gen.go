@@ -35,6 +35,11 @@ func main() {
 	write(filepath.Join(fixtures, "python-langchain-rag", "models", "tiny.gguf"), validGGUF())
 	write(filepath.Join(fixtures, "malformed-models", "models", "tiny.gguf"), validGGUF())
 
+	// Inert risky checkpoint: a bare os.system GLOBAL reference (no reduce, no
+	// call) — the static pickle walk flags AIROM-RISK-PICKLE-IMPORT, proving the
+	// end-to-end risk overlay through the assembler and every writer.
+	write(filepath.Join(fixtures, "python-langchain-rag", "models", "poisoned.pt"), riskyTorchPickle())
+
 	// Deliberately corrupt weight files (chaos fixture).
 	write(filepath.Join(fixtures, "malformed-models", "models", "broken.pt"), brokenTorchZip())
 	write(filepath.Join(fixtures, "malformed-models", "models", "corrupt.safetensors"), corruptSafetensors())
@@ -61,6 +66,20 @@ func brokenTorchZip() []byte {
 	var b bytes.Buffer
 	b.Write([]byte{'P', 'K', 0x03, 0x04})
 	b.WriteString("this is not a real zip central directory, just noise\x00\x01\x02")
+	return b.Bytes()
+}
+
+// riskyTorchPickle is a minimal, INERT pickle stream: proto 2, a GLOBAL
+// opcode naming os.system, then STOP. It only *references* the callable (no
+// REDUCE, no arguments), so even a real unpickle would merely bind the name —
+// nothing executes. The static walk still flags it, which is the point: this
+// exercises the AIROM-RISK-PICKLE-IMPORT path end-to-end without shipping a
+// working exploit.
+func riskyTorchPickle() []byte {
+	var b bytes.Buffer
+	b.Write([]byte{0x80, 0x02}) // PROTO 2
+	b.WriteString("cos\nsystem\n") // GLOBAL "os" "system"
+	b.WriteByte('.')               // STOP
 	return b.Bytes()
 }
 

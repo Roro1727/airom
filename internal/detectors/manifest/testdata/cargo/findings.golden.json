@@ -15,7 +15,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "cargo"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -43,7 +44,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "cargo"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -71,7 +73,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "cargo"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -99,7 +102,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "cargo"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {

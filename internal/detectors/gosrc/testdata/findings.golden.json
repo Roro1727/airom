@@ -15,7 +15,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -43,7 +44,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -69,7 +71,8 @@
         "Model": null,
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -96,7 +99,8 @@
         "Model": null,
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -128,7 +132,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -156,7 +161,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -184,7 +190,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -212,7 +219,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "golang"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {

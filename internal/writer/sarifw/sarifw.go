@@ -58,12 +58,14 @@ func (wr Writer) Write(w io.Writer, inv *airom.Inventory) error {
 func (wr Writer) build(inv *airom.Inventory) sarifReport {
 	comps := scannedComponents(inv)
 	rules, ruleIndex := buildRules(comps)
+	riskRules, riskIndex := buildRiskRules(comps, len(rules))
+	rules = append(rules, riskRules...)
 
 	run := sarifRun{
 		Tool:        buildTool(inv, rules),
 		ColumnKind:  columnKind,
 		Invocations: []sarifInvocation{buildInvocation(inv)},
-		Results:     wr.buildResults(comps, ruleIndex),
+		Results:     append(wr.buildResults(comps, ruleIndex), buildRiskResults(comps, riskIndex)...),
 	}
 
 	// SRCROOT anchors artifact URIs to a filesystem root, so it is emitted only
@@ -131,6 +133,125 @@ func buildRules(comps []airom.Component) ([]sarifRule, map[string]int) {
 		})
 	}
 	return rules, index
+}
+
+// buildRiskRules adds one security rule per artifact-risk type present, id
+// "risk/<slug>", carrying the GitHub `security-severity` property so the
+// findings bucket in the Code Scanning UI. Indices continue from offset (the
+// detector-rule count) so risk results can reference them. Deterministic:
+// rules sorted by slug.
+func buildRiskRules(comps []airom.Component, offset int) ([]sarifRule, map[string]int) {
+	present := map[airom.RiskID]bool{}
+	for _, c := range comps {
+		for _, r := range c.Risks {
+			present[r.ID] = true
+		}
+	}
+	if len(present) == 0 {
+		return nil, nil
+	}
+	ids := make([]airom.RiskID, 0, len(present))
+	for id := range present {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool { return airom.RiskByID(ids[i]).Slug < airom.RiskByID(ids[j]).Slug })
+
+	rules := make([]sarifRule, 0, len(ids))
+	index := make(map[string]int, len(ids))
+	for i, id := range ids {
+		meta := airom.RiskByID(id)
+		ruleID := "risk/" + meta.Slug
+		index[ruleID] = offset + i
+		rules = append(rules, sarifRule{
+			ID:                   ruleID,
+			Name:                 upperCamelCase(ruleID),
+			ShortDescription:     sarifText{Text: meta.Description},
+			DefaultConfiguration: sarifConfig{Level: riskLevel(meta.Severity)},
+			HelpURI:              helpURI + "risks.md#" + meta.Slug,
+			Properties: map[string]any{
+				"security-severity":   securitySeverity(meta.Severity),
+				"airom:risk.severity": string(meta.Severity),
+			},
+		})
+	}
+	return rules, index
+}
+
+// buildRiskResults emits one security result per (component, risk), in
+// (component, sorted-risk) order — c.Risks is already sorted by the assembler.
+func buildRiskResults(comps []airom.Component, index map[string]int) []sarifResult {
+	if len(index) == 0 {
+		return nil
+	}
+	var results []sarifResult
+	for _, c := range comps {
+		for _, r := range c.Risks {
+			meta := airom.RiskByID(r.ID)
+			ruleID := "risk/" + meta.Slug
+			res := sarifResult{
+				RuleID:     ruleID,
+				RuleIndex:  index[ruleID],
+				Level:      riskLevel(meta.Severity),
+				Message:    sarifText{Text: riskMessage(c, r, meta)},
+				Locations:  riskLocations(r),
+				Properties: map[string]any{"airom:componentId": string(c.ID), "airom:risk.severity": string(r.Severity)},
+			}
+			if len(r.Detail) > 0 {
+				res.Properties["airom:risk.symbols"] = strings.Join(r.Detail, "|")
+			}
+			results = append(results, res)
+		}
+	}
+	return results
+}
+
+// riskLocations projects a risk's provenance occurrence to a SARIF location,
+// or an empty slice when the risk carries none.
+func riskLocations(r airom.ArtifactRisk) []sarifLocation {
+	if r.Occurrence == nil {
+		return []sarifLocation{}
+	}
+	o := *r.Occurrence
+	return []sarifLocation{{
+		PhysicalLocation: sarifPhysicalLocation{
+			ArtifactLocation: sarifArtifactLocation{URI: o.Location.Path, URIBaseID: srcRootID},
+			Region:           buildRegion(o),
+		},
+	}}
+}
+
+// riskMessage renders the security-result headline.
+func riskMessage(c airom.Component, r airom.ArtifactRisk, meta airom.RiskMeta) string {
+	msg := fmt.Sprintf("%s in %q", meta.Title, c.Name)
+	if len(r.Detail) > 0 {
+		msg += ": " + strings.Join(r.Detail, ", ")
+	}
+	return msg
+}
+
+// riskLevel maps a severity bucket to a SARIF result level.
+func riskLevel(s airom.RiskSeverity) string {
+	switch s {
+	case airom.RiskHigh:
+		return "error"
+	case airom.RiskMedium:
+		return "warning"
+	default:
+		return "note"
+	}
+}
+
+// securitySeverity maps a severity bucket to the GitHub Code Scanning
+// `security-severity` bucket marker (a 0–10 string, NOT a CVSS claim).
+func securitySeverity(s airom.RiskSeverity) string {
+	switch s {
+	case airom.RiskHigh:
+		return "8.0"
+	case airom.RiskMedium:
+		return "5.0"
+	default:
+		return "3.0"
+	}
 }
 
 // buildTool assembles tool.driver (§3.1).
@@ -262,8 +383,12 @@ func resultProperties(c airom.Component, o airom.Occurrence) map[string]any {
 	if c.PURL != "" {
 		p["airom:purl"] = c.PURL
 	}
-	if c.Model != nil && c.Model.PickleRisk != nil && len(c.Model.PickleRisk.Globals) > 0 {
-		p["airom:pickle.risk"] = "suspicious"
+	// Legacy inline signal, kept for one release; the authoritative risk output
+	// is the security results keyed to the risk/<slug> rules.
+	for _, r := range c.Risks {
+		if r.ID == airom.RiskPickleImport {
+			p["airom:pickle.risk"] = string(r.Severity)
+		}
 	}
 	return p
 }

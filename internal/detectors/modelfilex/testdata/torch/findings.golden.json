@@ -18,12 +18,12 @@
           "ContextLength": 0,
           "Format": "torch-zip",
           "BaseModel": "",
-          "PickleRisk": null,
           "Card": null
         },
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -55,16 +55,19 @@
           "ContextLength": 0,
           "Format": "torch-zip",
           "BaseModel": "",
-          "PickleRisk": {
-            "globals": [
-              "os.system"
-            ]
-          },
           "Card": null
         },
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": [
+          {
+            "ID": "AIROM-RISK-PICKLE-IMPORT",
+            "Detail": [
+              "os.system"
+            ]
+          }
+        ]
       },
       "Occurrence": {
         "location": {
@@ -96,16 +99,19 @@
           "ContextLength": 0,
           "Format": "torch-pickle",
           "BaseModel": "",
-          "PickleRisk": {
-            "globals": [
-              "subprocess.Popen"
-            ]
-          },
           "Card": null
         },
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": [
+          {
+            "ID": "AIROM-RISK-PICKLE-IMPORT",
+            "Detail": [
+              "subprocess.Popen"
+            ]
+          }
+        ]
       },
       "Occurrence": {
         "location": {

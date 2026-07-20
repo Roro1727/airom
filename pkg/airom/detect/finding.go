@@ -13,8 +13,15 @@ type ModelClaim struct {
 	ContextLength int64 // 0 = unclaimed
 	Format        string
 	BaseModel     string
-	PickleRisk    *airom.PickleRisk
 	Card          *airom.ModelCard
+}
+
+// RiskClaim is one artifact-risk a detector asserts. Severity is NOT claimed —
+// the assembler derives it deterministically from airom.RiskCatalog — so a
+// detector only names the risk ID and the specifics (the suspicious symbols).
+type RiskClaim struct {
+	ID     airom.RiskID
+	Detail []string
 }
 
 // DataClaim is the partial dataset/prompt facet.
@@ -55,6 +62,11 @@ type ComponentClaim struct {
 	Data    *DataClaim
 	Infra   *InfraClaim
 	Package *PackageClaim
+
+	// Risks is the artifact-risk overlay for this component (independent of the
+	// facet family): the assembler unions them by ID and attaches the finding's
+	// occurrence as provenance.
+	Risks []RiskClaim
 }
 
 // TargetHint names a relation's target for the assembler to resolve AFTER

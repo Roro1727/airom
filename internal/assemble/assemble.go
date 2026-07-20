@@ -304,7 +304,62 @@ type draft struct {
 	// under shuffle: the lexicographically smallest declared name wins.
 	pkgName string
 
+	// risks accumulates the artifact-risk overlay, keyed by RiskID so the same
+	// risk seen at two paths (same-hash component) unions rather than duplicates.
+	risks map[airom.RiskID]*riskAgg
+
 	facetWarnings []string
+}
+
+// riskAgg accumulates one risk across sightings: a deduped detail set and the
+// single provenance occurrence, chosen deterministically (smallest path/line/
+// detector) so the output is shuffle-stable (P7).
+type riskAgg struct {
+	detail map[string]bool
+	occ    airom.Occurrence
+	hasOcc bool
+}
+
+// addRisk folds one risk claim into the draft: unions its detail and keeps the
+// deterministically-smallest occurrence as provenance.
+func (d *draft) addRisk(id airom.RiskID, detail []string, occ airom.Occurrence) {
+	if d.risks == nil {
+		d.risks = map[airom.RiskID]*riskAgg{}
+	}
+	a := d.risks[id]
+	if a == nil {
+		a = &riskAgg{detail: map[string]bool{}}
+		d.risks[id] = a
+	}
+	for _, s := range detail {
+		a.detail[s] = true
+	}
+	if !a.hasOcc || occLess(occ, a.occ) {
+		a.occ, a.hasOcc = occ, true
+	}
+}
+
+// occLess is a TOTAL order over occurrences, so risk provenance is shuffle-
+// stable (P7) even when two sightings share a (path, line, detector): the
+// remaining fields break every tie. A partial order here would let the
+// first-absorbed sighting win, which is finding-order-dependent.
+func occLess(a, b airom.Occurrence) bool {
+	if a.Location.Path != b.Location.Path {
+		return a.Location.Path < b.Location.Path
+	}
+	if a.Location.Line != b.Location.Line {
+		return a.Location.Line < b.Location.Line
+	}
+	if a.Location.Column != b.Location.Column {
+		return a.Location.Column < b.Location.Column
+	}
+	if a.DetectorID != b.DetectorID {
+		return a.DetectorID < b.DetectorID
+	}
+	if a.Method != b.Method {
+		return a.Method < b.Method
+	}
+	return a.Snippet < b.Snippet
 }
 
 type assembly struct {
@@ -380,6 +435,10 @@ func (a *assembly) absorb(f detect.Finding) {
 		if _, known := d.downloadLocation.Value(); !known {
 			d.downloadLocation = airom.KnownString(f.Claim.DownloadLocation)
 		}
+	}
+
+	for _, r := range f.Claim.Risks {
+		d.addRisk(r.ID, r.Detail, occ)
 	}
 
 	a.mergeFacets(d, f.Claim)
@@ -497,6 +556,12 @@ func (a *assembly) mergeDraft(dst, src *draft) {
 	if src.pkgName != "" && (dst.pkgName == "" || src.pkgName < dst.pkgName) {
 		dst.pkgName = src.pkgName
 	}
+	for id, agg := range src.risks {
+		if !agg.hasOcc {
+			continue
+		}
+		dst.addRisk(id, sortedSetKeys(agg.detail), agg.occ)
+	}
 }
 
 // mergeFacets folds a claim's partial facets in: Known > Unknown > Absent;
@@ -514,12 +579,6 @@ func (a *assembly) mergeFacets(d *draft, c detect.ComponentClaim) {
 		a.mergeOptString(d, &m.BaseModel, c.Model.BaseModel, "model.baseModel")
 		a.mergeOptInt64(d, &m.ParamCount, c.Model.ParamCount, "model.paramCount")
 		a.mergeOptInt64(d, &m.ContextLength, c.Model.ContextLength, "model.contextLength")
-		if c.Model.PickleRisk != nil {
-			if m.PickleRisk == nil {
-				m.PickleRisk = &airom.PickleRisk{}
-			}
-			m.PickleRisk.Globals = mergeStringSet(m.PickleRisk.Globals, c.Model.PickleRisk.Globals)
-		}
 		if c.Model.Card != nil && m.Card == nil {
 			m.Card = c.Model.Card
 		}
@@ -617,34 +676,14 @@ func mergeHashes(dst, add []airom.Hash) []airom.Hash {
 	return dst
 }
 
-func mergeStringSet(dst, add []string) []string {
-	seen := make(map[string]bool, len(dst))
-	for _, s := range dst {
-		seen[s] = true
-	}
-	for _, s := range add {
-		if !seen[s] {
-			dst = append(dst, s)
-			seen[s] = true
-		}
-	}
-	sort.Strings(dst)
-	return dst
-}
-
 // finish produces the final Component from a draft.
 func (d *draft) finish() airom.Component {
-	// Occurrence dedup (Path, Line, DetectorID) + deterministic order.
-	sort.SliceStable(d.occs, func(i, j int) bool {
-		a, b := d.occs[i], d.occs[j]
-		if a.Location.Path != b.Location.Path {
-			return a.Location.Path < b.Location.Path
-		}
-		if a.Location.Line != b.Location.Line {
-			return a.Location.Line < b.Location.Line
-		}
-		return a.DetectorID < b.DetectorID
-	})
+	// Sort by the TOTAL occLess order, then dedup by (Path, Line, DetectorID).
+	// A total order matters at the tie: two occurrences sharing those three
+	// keys but differing in column/method/snippet (e.g. one rule matching a
+	// line twice) would otherwise keep an input-order-dependent survivor,
+	// breaking P7. occLess is the same order the risk overlay uses.
+	sort.SliceStable(d.occs, func(i, j int) bool { return occLess(d.occs[i], d.occs[j]) })
 	occs := d.occs[:0:0]
 	for i, o := range d.occs {
 		if i > 0 {
@@ -714,7 +753,45 @@ func (d *draft) finish() airom.Component {
 		c.Props = append(c.Props, airom.KV{Name: "airom:model.id", Value: d.name})
 	}
 
+	c.Risks = d.finishRisks()
+
 	return c
+}
+
+// finishRisks materializes the accumulated risks into the sorted, severity-
+// stamped overlay. Order is (ID, then detail) — deterministic under shuffle.
+func (d *draft) finishRisks() []airom.ArtifactRisk {
+	if len(d.risks) == 0 {
+		return nil
+	}
+	out := make([]airom.ArtifactRisk, 0, len(d.risks))
+	for id, agg := range d.risks {
+		r := airom.ArtifactRisk{
+			ID:       id,
+			Severity: airom.RiskByID(id).Severity,
+			Detail:   sortedSetKeys(agg.detail),
+		}
+		if agg.hasOcc {
+			occ := agg.occ
+			r.Occurrence = &occ
+		}
+		out = append(out, r)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out
+}
+
+// sortedSetKeys returns the set's keys sorted — the deterministic detail order.
+func sortedSetKeys(set map[string]bool) []string {
+	if len(set) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(set))
+	for k := range set {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func optFrom(s string) airom.OptString {

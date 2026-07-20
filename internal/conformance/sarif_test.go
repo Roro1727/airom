@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/airomhq/airom/internal/writer"
@@ -71,6 +72,13 @@ func TestSARIFStructuralConformance(t *testing.T) {
 			t.Errorf("result[%d] ruleIndex %d does not point at ruleId %q", i, idx, ruleID)
 		}
 
+		// Risk results are security findings with their own severity level and
+		// no component-identity fingerprint; the §7.1 inventory encoding below
+		// applies to detector results only.
+		if strings.HasPrefix(ruleID, "risk/") {
+			continue
+		}
+
 		// Default mode: level "note", no kind (§7.1).
 		if got := res["level"]; got != "note" {
 			t.Errorf("result[%d] level = %v, want note", i, got)
@@ -97,6 +105,9 @@ func TestSARIFStrictKindToggle(t *testing.T) {
 	}
 	for i, r := range results {
 		res := obj(t, r)
+		if strings.HasPrefix(str(t, res["ruleId"]), "risk/") {
+			continue // security findings keep their level in strict mode
+		}
 		if got := res["kind"]; got != "informational" {
 			t.Errorf("strict result[%d] kind = %v, want informational", i, got)
 		}
@@ -116,6 +127,9 @@ func TestSARIFFingerprintRecipe(t *testing.T) {
 	for _, r := range results {
 		res := obj(t, r)
 		ruleID := str(t, res["ruleId"])
+		if strings.HasPrefix(ruleID, "risk/") {
+			continue // risk results are not component-identity fingerprinted
+		}
 		compID := str(t, obj(t, res["properties"])["airom:componentId"])
 		loc := obj(t, arr(t, res["locations"])[0])
 		uri := str(t, obj(t, obj(t, loc["physicalLocation"])["artifactLocation"])["uri"])

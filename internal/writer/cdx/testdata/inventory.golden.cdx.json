@@ -226,11 +226,11 @@
         },
         {
           "name": "airom:pickle.imports",
-          "value": "os.system|builtins.eval"
+          "value": "builtins.eval|os.system"
         },
         {
           "name": "airom:pickle.risk",
-          "value": "suspicious"
+          "value": "high"
         },
         {
           "name": "airom:releaseTime",
@@ -457,6 +457,40 @@
       "ref": "airom:0000000000000000",
       "dependsOn": [
         "airom:3333333333333333"
+      ]
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "AIROM-RISK-PICKLE-IMPORT",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "high",
+          "method": "other"
+        }
+      ],
+      "description": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced.",
+      "affects": [
+        {
+          "ref": "airom:2222222222222222"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/llama.gguf"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "builtins.eval|os.system"
+        }
       ]
     }
   ]

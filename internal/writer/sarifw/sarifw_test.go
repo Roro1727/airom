@@ -8,6 +8,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -78,7 +79,11 @@ func sample() *airom.Inventory {
 				Provider:   airom.KnownString("local"),
 				PURL:       "pkg:generic/llama-3-8b?checksum=sha256:00ff",
 				Confidence: 1,
-				Model:      &airom.ModelFacet{PickleRisk: &airom.PickleRisk{Globals: []string{"os.system", "builtins.eval"}}},
+				Risks: []airom.ArtifactRisk{{
+					ID: airom.RiskPickleImport, Severity: airom.RiskHigh,
+					Detail:     []string{"builtins.eval", "os.system"},
+					Occurrence: &airom.Occurrence{Location: airom.Location{Path: "models/llama.gguf"}, DetectorID: "modelfilex/torch", Method: airom.MethodBinary, Confidence: 0.95},
+				}},
 				Evidence: airom.Evidence{Occurrences: []airom.Occurrence{
 					{
 						Location:   airom.Location{Path: "models/llama.gguf", Line: 0},
@@ -208,12 +213,24 @@ func TestEnvelope(t *testing.T) {
 }
 
 func TestOneRulePerDetector(t *testing.T) {
-	rules := parse(t, render(t, false)).Runs[0].Tool.Driver.Rules
+	all := parse(t, render(t, false)).Runs[0].Tool.Driver.Rules
+	// Detector rules come first (sorted by id), then risk rules appended.
+	var rules []struct {
+		ID                   string                 `json:"id"`
+		Name                 string                 `json:"name"`
+		DefaultConfiguration struct{ Level string } `json:"defaultConfiguration"`
+		Properties           map[string]any         `json:"properties"`
+	}
+	for _, r := range all {
+		if !strings.HasPrefix(r.ID, "risk/") {
+			rules = append(rules, r)
+		}
+	}
 	// Distinct detectors across non-root components: model-literal,
 	// sdk-import, gguf/header. The root's rules/root/app must not appear.
 	wantIDs := []string{"rules/gguf/header", "rules/openai/model-literal", "rules/openai/sdk-import"}
 	if len(rules) != len(wantIDs) {
-		t.Fatalf("rule count = %d, want %d: %+v", len(rules), len(wantIDs), rules)
+		t.Fatalf("detector rule count = %d, want %d: %+v", len(rules), len(wantIDs), rules)
 	}
 	for i, r := range rules {
 		if r.ID != wantIDs[i] {
@@ -237,29 +254,42 @@ func TestOneRulePerDetector(t *testing.T) {
 
 func TestOneResultPerOccurrence(t *testing.T) {
 	results := parse(t, render(t, false)).Runs[0].Results
-	// 2 (hosted) + 1 (local) = 3; the root occurrence is excluded.
-	if len(results) != 3 {
-		t.Fatalf("result count = %d, want 3", len(results))
-	}
+	rules := parse(t, render(t, false)).Runs[0].Tool.Driver.Rules
+	inventory := 0
 	for _, res := range results {
 		if res.RuleID == "rules/root/app" {
 			t.Errorf("root occurrence leaked into results: %+v", res)
 		}
-		// ruleIndex must point at the matching rule id.
-		rules := parse(t, render(t, false)).Runs[0].Tool.Driver.Rules
+		// ruleIndex must point at the matching rule id — for detector AND risk
+		// results, since risk indices continue past the detector rules.
 		if rules[res.RuleIndex].ID != res.RuleID {
 			t.Errorf("ruleIndex %d does not match ruleId %q", res.RuleIndex, res.RuleID)
 		}
+		if !strings.HasPrefix(res.RuleID, "risk/") {
+			inventory++
+		}
+	}
+	// 2 (hosted) + 1 (local) = 3 inventory results; the root occurrence is excluded.
+	if inventory != 3 {
+		t.Fatalf("inventory result count = %d, want 3", inventory)
 	}
 }
 
 func TestLevelKindToggle(t *testing.T) {
+	// The note/informational toggle applies to inventory results only; risk
+	// results are security findings and keep their severity level in both modes.
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
+		if strings.HasPrefix(res.RuleID, "risk/") {
+			continue
+		}
 		if res.Level != "note" || res.Kind != "" {
 			t.Errorf("default: level=%q kind=%q, want note/empty", res.Level, res.Kind)
 		}
 	}
 	for _, res := range parse(t, render(t, true)).Runs[0].Results {
+		if strings.HasPrefix(res.RuleID, "risk/") {
+			continue
+		}
 		if res.Kind != "informational" || res.Level != "" {
 			t.Errorf("strict: level=%q kind=%q, want empty/informational", res.Level, res.Kind)
 		}
@@ -314,6 +344,9 @@ func TestUTF16ColumnAndSnippet(t *testing.T) {
 
 func TestPartialFingerprintRecipe(t *testing.T) {
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
+		if strings.HasPrefix(res.RuleID, "risk/") {
+			continue // risk results are not component-identity fingerprinted
+		}
 		uri := res.Locations[0].PhysicalLocation.ArtifactLocation.URI
 		var compID string
 		switch uri {
@@ -338,6 +371,9 @@ func TestPartialFingerprintRecipe(t *testing.T) {
 
 func TestResultProperties(t *testing.T) {
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
+		if strings.HasPrefix(res.RuleID, "risk/") {
+			continue // risk results have their own shape; see TestRiskResults
+		}
 		p := res.Properties
 		if p["airom:componentId"] == nil || p["airom:kind"] == nil {
 			t.Errorf("missing identity props: %+v", p)
@@ -366,6 +402,9 @@ func TestResultProperties(t *testing.T) {
 func TestMessageText(t *testing.T) {
 	got := map[string]string{}
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
+		if strings.HasPrefix(res.RuleID, "risk/") {
+			continue // risk messages are asserted in TestRiskResults
+		}
 		got[res.Locations[0].PhysicalLocation.ArtifactLocation.URI] = res.Message.Text
 	}
 	if m := got["src/app.py"]; m != "hosted-llm 'openai/gpt-4.1' detected (confidence 0.9)" {
@@ -373,6 +412,50 @@ func TestMessageText(t *testing.T) {
 	}
 	if m := got["models/llama.gguf"]; m != "local-model-file 'llama-3-8b' [q4_k_m] detected (confidence 1)" {
 		t.Errorf("local message = %q", m)
+	}
+}
+
+// TestRiskResults asserts the artifact-risk security overlay: a rule per risk
+// type with the GitHub security-severity marker, and an error-level result on
+// the affected artifact carrying the risk id and symbols.
+func TestRiskResults(t *testing.T) {
+	run := parse(t, render(t, false)).Runs[0]
+
+	ruleFound := false
+	for _, r := range run.Tool.Driver.Rules {
+		if r.ID != "risk/pickle-import" {
+			continue
+		}
+		ruleFound = true
+		if r.Properties["security-severity"] != "8.0" {
+			t.Errorf("security-severity = %v, want 8.0", r.Properties["security-severity"])
+		}
+		if r.DefaultConfiguration.Level != "error" {
+			t.Errorf("rule level = %q, want error", r.DefaultConfiguration.Level)
+		}
+	}
+	if !ruleFound {
+		t.Fatal("no risk/pickle-import rule emitted")
+	}
+
+	resFound := false
+	for _, res := range run.Results {
+		if res.RuleID != "risk/pickle-import" {
+			continue
+		}
+		resFound = true
+		if res.Level != "error" {
+			t.Errorf("result level = %q, want error", res.Level)
+		}
+		if uri := res.Locations[0].PhysicalLocation.ArtifactLocation.URI; uri != "models/llama.gguf" {
+			t.Errorf("risk location = %q, want models/llama.gguf", uri)
+		}
+		if res.Properties["airom:risk.symbols"] != "builtins.eval|os.system" {
+			t.Errorf("risk symbols = %v", res.Properties["airom:risk.symbols"])
+		}
+	}
+	if !resFound {
+		t.Fatal("no risk/pickle-import result emitted")
 	}
 }
 

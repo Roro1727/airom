@@ -18,12 +18,12 @@
           "ContextLength": 0,
           "Format": "onnx",
           "BaseModel": "",
-          "PickleRisk": null,
           "Card": null
         },
         "Data": null,
         "Infra": null,
-        "Package": null
+        "Package": null,
+        "Risks": null
       },
       "Occurrence": {
         "location": {

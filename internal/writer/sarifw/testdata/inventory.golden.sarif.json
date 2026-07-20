@@ -50,6 +50,21 @@
               "properties": {
                 "airom:method": "manifest-analysis"
               }
+            },
+            {
+              "id": "risk/pickle-import",
+              "name": "RiskPickleImport",
+              "shortDescription": {
+                "text": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import",
+              "properties": {
+                "airom:risk.severity": "high",
+                "security-severity": "8.0"
+              }
             }
           ],
           "properties": {
@@ -203,9 +218,32 @@
             "airom:confidence": 1,
             "airom:kind": "local-model-file",
             "airom:occurrence.confidence": 1,
-            "airom:pickle.risk": "suspicious",
+            "airom:pickle.risk": "high",
             "airom:provider": "local",
             "airom:purl": "pkg:generic/llama-3-8b?checksum=sha256:00ff"
+          }
+        },
+        {
+          "ruleId": "risk/pickle-import",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Unsafe pickle import in \"llama-3-8b\": builtins.eval, os.system"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/llama.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:bbbb444455556666",
+            "airom:risk.severity": "high",
+            "airom:risk.symbols": "builtins.eval|os.system"
           }
         }
       ]

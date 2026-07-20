@@ -15,7 +15,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -43,7 +44,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -71,7 +73,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -99,7 +102,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -127,7 +131,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -155,7 +160,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -183,7 +189,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -211,7 +218,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -239,7 +247,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -267,7 +276,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -295,7 +305,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -323,7 +334,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {
@@ -351,7 +363,8 @@
         "Infra": null,
         "Package": {
           "Ecosystem": "pypi"
-        }
+        },
+        "Risks": null
       },
       "Occurrence": {
         "location": {

@@ -57,9 +57,12 @@ func BuildFixture() *airom.Inventory {
 		PURL:       "pkg:generic/tiny.gguf?checksum=sha256:" + sha,
 		Confidence: 1,
 		Hashes:     []airom.Hash{{Alg: "SHA-256", Hex: sha}},
-		Model:      &airom.ModelFacet{Format: airom.KnownString("gguf"), PickleRisk: &airom.PickleRisk{Globals: []string{"os.system"}}},
-		Props:      []airom.KV{{Name: "airom:pickle.risk", Value: "high"}, {Name: "airom:pickle.imports", Value: "os.system"}},
-		Evidence:   airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "models/tiny.gguf"}, DetectorID: "modelfile/gguf", Method: airom.MethodHash, Confidence: 1}}},
+		Model:      &airom.ModelFacet{Format: airom.KnownString("gguf")},
+		Risks: []airom.ArtifactRisk{{
+			ID: airom.RiskPickleImport, Severity: airom.RiskHigh, Detail: []string{"os.system"},
+			Occurrence: &airom.Occurrence{Location: airom.Location{Path: "models/tiny.gguf"}, DetectorID: "modelfilex/torch", Method: airom.MethodBinary, Confidence: 0.95},
+		}},
+		Evidence: airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "models/tiny.gguf"}, DetectorID: "modelfile/gguf", Method: airom.MethodHash, Confidence: 1}}},
 	}
 	framework := airom.Component{
 		ID: "airom:3333333333333333", Kind: airom.KindFramework, Name: "langchain",

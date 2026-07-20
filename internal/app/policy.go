@@ -53,6 +53,10 @@ type confidenceCmp struct {
 var (
 	identRe = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 	cmpRe   = regexp.MustCompile(`^confidence\s*(>=|<=|>|<|=)\s*([0-9.]+)$`)
+	// riskRe matches the artifact-risk selectors: "risk" (any), "risk:high"
+	// (by severity), or "risk:pickle-import" (by catalog slug). ':' is outside
+	// the ident charset, so these need their own token form.
+	riskRe = regexp.MustCompile(`^risk(?::([a-z][a-z0-9-]*))?$`)
 )
 
 // MatchAny is the policy used when --exit-code is set without --fail-on:
@@ -97,6 +101,14 @@ func parseTerm(raw string) (term, error) {
 			return term{}, fmt.Errorf("confidence bound %v outside [0,1]", v)
 		}
 		return term{Cmp: &confidenceCmp{Op: m[1], Value: v}}, nil
+	}
+	// Artifact-risk selectors ("risk", "risk:high", "risk:pickle-import").
+	if m := riskRe.FindStringSubmatch(s); m != nil {
+		if sel := m[1]; sel != "" && !validRiskSelector(sel) {
+			return term{}, fmt.Errorf("unknown risk selector %q; want a severity (%s) or a slug (%s)",
+				sel, strings.Join(riskSeverityList(), ", "), strings.Join(riskSlugList(), ", "))
+		}
+		return term{Ident: s}, nil
 	}
 	// Bare "confidence" is reserved (almost certainly a typo'd comparison),
 	// but "confidence-*" and the like remain legal identifiers — the grammar
@@ -198,10 +210,71 @@ func termMatches(t term, c *airom.Component) bool {
 	if t.Ident == string(c.Kind) {
 		return true
 	}
+	if t.Ident == "risk" || strings.HasPrefix(t.Ident, "risk:") {
+		return riskTermMatches(t.Ident, c)
+	}
+	// pickle-risk: deprecated alias for the pickle-import risk (back-compat).
 	if t.Ident == "pickle-risk" {
-		return c.Model != nil && c.Model.PickleRisk != nil && len(c.Model.PickleRisk.Globals) > 0
+		return hasRisk(c, airom.RiskPickleImport)
 	}
 	return false
+}
+
+// riskTermMatches evaluates a "risk" / "risk:<sev>" / "risk:<slug>" selector
+// against one component.
+func riskTermMatches(ident string, c *airom.Component) bool {
+	_, sel, _ := strings.Cut(ident, ":")
+	for _, r := range c.Risks {
+		switch {
+		case sel == "": // "risk" — any
+			return true
+		case string(r.Severity) == sel: // by severity bucket
+			return true
+		case airom.RiskByID(r.ID).Slug == sel: // by catalog slug
+			return true
+		}
+	}
+	return false
+}
+
+// hasRisk reports whether the component carries a risk of the given id.
+func hasRisk(c *airom.Component, id airom.RiskID) bool {
+	for _, r := range c.Risks {
+		if r.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// validRiskSelector reports whether a "risk:<sel>" suffix names a known
+// severity bucket or catalog slug.
+func validRiskSelector(sel string) bool {
+	for _, s := range airom.RiskSeverities() {
+		if string(s) == sel {
+			return true
+		}
+	}
+	_, ok := airom.RiskSlugToID(sel)
+	return ok
+}
+
+// riskSeverityList / riskSlugList back the parse-error messages.
+func riskSeverityList() []string {
+	out := make([]string, 0, len(airom.RiskSeverities()))
+	for _, s := range airom.RiskSeverities() {
+		out = append(out, string(s))
+	}
+	return out
+}
+
+func riskSlugList() []string {
+	var out []string
+	for _, m := range airom.RiskCatalog {
+		out = append(out, m.Slug)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func compareConfidence(v float64, cmp *confidenceCmp) bool {

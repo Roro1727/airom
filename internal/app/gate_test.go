@@ -22,7 +22,7 @@ func TestPolicyMatches(t *testing.T) {
 		{Kind: airom.KindLibrary, Name: "openai", Confidence: 0.95},
 		{
 			Kind: airom.KindLocalModelFile, Name: "m.pt", Confidence: 0.9,
-			Model: &airom.ModelFacet{PickleRisk: &airom.PickleRisk{Globals: []string{"os.system"}}},
+			Risks: []airom.ArtifactRisk{{ID: airom.RiskPickleImport, Severity: airom.RiskHigh, Detail: []string{"os.system"}}},
 		},
 	}}
 	rootOnly := &airom.Inventory{Components: []airom.Component{
@@ -49,8 +49,13 @@ func TestPolicyMatches(t *testing.T) {
 		{"library&confidence>=0.9", inv, true},       // openai is 0.95
 		{"hosted-llm&library", inv, false},           // no single component is both
 		{"vector-db|hosted-llm", inv, true},          // OR
-		{"pickle-risk", inv, true},                   // the .pt flagged os.system
+		{"pickle-risk", inv, true},                   // deprecated alias for the pickle-import risk
 		{"pickle-risk&confidence>=0.95", inv, false}, // the risky model is 0.9
+		{"risk", inv, true},                          // any artifact risk
+		{"risk:high", inv, true},                     // pickle-import is high severity
+		{"risk:medium", inv, false},                  // none at medium
+		{"risk:pickle-import", inv, true},            // by catalog slug
+		{"vector-db|risk:high", inv, true},           // OR with a risk selector
 		{"confidence>=0.95", inv, true},              // openai
 		// "application" is no longer expressible: it is rejected at parse time
 		// (TestParsePolicyRejectsUnknownIdentifiers) precisely because it could

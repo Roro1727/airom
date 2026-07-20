@@ -38,6 +38,20 @@
               }
             },
             {
+              "id": "modelfilex/torch",
+              "name": "ModelfilexTorch",
+              "shortDescription": {
+                "text": "Components identified by the modelfilex/torch detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
               "id": "project/raglink",
               "name": "ProjectRaglink",
               "shortDescription": {
@@ -162,6 +176,21 @@
               "properties": {
                 "airom:method": "source-code-analysis"
               }
+            },
+            {
+              "id": "risk/pickle-import",
+              "name": "RiskPickleImport",
+              "shortDescription": {
+                "text": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import",
+              "properties": {
+                "airom:risk.severity": "high",
+                "security-severity": "8.0"
+              }
             }
           ]
         }
@@ -216,7 +245,7 @@
         },
         {
           "ruleId": "project/raglink",
-          "ruleIndex": 2,
+          "ruleIndex": 3,
           "level": "note",
           "message": {
             "text": "rag-pipeline 'rag-pipeline' detected (confidence 0.6)"
@@ -248,8 +277,38 @@
           }
         },
         {
+          "ruleId": "modelfilex/torch",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'poisoned.pt' detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/poisoned.pt",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "875e033c61b09a536e915eafd5abbe6d26de946fd9e30de8c3ca2ab272b559f9"
+          },
+          "properties": {
+            "airom:componentId": "airom:243c3c460eb1aeda",
+            "airom:confidence": 0.95,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.95,
+            "airom:pickle.risk": "high",
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/poisoned.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+          }
+        },
+        {
           "ruleId": "rules/openai/embedding-literal",
-          "ruleIndex": 9,
+          "ruleIndex": 10,
           "level": "note",
           "message": {
             "text": "embedding-model 'text-embedding-3-large' detected (confidence 0.85)"
@@ -320,7 +379,7 @@
         },
         {
           "ruleId": "rules/chroma/import",
-          "ruleIndex": 7,
+          "ruleIndex": 8,
           "level": "note",
           "message": {
             "text": "vector-db 'chroma' [0.5.5] detected (confidence 0.985)"
@@ -357,7 +416,7 @@
         },
         {
           "ruleId": "rules/chroma/client",
-          "ruleIndex": 6,
+          "ruleIndex": 7,
           "level": "note",
           "message": {
             "text": "vector-db 'chroma' [0.5.5] detected (confidence 0.985)"
@@ -394,7 +453,7 @@
         },
         {
           "ruleId": "prompt/file",
-          "ruleIndex": 3,
+          "ruleIndex": 4,
           "level": "note",
           "message": {
             "text": "prompt 'system.txt' detected (confidence 0.8)"
@@ -421,7 +480,7 @@
         },
         {
           "ruleId": "rules/aiconfig/sampling",
-          "ruleIndex": 4,
+          "ruleIndex": 5,
           "level": "note",
           "message": {
             "text": "ai-config 'temperature' detected (confidence 0.5)"
@@ -492,7 +551,7 @@
         },
         {
           "ruleId": "rules/aiconfig/token-limits",
-          "ruleIndex": 5,
+          "ruleIndex": 6,
           "level": "note",
           "message": {
             "text": "ai-config 'max_tokens' detected (confidence 0.5)"
@@ -563,7 +622,7 @@
         },
         {
           "ruleId": "rules/openai/chat-call",
-          "ruleIndex": 8,
+          "ruleIndex": 9,
           "level": "note",
           "message": {
             "text": "library 'openai' [1.51.0] detected (confidence 0.985)"
@@ -601,7 +660,7 @@
         },
         {
           "ruleId": "rules/openai/model-literal",
-          "ruleIndex": 10,
+          "ruleIndex": 11,
           "level": "note",
           "message": {
             "text": "hosted-llm 'gpt-4.1' detected (confidence 0.85)"
@@ -663,6 +722,29 @@
             "airom:occurrence.confidence": 0.95,
             "airom:provider": "local",
             "airom:purl": "pkg:generic/tiny.gguf?checksum=sha256:a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99"
+          }
+        },
+        {
+          "ruleId": "risk/pickle-import",
+          "ruleIndex": 12,
+          "level": "error",
+          "message": {
+            "text": "Unsafe pickle import in \"poisoned.pt\": os.system"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/poisoned.pt",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:243c3c460eb1aeda",
+            "airom:risk.severity": "high",
+            "airom:risk.symbols": "os.system"
           }
         }
       ]

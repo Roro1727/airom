@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/airomhq/airom/pkg/airom"
 	"github.com/airomhq/airom/pkg/airom/detect"
 )
 
@@ -116,8 +117,8 @@ func TestTorchLegacyBenign(t *testing.T) {
 	if m == nil || m.Format != "torch-pickle" {
 		t.Fatalf("format = %+v, want torch-pickle", m)
 	}
-	if m.PickleRisk != nil {
-		t.Errorf("benign pickle flagged risk: %v", m.PickleRisk)
+	if len(got[0].Claim.Risks) != 0 {
+		t.Errorf("benign pickle flagged risk: %v", got[0].Claim.Risks)
 	}
 	if c := got[0].Occurrence.Confidence; c != 0.9 {
 		t.Errorf("confidence = %v, want 0.9", c)
@@ -136,9 +137,10 @@ func TestTorchEvilRaisesConfidence(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("got %d findings, want 1", len(got))
 	}
-	m := got[0].Claim.Model
-	if m.PickleRisk == nil || len(m.PickleRisk.Globals) != 1 || m.PickleRisk.Globals[0] != "os.system" {
-		t.Fatalf("PickleRisk = %+v, want globals [os.system]", m.PickleRisk)
+	risks := got[0].Claim.Risks
+	if len(risks) != 1 || risks[0].ID != airom.RiskPickleImport ||
+		len(risks[0].Detail) != 1 || risks[0].Detail[0] != "os.system" {
+		t.Fatalf("Risks = %+v, want one pickle-import with [os.system]", risks)
 	}
 	if c := got[0].Occurrence.Confidence; c != 0.95 {
 		t.Errorf("confidence = %v, want 0.95", c)

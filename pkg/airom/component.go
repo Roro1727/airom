@@ -95,12 +95,6 @@ type BoundParam struct {
 	Occurrence *Occurrence `json:"occurrence,omitempty"`
 }
 
-// PickleRisk records suspicious GLOBAL opcodes found by the static pickle
-// walk (§13) — surfaced as a security signal, never executed.
-type PickleRisk struct {
-	Globals []string `json:"globals"` // dotted callables: "os.system", "builtins.eval"
-}
-
 // PerformanceMetric is one modelCard quantitative-analysis entry.
 type PerformanceMetric struct {
 	Type  string `json:"type"`
@@ -141,7 +135,6 @@ type ModelFacet struct {
 	Format           OptString    `json:"format,omitzero"`    // "gguf","safetensors","onnx",…
 	BaseModel        OptString    `json:"baseModel,omitzero"` // adapter lineage → also a derived-from edge
 	GenerationParams []BoundParam `json:"generationParams,omitempty"`
-	PickleRisk       *PickleRisk  `json:"pickleRisk,omitempty"`
 	Card             *ModelCard   `json:"card,omitempty"`
 }
 
@@ -198,6 +191,11 @@ type Component struct {
 	Confidence Confidence `json:"confidence"` // assembled (§9.3) — never detector-set
 	Evidence   Evidence   `json:"evidence"`
 	Props      []KV       `json:"props,omitempty"` // overflow → CDX properties, airom:* namespace
+
+	// Risks is the artifact-risk overlay: structural code-execution / injection
+	// findings keyed to this component, projected into CycloneDX vulnerabilities[]
+	// and SARIF security results. Sorted by (ID, Detail) for determinism (P7).
+	Risks []ArtifactRisk `json:"risks,omitempty"`
 
 	Attestations []AttestationRef `json:"attestations,omitempty"`
 }

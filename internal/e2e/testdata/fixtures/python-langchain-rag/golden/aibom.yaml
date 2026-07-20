@@ -43,6 +43,35 @@ components:
     id: airom:1d7789e0b7e68c35
     kind: rag-pipeline
     name: rag-pipeline
+  - confidence: 0.95
+    evidence:
+      occurrences:
+        - confidence: 0.95
+          detectorId: modelfilex/torch
+          location:
+            path: models/poisoned.pt
+          method: binary-analysis
+    hashes:
+      - alg: SHA-256
+        hex: 7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd
+    id: airom:243c3c460eb1aeda
+    kind: local-model-file
+    model:
+      format: torch-pickle
+    name: poisoned.pt
+    provider: local
+    purl: pkg:generic/poisoned.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd
+    risks:
+      - detail:
+          - os.system
+        id: AIROM-RISK-PICKLE-IMPORT
+        occurrence:
+          confidence: 0.95
+          detectorId: modelfilex/torch
+          location:
+            path: models/poisoned.pt
+          method: binary-analysis
+        severity: high
   - confidence: 0.85
     evidence:
       occurrences:
@@ -362,7 +391,7 @@ source:
   kind: dir
   target: python-langchain-rag
 stats:
-  contentBytes: 1112
+  contentBytes: 1126
   detectors:
     - findings: 0
       id: dataset/file
@@ -440,9 +469,9 @@ stats:
       id: modelfilex/tflite
       invocations: 0
       ns: 0
-    - findings: 0
+    - findings: 1
       id: modelfilex/torch
-      invocations: 0
+      invocations: 1
       ns: 0
     - findings: 0
       id: project/adapter
@@ -470,9 +499,9 @@ stats:
       ns: 0
   durationNs: 0
   filesFailed: 0
-  filesProcessed: 5
-  filesWalked: 5
-  headerBytes: 1197
+  filesProcessed: 6
+  filesWalked: 6
+  headerBytes: 1211
   selection:
     - 'dataset/file: selected by "default"'
     - 'gosrc/ast: selected by "default"'

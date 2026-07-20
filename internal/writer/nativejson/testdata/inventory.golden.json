@@ -103,12 +103,7 @@
         }
       ],
       "model": {
-        "format": "gguf",
-        "pickleRisk": {
-          "globals": [
-            "os.system"
-          ]
-        }
+        "format": "gguf"
       },
       "confidence": 1,
       "evidence": {
@@ -123,14 +118,21 @@
           }
         ]
       },
-      "props": [
+      "risks": [
         {
-          "name": "airom:pickle.risk",
-          "value": "high"
-        },
-        {
-          "name": "airom:pickle.imports",
-          "value": "os.system"
+          "id": "AIROM-RISK-PICKLE-IMPORT",
+          "severity": "high",
+          "detail": [
+            "os.system"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/tiny.gguf"
+            },
+            "detectorId": "modelfilex/torch",
+            "method": "binary-analysis",
+            "confidence": 0.95
+          }
         }
       ]
     },

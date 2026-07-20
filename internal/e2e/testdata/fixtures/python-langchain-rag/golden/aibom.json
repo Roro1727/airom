@@ -79,6 +79,52 @@
       }
     },
     {
+      "id": "airom:243c3c460eb1aeda",
+      "kind": "local-model-file",
+      "name": "poisoned.pt",
+      "provider": "local",
+      "purl": "pkg:generic/poisoned.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "hex": "7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+        }
+      ],
+      "model": {
+        "format": "torch-pickle"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "models/poisoned.pt"
+            },
+            "detectorId": "modelfilex/torch",
+            "method": "binary-analysis",
+            "confidence": 0.95
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-PICKLE-IMPORT",
+          "severity": "high",
+          "detail": [
+            "os.system"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/poisoned.pt"
+            },
+            "detectorId": "modelfilex/torch",
+            "method": "binary-analysis",
+            "confidence": 0.95
+          }
+        }
+      ]
+    },
+    {
       "id": "airom:3c77e68ca5b2bf87",
       "kind": "embedding-model",
       "name": "text-embedding-3-large",
@@ -534,11 +580,11 @@
     }
   ],
   "stats": {
-    "filesWalked": 5,
-    "filesProcessed": 5,
+    "filesWalked": 6,
+    "filesProcessed": 6,
     "filesFailed": 0,
-    "headerBytes": 1197,
-    "contentBytes": 1112,
+    "headerBytes": 1211,
+    "contentBytes": 1126,
     "durationNs": 0,
     "selection": [
       "dataset/file: selected by \"default\"",
@@ -685,8 +731,8 @@
       },
       {
         "id": "modelfilex/torch",
-        "invocations": 0,
-        "findings": 0,
+        "invocations": 1,
+        "findings": 1,
         "ns": 0
       },
       {
