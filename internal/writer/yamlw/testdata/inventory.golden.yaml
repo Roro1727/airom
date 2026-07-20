@@ -1,3 +1,29 @@
+compliance:
+  - controls:
+      - evidence:
+          - airom:1111111111111111
+          - airom:3333333333333333
+        id: MAP-2.1
+        rationale: 2 component(s) provide supporting evidence
+        ref: https://airc.nist.gov/
+        score: 1
+        state: met
+        title: AI methods are inventoried and documented
+      - counterEvidence:
+          - airom:2222222222222222
+        id: MEASURE-2.7
+        rationale: 1 component(s) constitute a gap
+        score: 0
+        state: gap
+        title: AI system security and resilience are evaluated
+      - id: GOVERN-1.1
+        rationale: not automatable by a static scan — requires manual attestation
+        state: manual
+        title: Legal and regulatory requirements are documented
+    framework: nist-ai-rmf
+    name: NIST AI Risk Management Framework
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+    version: "1.0"
 components:
   - confidence: 1
     evidence: {}

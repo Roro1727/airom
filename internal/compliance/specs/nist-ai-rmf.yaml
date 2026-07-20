@@ -1,0 +1,70 @@
+# NIST AI Risk Management Framework (AI RMF 1.0) — control mapping.
+#
+# HONESTY CONTRACT: the AI RMF is largely a GOVERNANCE framework — its
+# subcategories describe organizational process (policy, documentation,
+# oversight, monitoring) that a static code scan cannot verify. Those are marked
+# `manual` here and carry no score: AIROM never claims conformance it cannot
+# back with evidence. Only the subcategories an AIBOM genuinely speaks to — the
+# documented inventory of AI components, and scanner-detected security concerns
+# — are auto-evaluated, and each "met" points at the components that prove it.
+#
+# The mapping expression grammar (evidence_of / gap_if) mirrors a subset of the
+# --fail-on grammar: component kinds, "*", and risk selectors, joined by | and &.
+id: nist-ai-rmf
+name: "NIST AI Risk Management Framework"
+version: "1.0"
+url: "https://www.nist.gov/itl/ai-risk-management-framework"
+controls:
+  # ── GOVERN — organizational policy and accountability (manual) ─────────────
+  - id: GOVERN-1.1
+    title: "Legal and regulatory requirements involving AI are understood, managed, and documented"
+    ref: "https://airc.nist.gov/"
+    manual: true
+  - id: GOVERN-4.1
+    title: "Organizational practices foster critical thinking about the potential impacts of AI"
+    ref: "https://airc.nist.gov/"
+    manual: true
+
+  # ── MAP — establish context and inventory the AI system ───────────────────
+  - id: MAP-2.1
+    title: "The specific tasks and methods used to implement the AI system are defined and documented"
+    text: >-
+      An AIBOM documenting the models, embeddings, and frameworks the system uses
+      is direct evidence that the AI methods in use are inventoried and documented.
+    ref: "https://airc.nist.gov/"
+    evidence_of: "hosted-llm | local-model-file | embedding-model | framework | rag-pipeline"
+  - id: MAP-4.1
+    title: "Approaches for mapping third-party AI technology risks are in place"
+    text: >-
+      Third-party models, SDKs, and libraries discovered with provenance evidence
+      demonstrate that externally-sourced AI components are being inventoried.
+    ref: "https://airc.nist.gov/"
+    evidence_of: "framework | library | hosted-llm | embedding-model"
+  - id: MAP-1.1
+    title: "Intended purpose, context of use, and norms/expectations are documented"
+    ref: "https://airc.nist.gov/"
+    manual: true
+
+  # ── MEASURE — assess and track risks ──────────────────────────────────────
+  - id: MEASURE-2.7
+    title: "AI system security and resilience are evaluated and documented"
+    text: >-
+      A statically-detected model-artifact or unsafe-load risk is a security
+      concern this subcategory requires to be examined; its presence is a gap
+      until evaluated and dispositioned.
+    ref: "https://airc.nist.gov/"
+    gap_if: "risk"
+  - id: MEASURE-1.1
+    title: "Approaches and metrics for measuring AI risks are selected and documented"
+    ref: "https://airc.nist.gov/"
+    manual: true
+
+  # ── MANAGE — act on risks over the lifecycle (manual) ─────────────────────
+  - id: MANAGE-2.2
+    title: "Mechanisms are in place to sustain the value of deployed AI systems"
+    ref: "https://airc.nist.gov/"
+    manual: true
+  - id: MANAGE-4.1
+    title: "Post-deployment AI system monitoring plans are implemented"
+    ref: "https://airc.nist.gov/"
+    manual: true

@@ -29,7 +29,8 @@ const configFileName = ".airom.yaml"
 var knownKeys = map[string]bool{
 	// global flags (flags.go)
 	"output": true, "format": true, "select": true, "rules": true,
-	"parallel": true, "io-budget": true, "max-file-size": true,
+	"compliance": true,
+	"parallel":   true, "io-budget": true, "max-file-size": true,
 	"min-confidence": true, "ignore": true, "cache-dir": true,
 	"no-cache": true, "cdx-version": true, "sarif-strict-kinds": true,
 	"exit-code": true, "fail-on": true, "offline": true, "pprof": true,
@@ -43,9 +44,10 @@ var knownKeys = map[string]bool{
 // listKeys are configuration keys whose env-variable form is comma-split
 // (AIROM_OUTPUT="table,sarif=airom.sarif").
 var listKeys = map[string]bool{
-	"output": true,
-	"rules":  true,
-	"ignore": true,
+	"output":     true,
+	"rules":      true,
+	"compliance": true,
+	"ignore":     true,
 }
 
 // layers is the merged configuration plus per-layer provenance, needed
@@ -336,9 +338,10 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		Source: src,
 		Target: target,
 
-		Outputs:   outputs,
-		Select:    k.String("select"),
-		RulePaths: stringsKey(k, "rules"),
+		Outputs:    outputs,
+		Select:     k.String("select"),
+		RulePaths:  stringsKey(k, "rules"),
+		Compliance: stringsKey(k, "compliance"),
 
 		Parallel:      parallel,
 		IOBudget:      ioBudget,

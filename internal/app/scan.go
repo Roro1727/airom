@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/airomhq/airom/internal/assemble"
+	"github.com/airomhq/airom/internal/compliance"
 	"github.com/airomhq/airom/internal/detectors/all"
 	"github.com/airomhq/airom/internal/dispatch"
 	"github.com/airomhq/airom/internal/engine"
@@ -133,13 +134,25 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 	}
 
 	info := src.Info()
-	return assemble.Build(findings, unknowns, stats, assemble.Options{
+	inv := assemble.Build(findings, unknowns, stats, assemble.Options{
 		Tool:      Tool,
 		Source:    airom.SourceInfo{Kind: string(info.Kind), Target: info.Target},
 		Lifecycle: "pre-build",
 		Serial:    newSerial(),
 		Timestamp: time.Now().UTC(),
-	}), nil
+	})
+
+	// Compliance mapping is a post-assembly overlay: evaluate the requested
+	// frameworks against the finished inventory (§ risks.md sibling). An
+	// unknown framework id is a usage error, surfaced with the valid set.
+	if len(cfg.Compliance) > 0 {
+		results, err := compliance.Evaluate(inv, cfg.Compliance)
+		if err != nil {
+			return nil, &UsageError{Err: err}
+		}
+		inv.Compliance = results
+	}
+	return inv, nil
 }
 
 // newSerial produces a RFC 4122 v4 UUID URN without a dependency.

@@ -21,6 +21,9 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.String("format", "", "single-format alias for -o (mutually exclusive with -o)")
 	fs.String("select", "", `detector selection expression, e.g. "rules,+modelfile/gguf,-dataset/file"`)
 	fs.StringArray("rules", nil, "overlay rule pack file; repeatable; merged by rule ID")
+	fs.StringArray("compliance", nil,
+		fmt.Sprintf("map the AIBOM onto a governance framework; repeatable; frameworks: %s",
+			strings.Join(app.ComplianceFrameworks(), ", ")))
 	fs.Int("parallel", 0, "worker count (default: GOMAXPROCS)")
 	fs.String("io-budget", formatSize(app.DefaultIOBudget), "byte-weighted I/O semaphore budget (k/m/g suffixes)")
 	fs.String("max-file-size", formatSize(app.DefaultMaxFileSize), "full-content read cap for text detectors (k/m/g suffixes)")

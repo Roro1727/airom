@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/airomhq/airom/internal/compliance"
 )
 
 // SourceKind identifies which acquisition strategy a scan uses
@@ -49,6 +51,10 @@ func Formats() []string {
 	return fs
 }
 
+// ComplianceFrameworks lists the embedded compliance framework ids, sorted —
+// for the --compliance flag usage string and error messages.
+func ComplianceFrameworks() []string { return compliance.IDs() }
+
 // ParseFormat validates a user-supplied format name.
 func ParseFormat(s string) (OutputFormat, error) {
 	switch OutputFormat(strings.ToLower(strings.TrimSpace(s))) {
@@ -90,9 +96,10 @@ type Config struct {
 	Target string
 
 	// Output & selection
-	Outputs   []OutputSpec
-	Select    string   // detector selection expression (Syft-style; applied in Phase 5)
-	RulePaths []string // --rules overlays (loaded in Phase 6)
+	Outputs    []OutputSpec
+	Select     string   // detector selection expression (Syft-style; applied in Phase 5)
+	RulePaths  []string // --rules overlays (loaded in Phase 6)
+	Compliance []string // --compliance framework ids (e.g. "nist-ai-rmf"); empty = off
 
 	// Performance knobs (invariant P2: peak memory is a function of these,
 	// never of input size)
