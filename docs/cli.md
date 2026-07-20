@@ -64,6 +64,7 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--format <fmt>` | string | — | Single-format alias for `-o` (familiar scanner spelling). |
 | `--select <expr>` | string | per-source defaults | Detector selection expression (Syft-style tags + include/exclude): `"rules,+modelfile/gguf,-dataset/file"`. Which expression enabled which detector is recorded in the output `Stats`. |
 | `--rules <file>` | string, repeatable | — | Overlay rule pack(s), merged by rule ID (add/override/disable — see [rule-schema.md](./rule-schema.md#the-three-rule-layers-and-merge-semantics)). Changes the effective ruleset hash and therefore the cache namespace. |
+| `--compliance <framework>` | string, repeatable | — | Map the AIBOM onto a governance framework (e.g. `nist-ai-rmf`) and attach the result as CycloneDX `definitions`/`declarations`. A mapping, never a certification — see [compliance.md](./compliance.md). |
 | `--parallel N` | int | `GOMAXPROCS` | Worker count. Output is byte-identical at any value (invariant P7 — CI diffs `--parallel 1` vs `16`). |
 | `--io-budget <size>` | size | `256m` | Byte-weighted I/O semaphore budget, independent of CPU parallelism (§8). Peak memory is a function of this and the caps below — never of input size. |
 | `--max-file-size <size>` | size | `1m` | Full-content read cap for text-category detectors. Header-only binary parsers (GGUF, safetensors, …) are exempt — a 40 GB model file still costs only a 32 KB header read. |

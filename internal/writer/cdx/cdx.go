@@ -141,6 +141,10 @@ func (b *builder) build() *cyclonedx.BOM {
 	if vulns := buildVulnerabilities(inv); len(vulns) > 0 {
 		bom.Vulnerabilities = &vulns
 	}
+	if len(inv.Compliance) > 0 {
+		bom.Definitions = buildDefinitions(inv)
+		bom.Declarations = buildDeclarations(inv)
+	}
 	return bom
 }
 

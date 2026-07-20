@@ -268,8 +268,37 @@ func fixtureInventory() *airom.Inventory {
 		Unknowns: []airom.Unknown{
 			{Path: "models/mystery.bin", DetectorID: "rules/gguf/header", Reason: "unrecognized magic bytes"},
 		},
+		// Compliance overlay: met (evidence), gap (counter), and manual (no
+		// score) so the golden pins the full definitions/declarations shape.
+		Compliance: []airom.ComplianceResult{{
+			Framework: "nist-ai-rmf",
+			Name:      "NIST AI Risk Management Framework",
+			Version:   "1.0",
+			URL:       "https://www.nist.gov/itl/ai-risk-management-framework",
+			Controls: []airom.ControlOutcome{
+				{
+					ID: "MAP-2.1", Title: "AI methods are inventoried and documented", Ref: "https://airc.nist.gov/",
+					State: airom.ControlMet, Score: &scoreOne, Rationale: "2 component(s) provide supporting evidence",
+					Evidence: []airom.ID{idHosted, idFramew},
+				},
+				{
+					ID: "MEASURE-2.7", Title: "AI system security and resilience are evaluated",
+					State: airom.ControlGap, Score: &scoreZero, Rationale: "1 component(s) constitute a gap",
+					Counter: []airom.ID{idLocal},
+				},
+				{
+					ID: "GOVERN-1.1", Title: "Legal and regulatory requirements are documented",
+					State: airom.ControlManual, Rationale: "not automatable by a static scan — requires manual attestation",
+				},
+			},
+		}},
 	}
 }
+
+var (
+	scoreOne  = 1.0
+	scoreZero = 0.0
+)
 
 func encode(t *testing.T, opts writer.Options) []byte {
 	t.Helper()

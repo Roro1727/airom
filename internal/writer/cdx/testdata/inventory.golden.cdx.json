@@ -493,5 +493,123 @@
         }
       ]
     }
-  ]
+  ],
+  "declarations": {
+    "assessors": [
+      {
+        "bom-ref": "airom:assessor",
+        "organization": {
+          "name": "AIROM"
+        }
+      }
+    ],
+    "attestations": [
+      {
+        "summary": "NIST AI Risk Management Framework 1.0 — AIROM automated evidence mapping",
+        "assessor": "airom:assessor",
+        "map": [
+          {
+            "requirement": "airom:req:nist-ai-rmf:MAP-2.1",
+            "claims": [
+              "airom:claim:nist-ai-rmf:MAP-2.1"
+            ],
+            "conformance": {
+              "score": 1,
+              "rationale": "2 component(s) provide supporting evidence"
+            }
+          },
+          {
+            "requirement": "airom:req:nist-ai-rmf:MEASURE-2.7",
+            "claims": [
+              "airom:claim:nist-ai-rmf:MEASURE-2.7"
+            ],
+            "conformance": {
+              "score": 0,
+              "rationale": "1 component(s) constitute a gap"
+            }
+          },
+          {
+            "requirement": "airom:req:nist-ai-rmf:GOVERN-1.1",
+            "claims": [
+              "airom:claim:nist-ai-rmf:GOVERN-1.1"
+            ]
+          }
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "bom-ref": "airom:claim:nist-ai-rmf:MAP-2.1",
+        "target": "airom:0000000000000000",
+        "predicate": "met",
+        "reasoning": "2 component(s) provide supporting evidence",
+        "evidence": [
+          "airom:ev:nist-ai-rmf:MAP-2.1"
+        ]
+      },
+      {
+        "bom-ref": "airom:claim:nist-ai-rmf:MEASURE-2.7",
+        "target": "airom:0000000000000000",
+        "predicate": "not-met",
+        "reasoning": "1 component(s) constitute a gap",
+        "evidence": [
+          "airom:ev:nist-ai-rmf:MEASURE-2.7"
+        ]
+      },
+      {
+        "bom-ref": "airom:claim:nist-ai-rmf:GOVERN-1.1",
+        "target": "airom:0000000000000000",
+        "predicate": "requires-manual-review",
+        "reasoning": "not automatable by a static scan — requires manual attestation"
+      }
+    ],
+    "evidence": [
+      {
+        "bom-ref": "airom:ev:nist-ai-rmf:MAP-2.1",
+        "description": "gpt-4.1 (src/rag.py:42); langchain (requirements.txt:3)"
+      },
+      {
+        "bom-ref": "airom:ev:nist-ai-rmf:MEASURE-2.7",
+        "description": "llama-3-8b.Q4_K_M.gguf (models/llama.gguf)"
+      }
+    ]
+  },
+  "definitions": {
+    "standards": [
+      {
+        "bom-ref": "airom:std:nist-ai-rmf",
+        "name": "NIST AI Risk Management Framework",
+        "version": "1.0",
+        "requirements": [
+          {
+            "bom-ref": "airom:req:nist-ai-rmf:MAP-2.1",
+            "identifier": "MAP-2.1",
+            "title": "AI methods are inventoried and documented",
+            "externalReferences": [
+              {
+                "url": "https://airc.nist.gov/",
+                "type": "website"
+              }
+            ]
+          },
+          {
+            "bom-ref": "airom:req:nist-ai-rmf:MEASURE-2.7",
+            "identifier": "MEASURE-2.7",
+            "title": "AI system security and resilience are evaluated"
+          },
+          {
+            "bom-ref": "airom:req:nist-ai-rmf:GOVERN-1.1",
+            "identifier": "GOVERN-1.1",
+            "title": "Legal and regulatory requirements are documented"
+          }
+        ],
+        "externalReferences": [
+          {
+            "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+            "type": "website"
+          }
+        ]
+      }
+    ]
+  }
 }

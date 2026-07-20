@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 
+	"github.com/airomhq/airom/internal/compliance"
 	"github.com/airomhq/airom/internal/writer"
 	"github.com/airomhq/airom/pkg/airom"
 
@@ -32,7 +33,7 @@ func emit(ctx context.Context, inv *airom.Inventory, cfg *Config) error {
 	logDiagnostics(inv, cfg)
 
 	if cfg.MinConfidence > 0 {
-		inv = filterByConfidence(inv, cfg.MinConfidence)
+		inv = presentationFilter(inv, cfg)
 	}
 	if !cfg.Stats {
 		inv.Stats = airom.ScanStats{
@@ -52,6 +53,26 @@ func emit(ctx context.Context, inv *airom.Inventory, cfg *Config) error {
 		SARIFStrict: cfg.SARIFStrictKinds,
 	}
 	return writer.Fanout(ctx, inv, outputs, opts, stdout)
+}
+
+// presentationFilter applies the --min-confidence presentation filter and
+// keeps the emitted inventory internally consistent. Because the compliance
+// overlay describes the inventory being emitted, it is RE-MAPPED over the
+// filtered components — otherwise a control would reference (or claim a scored
+// "met" against) components the filter just dropped, asserting evidence that
+// is not in the BOM. Framework ids were validated in the pipeline, so a re-map
+// error is not expected; on the off chance, the stale overlay is dropped
+// rather than emitted with dangling evidence.
+func presentationFilter(inv *airom.Inventory, cfg *Config) *airom.Inventory {
+	out := filterByConfidence(inv, cfg.MinConfidence)
+	if len(cfg.Compliance) > 0 {
+		if results, err := compliance.Evaluate(out, cfg.Compliance); err == nil {
+			out.Compliance = results
+		} else {
+			out.Compliance = nil
+		}
+	}
+	return out
 }
 
 // filterByConfidence returns a copy of inv keeping the application root and

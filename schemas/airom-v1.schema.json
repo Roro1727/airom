@@ -26,10 +26,39 @@
     "components": { "type": "array", "items": { "$ref": "#/$defs/component" } },
     "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
     "unknowns": { "type": "array", "items": { "$ref": "#/$defs/unknown" } },
+    "compliance": { "type": "array", "items": { "$ref": "#/$defs/complianceResult" } },
     "stats": { "type": "object" }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^airom:[0-9a-f]{16}$" },
+    "complianceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framework", "name", "version", "controls"],
+      "properties": {
+        "framework": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "url": { "type": "string" },
+        "controls": { "type": "array", "items": { "$ref": "#/$defs/controlOutcome" } }
+      }
+    },
+    "controlOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "state", "rationale"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "text": { "type": "string" },
+        "ref": { "type": "string" },
+        "state": { "enum": ["met", "gap", "manual"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rationale": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "counterEvidence": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+      }
+    },
     "optString": { "type": ["string", "null"] },
     "optInt64": { "type": ["integer", "null"] },
     "optTime": { "type": ["string", "null"], "format": "date-time" },

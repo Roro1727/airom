@@ -240,6 +240,44 @@
       "reason": "header length exceeds file"
     }
   ],
+  "compliance": [
+    {
+      "framework": "nist-ai-rmf",
+      "name": "NIST AI Risk Management Framework",
+      "version": "1.0",
+      "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+      "controls": [
+        {
+          "id": "MAP-2.1",
+          "title": "AI methods are inventoried and documented",
+          "ref": "https://airc.nist.gov/",
+          "state": "met",
+          "score": 1,
+          "rationale": "2 component(s) provide supporting evidence",
+          "evidence": [
+            "airom:1111111111111111",
+            "airom:3333333333333333"
+          ]
+        },
+        {
+          "id": "MEASURE-2.7",
+          "title": "AI system security and resilience are evaluated",
+          "state": "gap",
+          "score": 0,
+          "rationale": "1 component(s) constitute a gap",
+          "counterEvidence": [
+            "airom:2222222222222222"
+          ]
+        },
+        {
+          "id": "GOVERN-1.1",
+          "title": "Legal and regulatory requirements are documented",
+          "state": "manual",
+          "rationale": "not automatable by a static scan — requires manual attestation"
+        }
+      ]
+    }
+  ],
   "stats": {
     "filesWalked": 0,
     "filesProcessed": 0,

@@ -87,6 +87,34 @@ func BuildFixture() *airom.Inventory {
 		Evidence: airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "src/rag.py", Line: 12}, DetectorID: "rules/chroma/client", Method: airom.MethodSourceCode, Confidence: 0.7}}},
 	}
 
+	// Compliance overlay: one framework exercising every control state — a
+	// met control with supporting evidence, a gap with counter-evidence (the
+	// risky weights), and a manual control (no score). Hand-authored (the
+	// evaluator has its own tests); this fixture proves the projection.
+	scoreMet, scoreGap := 1.0, 0.0
+	compliance := airom.ComplianceResult{
+		Framework: "nist-ai-rmf",
+		Name:      "NIST AI Risk Management Framework",
+		Version:   "1.0",
+		URL:       "https://www.nist.gov/itl/ai-risk-management-framework",
+		Controls: []airom.ControlOutcome{
+			{
+				ID: "MAP-2.1", Title: "AI methods are inventoried and documented", Ref: "https://airc.nist.gov/",
+				State: airom.ControlMet, Score: &scoreMet, Rationale: "2 component(s) provide supporting evidence",
+				Evidence: []airom.ID{model.ID, framework.ID},
+			},
+			{
+				ID: "MEASURE-2.7", Title: "AI system security and resilience are evaluated",
+				State: airom.ControlGap, Score: &scoreGap, Rationale: "1 component(s) constitute a gap",
+				Counter: []airom.ID{weights.ID},
+			},
+			{
+				ID: "GOVERN-1.1", Title: "Legal and regulatory requirements are documented",
+				State: airom.ControlManual, Rationale: "not automatable by a static scan — requires manual attestation",
+			},
+		},
+	}
+
 	return &airom.Inventory{
 		SchemaVersion: "1",
 		Tool:          airom.ToolInfo{Name: "airom", Version: "1.0.0", Commit: "abc123"},
@@ -96,6 +124,7 @@ func BuildFixture() *airom.Inventory {
 		Source:        airom.SourceInfo{Kind: "dir", Target: "/src/ai-app", Git: &airom.GitInfo{Remote: "https://github.com/acme/ai-app.git", Commit: "deadbeef"}},
 		Root:          root.ID,
 		Components:    []airom.Component{root, model, weights, framework, dataset, vecdb},
+		Compliance:    []airom.ComplianceResult{compliance},
 		Relationships: []airom.Relationship{
 			{From: root.ID, To: framework.ID, Type: airom.RelDependsOn, Confidence: 0.95},
 			{From: model.ID, To: dataset.ID, Type: airom.RelTrainedOn, Confidence: 0.8},

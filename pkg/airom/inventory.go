@@ -99,15 +99,16 @@ type ScanStats struct {
 // serializes (invariant P5). The native JSON serialization of this struct
 // is a versioned API from release one.
 type Inventory struct {
-	SchemaVersion string         `json:"schemaVersion"` // "1"
-	Tool          ToolInfo       `json:"tool"`
-	Serial        string         `json:"serial"`    // uuid → CDX serialNumber (injectable for goldens)
-	Timestamp     time.Time      `json:"timestamp"` // injectable clock
-	Lifecycle     string         `json:"lifecycle"` // "pre-build" (source) | "post-build" (image)
-	Source        SourceInfo     `json:"source"`
-	Root          ID             `json:"root"`
-	Components    []Component    `json:"components"`              // sorted by ID — deterministic
-	Relationships []Relationship `json:"relationships,omitempty"` // sorted (From, Type, To)
-	Unknowns      []Unknown      `json:"unknowns,omitempty"`
-	Stats         ScanStats      `json:"stats"`
+	SchemaVersion string             `json:"schemaVersion"` // "1"
+	Tool          ToolInfo           `json:"tool"`
+	Serial        string             `json:"serial"`    // uuid → CDX serialNumber (injectable for goldens)
+	Timestamp     time.Time          `json:"timestamp"` // injectable clock
+	Lifecycle     string             `json:"lifecycle"` // "pre-build" (source) | "post-build" (image)
+	Source        SourceInfo         `json:"source"`
+	Root          ID                 `json:"root"`
+	Components    []Component        `json:"components"`              // sorted by ID — deterministic
+	Relationships []Relationship     `json:"relationships,omitempty"` // sorted (From, Type, To)
+	Unknowns      []Unknown          `json:"unknowns,omitempty"`
+	Compliance    []ComplianceResult `json:"compliance,omitempty"` // framework mappings (--compliance)
+	Stats         ScanStats          `json:"stats"`
 }
