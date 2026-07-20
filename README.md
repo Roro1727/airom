@@ -52,7 +52,28 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 
 **Languages:** Python, JavaScript, TypeScript, Go, Java, Rust, C#, Kotlin
 
-**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM · SARIF 2.1.0 · YAML · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
+**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM (with `vulnerabilities[]` for risks) · SARIF 2.1.0 · YAML · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
+
+## Risk detection
+
+Beyond inventory, AIROM flags **AI-native security risks** — load-time code-execution and injection surfaces that a generic SBOM or secret scanner never looks for. Each risk attaches to the component it concerns, carries `file:line` evidence, and is treated as **suspicion with evidence, never a verdict**: a static scan is evadable by construction, so the absence of a risk is not a safety claim.
+
+| Risk | Severity | What it catches |
+|---|---|---|
+| `pickle-import` | high | A Torch checkpoint whose pickle resolves a code-execution callable (`os.system`, `subprocess`, `builtins.eval`, …) |
+| `keras-lambda` | high | A Keras HDF5 config declaring a `Lambda` layer — marshalled Python that runs at `load_model` |
+| `gguf-template` | medium | A GGUF `chat_template` carrying Jinja sandbox-escape gadgets (`__globals__`, `os.popen`, …) |
+| `savedmodel-pyfunc` | medium | A TensorFlow SavedModel graph invoking a `PyFunc`-family Python callback |
+| `unsafe-load` | medium | A `torch.load(..., weights_only=False)` call site — an explicit opt-out of safe deserialization |
+
+Risks project natively into **CycloneDX `vulnerabilities[]`** (non-CVE ids with a named source; no fabricated CVSS), **SARIF security results** carrying GitHub's `security-severity` — so a poisoned checkpoint becomes a Code Scanning alert on the PR that introduced it — a `RISK` column in the table view, and the CI gate:
+
+```bash
+airom scan . --exit-code 1 --fail-on "risk:high"          # fail on any high-severity risk
+airom scan . --exit-code 1 --fail-on "risk:unsafe-load"   # or one specific risk
+```
+
+It stays deterministic and offline — no LLM, no vulnerability database. And it extends without Go: any rule pack can attach a catalog risk to a match via a `risk:` field. The full catalog and the model behind it are in **[docs/risks.md](docs/risks.md)**.
 
 ## Quick start
 
@@ -211,7 +232,7 @@ AIROM is at **v0.1.0**, its first tagged release: feature-complete against the 1
 | CLI ([docs/cli.md](docs/cli.md)): scan/fs/repo/image/k8s/clean/version, config layering (flags > env > file > defaults), exit-code contract, `--fail-on` grammar, pprof/trace bootstrap | **Complete** — Phase 3, plus grouped/styled help and a live scan progress indicator that degrades to nothing off a terminal |
 | Filesystem scanner: dir source (nested `.gitignore`/`.airomignore` stack, default skips, symlink safety), classification (language/binary/magic), read-once tee-hashed file context, phase-1 streaming pipeline (bounded channels, clamped I/O budget, panic isolation, deterministic output) | **Complete** — Phase 4 |
 | Plugin framework: public SDK (`pkg/airom` domain graph with tri-state fields, `pkg/airom/detect` contracts + dispatch index, `purl` discipline, `detectortest` harness), dispatcher with per-detector isolation and accounting, explicit catalog + Syft-style `--select`, assembler (CanonicalKey identity, keep-and-relate merge, grouped noisy-OR confidence, refusal-first relations), rule-engine compiler (full [rule-schema.md](docs/rule-schema.md) lint contract, three-layer merge, self-invalidating ruleset hash, Aho–Corasick prefilter, region lexers for all 8 languages), `detectors-gen`, `airom detectors list/explain` | **Complete** — Phase 5. `airom fs . --rules pack.yaml` runs user rule packs end-to-end today |
-| Detectors & rule packs: binary model-file parsers (GGUF, safetensors, ONNX, Torch + static pickle-opcode security scan, SavedModel, TFLite, HDF5, TensorRT — fuzzed), 8-ecosystem manifest detectors, Go AST detector, prompt/dataset/infra detectors, phase-2 project detectors (HF-dir assembly, adapter lineage, config binding, RAG synthesis), 47 embedded rule packs / 98 rules across all 8 categories, `rules list/lint/test` + `dev` scaffolding | **Complete** — Phase 6. Scans a real AI project into a rich AIBOM (models, embeddings, vector DBs, frameworks, weights, prompts, infra, RAG pipelines) |
+| Detectors & rule packs: binary model-file parsers (GGUF, safetensors, ONNX, Torch, SavedModel, TFLite, HDF5, TensorRT — fuzzed) with an artifact-risk overlay (pickle imports, Keras Lambda, GGUF template gadgets, SavedModel PyFunc → CycloneDX `vulnerabilities[]`/SARIF), 8-ecosystem manifest detectors, Go AST detector, prompt/dataset/infra detectors, phase-2 project detectors (HF-dir assembly, adapter lineage, config binding, RAG synthesis), 49 embedded rule packs / 101 rules across 9 categories (incl. a `security` category and a rule-level `risk:` field), `rules list/lint/test` + `dev` scaffolding | **Complete** — Phase 6. Scans a real AI project into a rich AIBOM (models, embeddings, vector DBs, frameworks, weights, prompts, infra, RAG pipelines) |
 | Sources: `repo` (exec-git shallow clone + local worktrees), `image` (docker-save/OCI archive + OCI layout — live registry/daemon pull is a follow-up), `k8s` (offline `--manifests` image enumeration — live cluster is a follow-up) | **Complete** — Phase 6 (with the noted follow-ups) |
 | Writers: native JSON (versioned, lossless superset — round-trip tested), CycloneDX 1.6/1.7 ML-BOM (modelCard + `evidence.occurrences[]`, validated against the official schemas), SARIF 2.1.0 (one rule per detector, one result per occurrence, line-free fingerprints), YAML, table; multi-output `-o fmt=path` | **Complete** — Phase 7. `airom scan . -o cyclonedx=bom.json -o sarif=scan.sarif` emits both from one pass |
 | Test suite: golden end-to-end fixture repos through the whole pipeline into all five formats, official CycloneDX/SARIF schema conformance, `docs/mapping.md` round-trip enforcement, full-scan determinism (`--parallel 1` vs `16`), chaos degradation, and a P2 RSS-ceiling regression harness — everything under `-race`, ~74% coverage | **Complete** — Phase 8 |
@@ -230,6 +251,7 @@ No FUD, just positioning — the tools below solve different problems:
 | Input | **Your repo, image, or cluster** | A registry entry you name (e.g. an HF repo) | Varies; often model artifacts or SaaS-connected repos |
 | Answers "why is this in my AIBOM?" | **Yes — file:line occurrences, technique, confidence in the BOM** | No — output describes the model, not your usage of it | Typically findings without BOM-native evidence |
 | CycloneDX `evidence.occurrences[]` | **Emitted** | Not emitted | Not emitted |
+| Load-time risk detection | **Built in — pickle / Lambda / template / PyFunc / unsafe-load, as CycloneDX `vulnerabilities[]` + SARIF, offline** | No | Varies — some scan model artifacts, typically SaaS or agent-based |
 | Coverage | Hosted APIs **and** local weights **and** frameworks, vector DBs, prompts, datasets, params, infra, RAG graphs | The named model | Usually model files and/or a curated subset |
 | Distribution | Single static Go binary, offline-capable | Python package | Agent or SaaS |
 | License | Apache 2.0 | Varies (often open source) | Proprietary |
@@ -241,7 +263,7 @@ If you already know exactly which registry model you use and want its card, a re
 AIROM is a security tool whose parsers eat untrusted bytes, and is hardened accordingly. The posture below is binding design contract ([ARCHITECTURE §13](docs/ARCHITECTURE.md)); the fuzzing and release machinery that enforce it land with the test and release phases (see [Project status](#project-status)):
 
 - **No model execution, ever.** Weight files are identified by magic bytes and bounded header parsing only — nothing is loaded, deserialized into objects, or run.
-- **Pickle opcode scanning.** Torch `.pt`/`.pkl` streams are statically walked for suspicious `GLOBAL` opcodes (`os.system`, `subprocess`, `builtins.eval`, …) without execution; results surface as `PickleRisk` on the component.
+- **Static artifact-risk scanning.** Model files and load-time code are walked for execution/injection surfaces — pickle imports, Keras Lambda layers, GGUF template gadgets, SavedModel Python callbacks, unsafe `torch.load` — without ever executing them. Findings surface as an evidence-linked risk overlay (CycloneDX `vulnerabilities[]`, SARIF, `--fail-on risk`); see [Risk detection](#risk-detection) and [docs/risks.md](docs/risks.md).
 - **Fuzzed parsers.** Every binary header parser is fuzzed in CI and must return errors — never panic, never allocate unbounded.
 - **No surprise network access.** Filesystem, local-repo, and `image --input` scans touch no network; `--offline` asserts it globally.
 - **Supply chain.** Releases are `CGO_ENABLED=0`, reproducibly built, cosign-signed, and ship with an SBOM — and, dogfooded, an AIBOM.
