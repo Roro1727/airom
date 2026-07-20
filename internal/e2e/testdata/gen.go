@@ -44,6 +44,18 @@ func main() {
 	write(filepath.Join(fixtures, "malformed-models", "models", "broken.pt"), brokenTorchZip())
 	write(filepath.Join(fixtures, "malformed-models", "models", "corrupt.safetensors"), corruptSafetensors())
 	write(filepath.Join(fixtures, "malformed-models", "models", "garbage.onnx"), garbageONNX())
+
+	// risky-models: the artifact-risk overlay end-to-end. One inert artifact
+	// per catalog risk (pickle-import, keras-lambda, gguf-template,
+	// savedmodel-pyfunc), plus a torch.load(weights_only=False) call site in
+	// src/ for the code-level unsafe-load risk. NONE are working exploits —
+	// each carries only the *signature* the detector matches (a name reference,
+	// a class_name string, a gadget token, an op name), never a payload.
+	riskyRoot := filepath.Join(fixtures, "risky-models")
+	write(filepath.Join(riskyRoot, "models", "checkpoint.pt"), riskyTorchPickle())
+	write(filepath.Join(riskyRoot, "models", "lambda.h5"), kerasLambdaHDF5())
+	write(filepath.Join(riskyRoot, "models", "poisoned.gguf"), poisonedGGUF())
+	write(filepath.Join(riskyRoot, "models", "tf_model", "saved_model.pb"), savedModelPyFunc())
 }
 
 // validGGUF is a well-formed, header-only GGUF: the four-byte magic, version
@@ -80,6 +92,56 @@ func riskyTorchPickle() []byte {
 	b.Write([]byte{0x80, 0x02})    // PROTO 2
 	b.WriteString("cos\nsystem\n") // GLOBAL "os" "system"
 	b.WriteByte('.')               // STOP
+	return b.Bytes()
+}
+
+// kerasLambdaHDF5 is an INERT HDF5 file: the 8-byte HDF5 superblock magic (so
+// the detector routes it) followed by a Keras model_config string declaring a
+// Lambda layer. The `function` payload is an elided placeholder — there is no
+// marshalled code object — so nothing can execute; only the `"class_name":
+// "Lambda"` signature is present, which is what flags AIROM-RISK-KERAS-LAMBDA.
+func kerasLambdaHDF5() []byte {
+	var b bytes.Buffer
+	b.Write([]byte{0x89, 'H', 'D', 'F', '\r', '\n', 0x1a, '\n'}) // HDF5 magic
+	b.Write(make([]byte, 64))                                    // superblock padding
+	b.WriteString(`model_config = {"class_name": "Lambda", "config": {"function": ["<elided>"]}}`)
+	return b.Bytes()
+}
+
+// poisonedGGUF is a well-formed GGUF header carrying a single metadata pair:
+// tokenizer.chat_template whose Jinja references a sandbox-escape gadget
+// (`__globals__` / `os.popen`). AIROM never RENDERS the template — it only
+// scans the metadata string for gadget tokens — so the fixture is inert data
+// that flags AIROM-RISK-GGUF-TEMPLATE. (`id` is a harmless command; it is
+// never run.)
+func poisonedGGUF() []byte {
+	var b bytes.Buffer
+	b.WriteString("GGUF")
+	putU32(&b, 3) // version 3
+	putU64(&b, 0) // tensor_count
+	putU64(&b, 1) // metadata_kv_count = 1
+	key := "tokenizer.chat_template"
+	val := "{% for m in messages %}{{ cycler.__init__.__globals__.os.popen('id').read() }}{% endfor %}"
+	putU64(&b, uint64(len(key)))
+	b.WriteString(key)
+	putU32(&b, 8) // value type 8 = string
+	putU64(&b, uint64(len(val)))
+	b.WriteString(val)
+	return b.Bytes()
+}
+
+// savedModelPyFunc is a minimal, INERT saved_model.pb: a protobuf with the
+// meta_graphs field (field 2) present so the SavedModel sniff accepts it, whose
+// body carries a length-prefixed `PyFunc` op name (0x06 + "PyFunc"). It is only
+// a graph-op *reference* — no registered callable, no execution — flagging
+// AIROM-RISK-SAVEDMODEL-PYFUNC.
+func savedModelPyFunc() []byte {
+	// field 4 (op), wire type 2, length-6 string "PyFunc": 0x22 0x06 P y F u n c.
+	body := append([]byte{0x0a, 0x04, 'n', 'o', 'd', 'e'}, []byte{0x22, 0x06, 'P', 'y', 'F', 'u', 'n', 'c'}...)
+	var b bytes.Buffer
+	b.WriteByte(0x12) // field 2 (meta_graphs), wire type 2 (length-delimited)
+	b.WriteByte(byte(len(body)))
+	b.Write(body)
 	return b.Bytes()
 }
 

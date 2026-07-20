@@ -1,0 +1,460 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-4000-8000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-17T12:00:00Z",
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "airom",
+          "version": "dev"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "airom:d4e3be4126ba4a51",
+      "type": "application",
+      "name": "risky-models",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0"
+        },
+        {
+          "name": "airom:kind",
+          "value": "application"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "airom:source.target",
+        "value": "risky-models"
+      },
+      {
+        "name": "airom:source.type",
+        "value": "dir"
+      },
+      {
+        "name": "airom:unknowns",
+        "value": "0"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "airom:2df08beb45af93fd",
+      "type": "machine-learning-model",
+      "name": "poisoned.gguf",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bf2744e85d3b8946848bc0e1f46b4a1494262b52b5dd593973f34347b5897aca"
+        }
+      ],
+      "purl": "pkg:generic/poisoned.gguf?checksum=sha256:bf2744e85d3b8946848bc0e1f46b4a1494262b52b5dd593973f34347b5897aca",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "gguf"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/poisoned.gguf"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:357bff4125ef88bb",
+      "type": "machine-learning-model",
+      "name": "lambda.h5",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "94b3916e37dea30e98d7ca9eb6418fe8b7dcf76e8621094fced71249a0a80755"
+        }
+      ],
+      "purl": "pkg:generic/lambda.h5?checksum=sha256:94b3916e37dea30e98d7ca9eb6418fe8b7dcf76e8621094fced71249a0a80755",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.85"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "hdf5"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/lambda.h5"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:43da64690b16bac7",
+      "type": "machine-learning-model",
+      "name": "tf_model",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1829dc8b79fbca0c48f6fa41c5d90c0e6b261f0303e241b21c7238a3f191ed5e"
+        }
+      ],
+      "purl": "pkg:generic/tf_model?checksum=sha256:1829dc8b79fbca0c48f6fa41c5d90c0e6b261f0303e241b21c7238a3f191ed5e",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.9"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "tensorflow-savedmodel"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/tf_model/saved_model.pb"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:a6ccf893ff130124",
+      "type": "library",
+      "name": "openai",
+      "version": "1.51.0",
+      "purl": "pkg:pypi/openai@1.51.0",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "library"
+        },
+        {
+          "name": "airom:provider",
+          "value": "openai"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "1.51.0",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 2,
+            "additionalContext": "openai==1.51.0"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:d5686fa6fcffb28f",
+      "type": "framework",
+      "name": "torch",
+      "version": "2.1.0",
+      "purl": "pkg:pypi/torch@2.1.0",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.99"
+        },
+        {
+          "name": "airom:kind",
+          "value": "framework"
+        },
+        {
+          "name": "airom:provider",
+          "value": "pytorch"
+        }
+      ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "version",
+            "confidence": 0.95,
+            "concludedValue": "2.1.0",
+            "methods": [
+              {
+                "technique": "manifest-analysis",
+                "confidence": 0.95
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "location": "requirements.txt",
+            "line": 1,
+            "additionalContext": "torch==2.1.0"
+          },
+          {
+            "location": "src/app.py",
+            "line": 7,
+            "additionalContext": "return torch.load(path, weights_only=False)"
+          }
+        ]
+      }
+    },
+    {
+      "bom-ref": "airom:d884b0dd6c364550",
+      "type": "machine-learning-model",
+      "name": "checkpoint.pt",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+        }
+      ],
+      "purl": "pkg:generic/checkpoint.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd",
+      "properties": [
+        {
+          "name": "airom:confidence",
+          "value": "0.95"
+        },
+        {
+          "name": "airom:kind",
+          "value": "local-model-file"
+        },
+        {
+          "name": "airom:model.format",
+          "value": "torch-pickle"
+        },
+        {
+          "name": "airom:model.provider",
+          "value": "local"
+        },
+        {
+          "name": "airom:pickle.imports",
+          "value": "os.system"
+        },
+        {
+          "name": "airom:pickle.risk",
+          "value": "high"
+        }
+      ],
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "models/checkpoint.pt"
+          }
+        ]
+      }
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "AIROM-RISK-GGUF-TEMPLATE",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#gguf-template"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "medium",
+          "method": "other"
+        }
+      ],
+      "description": "The GGUF tokenizer.chat_template contains Jinja sandbox-escape gadgets; rendering a prompt with it can execute code.",
+      "affects": [
+        {
+          "ref": "airom:2df08beb45af93fd"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/poisoned.gguf"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "__globals__|os.popen"
+        }
+      ]
+    },
+    {
+      "id": "AIROM-RISK-KERAS-LAMBDA",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#keras-lambda"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "high",
+          "method": "other"
+        }
+      ],
+      "description": "A Keras model config declares a Lambda layer, which marshals arbitrary Python that executes when the model is loaded.",
+      "affects": [
+        {
+          "ref": "airom:357bff4125ef88bb"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/lambda.h5"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "Lambda"
+        }
+      ]
+    },
+    {
+      "id": "AIROM-RISK-SAVEDMODEL-PYFUNC",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#savedmodel-pyfunc"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "medium",
+          "method": "other"
+        }
+      ],
+      "description": "The SavedModel graph contains a PyFunc-family op, which invokes arbitrary Python during inference.",
+      "affects": [
+        {
+          "ref": "airom:43da64690b16bac7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/tf_model/saved_model.pb"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "PyFunc"
+        }
+      ]
+    },
+    {
+      "id": "AIROM-RISK-UNSAFE-LOAD",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#unsafe-load"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "medium",
+          "method": "other"
+        }
+      ],
+      "description": "A source call site deserializes a model through an unsafe path (e.g. torch.load with weights_only=False); a malicious checkpoint would execute code on load.",
+      "affects": [
+        {
+          "ref": "airom:d5686fa6fcffb28f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "src/app.py:7"
+        }
+      ]
+    },
+    {
+      "id": "AIROM-RISK-PICKLE-IMPORT",
+      "source": {
+        "name": "airom",
+        "url": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import"
+      },
+      "ratings": [
+        {
+          "source": {
+            "name": "airom"
+          },
+          "severity": "high",
+          "method": "other"
+        }
+      ],
+      "description": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced.",
+      "affects": [
+        {
+          "ref": "airom:d884b0dd6c364550"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:risk.evidence",
+          "value": "models/checkpoint.pt"
+        },
+        {
+          "name": "airom:risk.symbols",
+          "value": "os.system"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,513 @@
+{
+  "schemaVersion": "1",
+  "tool": {
+    "name": "airom",
+    "version": "dev"
+  },
+  "serial": "urn:uuid:00000000-0000-4000-8000-000000000000",
+  "timestamp": "2026-07-17T12:00:00Z",
+  "lifecycle": "pre-build",
+  "source": {
+    "kind": "dir",
+    "target": "risky-models"
+  },
+  "root": "airom:d4e3be4126ba4a51",
+  "components": [
+    {
+      "id": "airom:2df08beb45af93fd",
+      "kind": "local-model-file",
+      "name": "poisoned.gguf",
+      "provider": "local",
+      "purl": "pkg:generic/poisoned.gguf?checksum=sha256:bf2744e85d3b8946848bc0e1f46b4a1494262b52b5dd593973f34347b5897aca",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "hex": "bf2744e85d3b8946848bc0e1f46b4a1494262b52b5dd593973f34347b5897aca"
+        }
+      ],
+      "model": {
+        "format": "gguf"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "models/poisoned.gguf"
+            },
+            "detectorId": "modelfile/gguf",
+            "method": "binary-analysis",
+            "confidence": 0.95,
+            "fields": {
+              "version": "3"
+            }
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-GGUF-TEMPLATE",
+          "severity": "medium",
+          "detail": [
+            "__globals__",
+            "os.popen"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/poisoned.gguf"
+            },
+            "detectorId": "modelfile/gguf",
+            "method": "binary-analysis",
+            "confidence": 0.95,
+            "fields": {
+              "version": "3"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "airom:357bff4125ef88bb",
+      "kind": "local-model-file",
+      "name": "lambda.h5",
+      "provider": "local",
+      "purl": "pkg:generic/lambda.h5?checksum=sha256:94b3916e37dea30e98d7ca9eb6418fe8b7dcf76e8621094fced71249a0a80755",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "hex": "94b3916e37dea30e98d7ca9eb6418fe8b7dcf76e8621094fced71249a0a80755"
+        }
+      ],
+      "model": {
+        "format": "hdf5"
+      },
+      "confidence": 0.85,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "models/lambda.h5"
+            },
+            "detectorId": "modelfilex/hdf5",
+            "method": "binary-analysis",
+            "confidence": 0.85
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-KERAS-LAMBDA",
+          "severity": "high",
+          "detail": [
+            "Lambda"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/lambda.h5"
+            },
+            "detectorId": "modelfilex/hdf5",
+            "method": "binary-analysis",
+            "confidence": 0.85
+          }
+        }
+      ]
+    },
+    {
+      "id": "airom:43da64690b16bac7",
+      "kind": "local-model-file",
+      "name": "tf_model",
+      "provider": "local",
+      "purl": "pkg:generic/tf_model?checksum=sha256:1829dc8b79fbca0c48f6fa41c5d90c0e6b261f0303e241b21c7238a3f191ed5e",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "hex": "1829dc8b79fbca0c48f6fa41c5d90c0e6b261f0303e241b21c7238a3f191ed5e"
+        }
+      ],
+      "model": {
+        "format": "tensorflow-savedmodel"
+      },
+      "confidence": 0.9,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "models/tf_model/saved_model.pb"
+            },
+            "detectorId": "modelfilex/savedmodel",
+            "method": "binary-analysis",
+            "confidence": 0.9
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-SAVEDMODEL-PYFUNC",
+          "severity": "medium",
+          "detail": [
+            "PyFunc"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/tf_model/saved_model.pb"
+            },
+            "detectorId": "modelfilex/savedmodel",
+            "method": "binary-analysis",
+            "confidence": 0.9
+          }
+        }
+      ]
+    },
+    {
+      "id": "airom:a6ccf893ff130124",
+      "kind": "library",
+      "name": "openai",
+      "version": "1.51.0",
+      "provider": "openai",
+      "purl": "pkg:pypi/openai@1.51.0",
+      "package": {
+        "ecosystem": "pypi"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "requirements.txt",
+              "line": 2
+            },
+            "detectorId": "manifest/pypi-requirements",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "openai==1.51.0"
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "1.51.0",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airom:d4e3be4126ba4a51",
+      "kind": "application",
+      "name": "risky-models",
+      "confidence": 0,
+      "evidence": {}
+    },
+    {
+      "id": "airom:d5686fa6fcffb28f",
+      "kind": "framework",
+      "name": "torch",
+      "version": "2.1.0",
+      "provider": "pytorch",
+      "purl": "pkg:pypi/torch@2.1.0",
+      "package": {
+        "ecosystem": "pypi"
+      },
+      "confidence": 0.99,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "requirements.txt",
+              "line": 1
+            },
+            "detectorId": "manifest/pypi-requirements",
+            "method": "manifest-analysis",
+            "confidence": 0.95,
+            "snippet": "torch==2.1.0"
+          },
+          {
+            "location": {
+              "path": "src/app.py",
+              "line": 7,
+              "endLine": 7,
+              "column": 12,
+              "endColumn": 47
+            },
+            "detectorId": "rules/unsafe-load/torch-weights-only-false",
+            "method": "source-code-analysis",
+            "confidence": 0.8,
+            "snippet": "return torch.load(path, weights_only=False)"
+          }
+        ],
+        "identity": [
+          {
+            "field": "version",
+            "value": "2.1.0",
+            "confidence": 0.95,
+            "methods": [
+              "manifest-analysis"
+            ]
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-UNSAFE-LOAD",
+          "severity": "medium",
+          "occurrence": {
+            "location": {
+              "path": "src/app.py",
+              "line": 7,
+              "endLine": 7,
+              "column": 12,
+              "endColumn": 47
+            },
+            "detectorId": "rules/unsafe-load/torch-weights-only-false",
+            "method": "source-code-analysis",
+            "confidence": 0.8,
+            "snippet": "return torch.load(path, weights_only=False)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "airom:d884b0dd6c364550",
+      "kind": "local-model-file",
+      "name": "checkpoint.pt",
+      "provider": "local",
+      "purl": "pkg:generic/checkpoint.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "hex": "7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+        }
+      ],
+      "model": {
+        "format": "torch-pickle"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "occurrences": [
+          {
+            "location": {
+              "path": "models/checkpoint.pt"
+            },
+            "detectorId": "modelfilex/torch",
+            "method": "binary-analysis",
+            "confidence": 0.95
+          }
+        ]
+      },
+      "risks": [
+        {
+          "id": "AIROM-RISK-PICKLE-IMPORT",
+          "severity": "high",
+          "detail": [
+            "os.system"
+          ],
+          "occurrence": {
+            "location": {
+              "path": "models/checkpoint.pt"
+            },
+            "detectorId": "modelfilex/torch",
+            "method": "binary-analysis",
+            "confidence": 0.95
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "filesWalked": 6,
+    "filesProcessed": 6,
+    "filesFailed": 0,
+    "headerBytes": 613,
+    "contentBytes": 613,
+    "durationNs": 0,
+    "selection": [
+      "dataset/file: selected by \"default\"",
+      "gosrc/ast: selected by \"default\"",
+      "infra/compose: selected by \"default\"",
+      "infra/dockerfile: selected by \"default\"",
+      "manifest/nuget: selected by \"default\"",
+      "manifest/cargo: selected by \"default\"",
+      "manifest/gomod: selected by \"default\"",
+      "manifest/gradle: selected by \"default\"",
+      "manifest/maven: selected by \"default\"",
+      "manifest/npm: selected by \"default\"",
+      "manifest/pypi-pyproject: selected by \"default\"",
+      "manifest/pypi-requirements: selected by \"default\"",
+      "modelfile/gguf: selected by \"default\"",
+      "modelfile/onnx: selected by \"default\"",
+      "modelfile/safetensors: selected by \"default\"",
+      "modelfilex/hdf5: selected by \"default\"",
+      "modelfilex/savedmodel: selected by \"default\"",
+      "modelfilex/tflite: selected by \"default\"",
+      "modelfilex/tensorrt: selected by \"default\"",
+      "modelfilex/torch: selected by \"default\"",
+      "project/adapter: selected by \"default\"",
+      "project/configbind: selected by \"default\"",
+      "project/hfdir: selected by \"default\"",
+      "project/raglink: selected by \"default\"",
+      "prompt/file: selected by \"default\"",
+      "ruleengine: selected by \"default\""
+    ],
+    "detectors": [
+      {
+        "id": "dataset/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "gosrc/ast",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/compose",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "infra/dockerfile",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/cargo",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gomod",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/gradle",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/maven",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/npm",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/nuget",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-pyproject",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "manifest/pypi-requirements",
+        "invocations": 1,
+        "findings": 2,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/gguf",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/onnx",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfile/safetensors",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/hdf5",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/savedmodel",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tensorrt",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/tflite",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "modelfilex/torch",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      },
+      {
+        "id": "project/adapter",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/configbind",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/hfdir",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "project/raglink",
+        "invocations": 1,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "prompt/file",
+        "invocations": 0,
+        "findings": 0,
+        "ns": 0
+      },
+      {
+        "id": "ruleengine",
+        "invocations": 1,
+        "findings": 1,
+        "ns": 0
+      }
+    ]
+  }
+}

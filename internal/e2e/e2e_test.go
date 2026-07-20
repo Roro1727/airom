@@ -64,6 +64,7 @@ var goldenFixtures = []string{
 	"node-openai",
 	"go-openai",
 	"mixed-monorepo",
+	"risky-models",
 }
 
 func fixtureDir(name string) string { return filepath.Join("testdata", "fixtures", name) }

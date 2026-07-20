@@ -1,0 +1,538 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "airom",
+          "semanticVersion": "dev",
+          "informationUri": "https://github.com/airomhq/airom",
+          "rules": [
+            {
+              "id": "manifest/pypi-requirements",
+              "name": "ManifestPypiRequirements",
+              "shortDescription": {
+                "text": "Components identified by the manifest/pypi-requirements detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "manifest-analysis"
+              }
+            },
+            {
+              "id": "modelfile/gguf",
+              "name": "ModelfileGguf",
+              "shortDescription": {
+                "text": "Components identified by the modelfile/gguf detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "modelfilex/hdf5",
+              "name": "ModelfilexHdf5",
+              "shortDescription": {
+                "text": "Components identified by the modelfilex/hdf5 detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "modelfilex/savedmodel",
+              "name": "ModelfilexSavedmodel",
+              "shortDescription": {
+                "text": "Components identified by the modelfilex/savedmodel detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "modelfilex/torch",
+              "name": "ModelfilexTorch",
+              "shortDescription": {
+                "text": "Components identified by the modelfilex/torch detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "binary-analysis"
+              }
+            },
+            {
+              "id": "rules/unsafe-load/torch-weights-only-false",
+              "name": "RulesUnsafeLoadTorchWeightsOnlyFalse",
+              "shortDescription": {
+                "text": "Components identified by the rules/unsafe-load/torch-weights-only-false detector."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/",
+              "properties": {
+                "airom:method": "source-code-analysis"
+              }
+            },
+            {
+              "id": "risk/gguf-template",
+              "name": "RiskGgufTemplate",
+              "shortDescription": {
+                "text": "The GGUF tokenizer.chat_template contains Jinja sandbox-escape gadgets; rendering a prompt with it can execute code."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#gguf-template",
+              "properties": {
+                "airom:risk.severity": "medium",
+                "security-severity": "5.0"
+              }
+            },
+            {
+              "id": "risk/keras-lambda",
+              "name": "RiskKerasLambda",
+              "shortDescription": {
+                "text": "A Keras model config declares a Lambda layer, which marshals arbitrary Python that executes when the model is loaded."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#keras-lambda",
+              "properties": {
+                "airom:risk.severity": "high",
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "risk/pickle-import",
+              "name": "RiskPickleImport",
+              "shortDescription": {
+                "text": "A pickle GLOBAL resolves to a code-execution callable; loading this artifact runs code before any model is produced."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#pickle-import",
+              "properties": {
+                "airom:risk.severity": "high",
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "risk/savedmodel-pyfunc",
+              "name": "RiskSavedmodelPyfunc",
+              "shortDescription": {
+                "text": "The SavedModel graph contains a PyFunc-family op, which invokes arbitrary Python during inference."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#savedmodel-pyfunc",
+              "properties": {
+                "airom:risk.severity": "medium",
+                "security-severity": "5.0"
+              }
+            },
+            {
+              "id": "risk/unsafe-load",
+              "name": "RiskUnsafeLoad",
+              "shortDescription": {
+                "text": "A source call site deserializes a model through an unsafe path (e.g. torch.load with weights_only=False); a malicious checkpoint would execute code on load."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://github.com/airomhq/airom/blob/main/docs/risks.md#unsafe-load",
+              "properties": {
+                "airom:risk.severity": "medium",
+                "security-severity": "5.0"
+              }
+            }
+          ]
+        }
+      },
+      "columnKind": "utf16CodeUnits",
+      "originalUriBaseIds": {
+        "SRCROOT": {
+          "uri": "file:///risky-models/"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-07-17T12:00:00Z"
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "modelfile/gguf",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'poisoned.gguf' detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/poisoned.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "d4eb9cce99a48102d689c416e39beb697bdc2ce4fd6cd6bbf43e6cd0b5baecf3"
+          },
+          "properties": {
+            "airom:componentId": "airom:2df08beb45af93fd",
+            "airom:confidence": 0.95,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/poisoned.gguf?checksum=sha256:bf2744e85d3b8946848bc0e1f46b4a1494262b52b5dd593973f34347b5897aca"
+          }
+        },
+        {
+          "ruleId": "modelfilex/hdf5",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'lambda.h5' detected (confidence 0.85)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/lambda.h5",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "0fec20992be9306af878ceeff9b6f944f4997084f97628143e2faf2fc34c961e"
+          },
+          "properties": {
+            "airom:componentId": "airom:357bff4125ef88bb",
+            "airom:confidence": 0.85,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.85,
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/lambda.h5?checksum=sha256:94b3916e37dea30e98d7ca9eb6418fe8b7dcf76e8621094fced71249a0a80755"
+          }
+        },
+        {
+          "ruleId": "modelfilex/savedmodel",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'tf_model' detected (confidence 0.9)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/tf_model/saved_model.pb",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "3bdefe860cd407a1060b633ded1b2658e54c1aa268df2002532bd7d47158b9a6"
+          },
+          "properties": {
+            "airom:componentId": "airom:43da64690b16bac7",
+            "airom:confidence": 0.9,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.9,
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/tf_model?checksum=sha256:1829dc8b79fbca0c48f6fa41c5d90c0e6b261f0303e241b21c7238a3f191ed5e"
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "library 'openai' [1.51.0] detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "snippet": {
+                    "text": "openai==1.51.0"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "f4dcbce03a17b673ff77be6971ebf09e56e678c2cc59e8c21d148ee42f8277e7"
+          },
+          "properties": {
+            "airom:componentId": "airom:a6ccf893ff130124",
+            "airom:confidence": 0.95,
+            "airom:kind": "library",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "openai",
+            "airom:purl": "pkg:pypi/openai@1.51.0"
+          }
+        },
+        {
+          "ruleId": "manifest/pypi-requirements",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "framework 'torch' [2.1.0] detected (confidence 0.99)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 1,
+                  "snippet": {
+                    "text": "torch==2.1.0"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "91bf674cc37264bb09113606c91fc07637f9073c3829f3601a7f84b9efd1dbcd"
+          },
+          "properties": {
+            "airom:componentId": "airom:d5686fa6fcffb28f",
+            "airom:confidence": 0.99,
+            "airom:kind": "framework",
+            "airom:occurrence.confidence": 0.95,
+            "airom:provider": "pytorch",
+            "airom:purl": "pkg:pypi/torch@2.1.0"
+          }
+        },
+        {
+          "ruleId": "rules/unsafe-load/torch-weights-only-false",
+          "ruleIndex": 5,
+          "level": "note",
+          "message": {
+            "text": "framework 'torch' [2.1.0] detected (confidence 0.99)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 12,
+                  "endLine": 7,
+                  "endColumn": 47,
+                  "snippet": {
+                    "text": "return torch.load(path, weights_only=False)"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "ffdbaf394d1132a1f87a521876de0208f6065c36bc191b28988ccff98120dfdb"
+          },
+          "properties": {
+            "airom:componentId": "airom:d5686fa6fcffb28f",
+            "airom:confidence": 0.99,
+            "airom:kind": "framework",
+            "airom:occurrence.confidence": 0.8,
+            "airom:provider": "pytorch",
+            "airom:purl": "pkg:pypi/torch@2.1.0"
+          }
+        },
+        {
+          "ruleId": "modelfilex/torch",
+          "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "local-model-file 'checkpoint.pt' detected (confidence 0.95)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/checkpoint.pt",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "airomComponentIdentity/v1": "d11a005c1eaad06cead9b0364cf5edc6788f35add4c151d36c5190c26bcda4d5"
+          },
+          "properties": {
+            "airom:componentId": "airom:d884b0dd6c364550",
+            "airom:confidence": 0.95,
+            "airom:kind": "local-model-file",
+            "airom:occurrence.confidence": 0.95,
+            "airom:pickle.risk": "high",
+            "airom:provider": "local",
+            "airom:purl": "pkg:generic/checkpoint.pt?checksum=sha256:7072e107c42927b16285ea4e9b6464b5420faab96560e10a41ca435bee8985fd"
+          }
+        },
+        {
+          "ruleId": "risk/gguf-template",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Unsafe GGUF chat template in \"poisoned.gguf\": __globals__, os.popen"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/poisoned.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:2df08beb45af93fd",
+            "airom:risk.severity": "medium",
+            "airom:risk.symbols": "__globals__|os.popen"
+          }
+        },
+        {
+          "ruleId": "risk/keras-lambda",
+          "ruleIndex": 7,
+          "level": "error",
+          "message": {
+            "text": "Keras Lambda layer in \"lambda.h5\": Lambda"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/lambda.h5",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:357bff4125ef88bb",
+            "airom:risk.severity": "high",
+            "airom:risk.symbols": "Lambda"
+          }
+        },
+        {
+          "ruleId": "risk/savedmodel-pyfunc",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "SavedModel Python-callback op in \"tf_model\": PyFunc"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/tf_model/saved_model.pb",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:43da64690b16bac7",
+            "airom:risk.severity": "medium",
+            "airom:risk.symbols": "PyFunc"
+          }
+        },
+        {
+          "ruleId": "risk/unsafe-load",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Unsafe model deserialization in \"torch\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 12,
+                  "endLine": 7,
+                  "endColumn": 47,
+                  "snippet": {
+                    "text": "return torch.load(path, weights_only=False)"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:d5686fa6fcffb28f",
+            "airom:risk.severity": "medium"
+          }
+        },
+        {
+          "ruleId": "risk/pickle-import",
+          "ruleIndex": 8,
+          "level": "error",
+          "message": {
+            "text": "Unsafe pickle import in \"checkpoint.pt\": os.system"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/checkpoint.pt",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:d884b0dd6c364550",
+            "airom:risk.severity": "high",
+            "airom:risk.symbols": "os.system"
+          }
+        }
+      ]
+    }
+  ]
+}
