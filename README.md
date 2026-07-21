@@ -10,7 +10,7 @@ AIROM is an open-source scanner that discovers AI assets — including models, p
 [![Go Reference](https://pkg.go.dev/badge/github.com/airomhq/airom.svg)](https://pkg.go.dev/github.com/airomhq/airom)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-> **v0.1.0 — first release.** Early but real: the pipeline, detectors, rule packs, and all five writers are implemented and tested. See [Project status](#project-status) for the honest ledger of what ships today versus what is deferred.
+> **v0.1.3.** Early but real: the pipeline, detectors, rule packs, and every writer are implemented and tested — and this release adds the **AI-native risk overlay** and **compliance framework mapping** (see [Risk detection](#risk-detection) and [Compliance mapping](#compliance-mapping)). See [Project status](#project-status) for the honest ledger of what ships today versus what is deferred.
 
 ---
 
@@ -241,7 +241,7 @@ Rules can even declare relationships and capture generation parameters at the ca
 
 ## Project status
 
-AIROM is at **v0.1.0**, its first tagged release: feature-complete against the 10-phase plan, architecture through a multi-agent production review. Early software — expect rough edges, and see the deferred row below for what it deliberately does not do yet. Honest ledger:
+AIROM is at **v0.1.3**: feature-complete against the 10-phase plan, architecture through a multi-agent production review, with the risk overlay and compliance mapping added on top. Early software — expect rough edges, and see the deferred row below for what it deliberately does not do yet. Honest ledger:
 
 | Area | Status |
 |---|---|
@@ -288,11 +288,11 @@ AIROM is a security tool whose parsers eat untrusted bytes, and is hardened acco
 - **No surprise network access.** Filesystem, local-repo, and `image --input` scans touch no network; `--offline` asserts it globally.
 - **Supply chain.** Releases are `CGO_ENABLED=0`, reproducibly built, cosign-signed, and ship with an SBOM — and, dogfooded, an AIBOM.
 
-A `SECURITY.md` with reporting instructions lands before the first release; until then, report vulnerabilities privately via a GitHub security advisory on the repository, not a public issue.
+Report vulnerabilities privately via a GitHub security advisory on the repository, not a public issue — see [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Start with [docs/plugin-guide.md](docs/plugin-guide.md) (a `CONTRIBUTING.md` lands before the first release). The fastest way to make AIROM better is a rule pack: one YAML file, two fixtures, one golden — most providers land in under an hour.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/plugin-guide.md](docs/plugin-guide.md). The fastest way to make AIROM better is a rule pack: one YAML file, two fixtures, one golden — most providers land in under an hour.
 
 ## License
 
