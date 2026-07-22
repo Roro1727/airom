@@ -82,6 +82,8 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^chore:"
+      - "^ci:"
+      - "^release:"
       - "Merge pull request"
   groups:
     - title: Features

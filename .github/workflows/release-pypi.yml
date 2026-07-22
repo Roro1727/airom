@@ -2,13 +2,15 @@ name: Publish (PyPI)
 
 # Publishes the Python SDK (sdk/python) to PyPI.
 #
-# Trigger: a push to main that changes the SDK, a v* tag, or a manual run.
+# Trigger: every push to main, or a manual run.
 #
 # Idempotency: PyPI permanently refuses to re-upload a version — even one that
 # was deleted. So this workflow publishes ONLY when the version in
 # sdk/python/src/airom/__init__.py is not already on the index; any other push
-# skips cleanly instead of failing. Bumping __version__ is therefore the
-# deliberate act that ships a release.
+# (docs, code, whatever) runs the cheap version check and skips cleanly instead
+# of failing. Bumping __version__ is therefore the deliberate act that ships a
+# release — which is why the trigger is every main push, not a path filter:
+# whenever main moves, PyPI is reconciled to the declared version.
 #
 # Auth: PyPI Trusted Publishing (OIDC). GitHub Actions proves its identity to
 # PyPI directly — there is NO API token stored, leaked, or rotated. One-time
@@ -22,15 +24,6 @@ name: Publish (PyPI)
 on:
   push:
     branches: [main]
-    paths:
-      - "sdk/python/**"
-      - "cmd/**"
-      - "internal/**"
-      - "pkg/**"
-      - "rules/**"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/release-pypi.yml"
   workflow_dispatch:
     inputs:
       repository:
