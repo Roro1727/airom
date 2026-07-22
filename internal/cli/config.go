@@ -35,7 +35,7 @@ var knownKeys = map[string]bool{
 	"no-cache": true, "cdx-version": true, "sarif-strict-kinds": true,
 	"exit-code": true, "fail-on": true, "offline": true, "pprof": true,
 	"trace": true, "stats": true, "verbose": true, "quiet": true,
-	"no-progress": true,
+	"no-progress": true, "wide": true,
 	// command-specific (image, k8s)
 	"input": true, "platform": true, "namespace": true,
 	"all-namespaces": true, "manifests": true, "parallel-images": true,
@@ -299,12 +299,13 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		return nil, &app.UsageError{Err: err}
 	}
 
-	var noCache, sarifStrict, offline, stats, quiet, noProgress, k8sAll, k8sParallelImages bool
+	var noCache, sarifStrict, offline, stats, wide, quiet, noProgress, k8sAll, k8sParallelImages bool
 	for key, dst := range map[string]*bool{
 		"no-cache":           &noCache,
 		"sarif-strict-kinds": &sarifStrict,
 		"offline":            &offline,
 		"stats":              &stats,
+		"wide":               &wide,
 		"quiet":              &quiet,
 		"no-progress":        &noProgress,
 		"all-namespaces":     &k8sAll,
@@ -365,6 +366,7 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		PProfAddr: k.String("pprof"),
 		TraceFile: k.String("trace"),
 		Stats:     stats,
+		Wide:      wide,
 
 		ImageInput:    k.String("input"),
 		ImagePlatform: k.String("platform"),

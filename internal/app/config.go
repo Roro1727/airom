@@ -121,6 +121,7 @@ type Config struct {
 	// Writers
 	CDXVersion       string
 	SARIFStrictKinds bool
+	Wide             bool // table: expand every file:line occurrence under each component
 
 	// CI policy (exit-code contract in docs/cli.md). Nil Policy = no gate:
 	// scan success always exits 0 regardless of findings.

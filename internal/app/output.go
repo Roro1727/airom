@@ -53,6 +53,7 @@ func emit(ctx context.Context, inv *airom.Inventory, cfg *Config) error {
 	opts := writer.Options{
 		CDXVersion:  cfg.CDXVersion,
 		SARIFStrict: cfg.SARIFStrictKinds,
+		TableWide:   cfg.Wide,
 	}
 	return writer.Fanout(ctx, inv, outputs, opts, stdout)
 }

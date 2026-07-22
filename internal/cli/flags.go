@@ -53,6 +53,7 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.String("trace", "", "write a Go execution trace to file")
 	fs.Bool("no-progress", false, "disable the scan progress indicator (auto-off when stderr is not a terminal)")
 	fs.Bool("stats", false, "emit the full ScanStats block in the output")
+	fs.Bool("wide", false, "table: expand every file:line occurrence under each component")
 	fs.CountP("verbose", "v", "increase log verbosity (repeatable; -vv adds source locations)")
 	fs.BoolP("quiet", "q", false, "errors only")
 }

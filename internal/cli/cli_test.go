@@ -115,6 +115,27 @@ func TestFSResolvesConfig(t *testing.T) {
 	}
 }
 
+func TestWideFlagResolves(t *testing.T) {
+	// default: off
+	got := captureScan(t)
+	t.Chdir(t.TempDir())
+	if _, err := execute(t, "fs", "."); err != nil {
+		t.Fatalf("fs error: %v", err)
+	}
+	if (*got).Wide {
+		t.Error("Wide = true without --wide")
+	}
+
+	// --wide flips it, and it reaches the table writer via emit()
+	got = captureScan(t)
+	if _, err := execute(t, "fs", ".", "--wide"); err != nil {
+		t.Fatalf("fs --wide error: %v", err)
+	}
+	if !(*got).Wide {
+		t.Error("Wide = false with --wide")
+	}
+}
+
 func TestConfigPrecedence(t *testing.T) {
 	got := captureScan(t)
 	dir := t.TempDir()
