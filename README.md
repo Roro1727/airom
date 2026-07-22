@@ -52,7 +52,7 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 
 **Languages:** Python, JavaScript, TypeScript, Go, Java, Rust, C#, Kotlin
 
-**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM (with `vulnerabilities[]` for risks and `definitions`/`declarations` for compliance) · SARIF 2.1.0 · YAML · a Markdown compliance report · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
+**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM (with `vulnerabilities[]` for risks and opt-in CVEs, and `definitions`/`declarations` for compliance) · SARIF 2.1.0 · YAML · a Markdown compliance report · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
 
 ## Risk detection
 
@@ -92,6 +92,17 @@ airom scan . --compliance nist-ai-rmf --exit-code 1 --fail-on "compliance:gap"
 ```
 
 That evidence-linked conformance is something a tool that drops evidence on export structurally cannot produce. Details and the honest-mapping contract are in **[docs/compliance.md](docs/compliance.md)**.
+
+## CVE overlay
+
+The core scan is offline and deterministic — it reports what an artifact *is*. `--cve` adds what is *known about it today*: it matches the AI package dependencies AIROM inventoried (by their purl) against the live **[OSV.dev](https://osv.dev)** database and attaches the resulting CVEs — with real CVSS v3 scores computed from each vector — to those components.
+
+```bash
+airom scan . --cve                                      # CVEs in every output format
+airom scan . --cve --exit-code 1 --fail-on "cve:high"   # fail CI on a high/critical CVE
+```
+
+It's **opt-in** on purpose: it touches the network (so it's mutually exclusive with `--offline`) and it isn't deterministic across time (the same scan surfaces more CVEs as OSV grows — right for a vuln check, wrong for a reproducible BOM). It's **scoped to AI dependencies**, not a general-purpose SCA, and it **degrades honestly** — a network failure yields no CVEs and a warning, never a failed scan. CVEs project into CycloneDX `vulnerabilities[]` (with a genuine `CVSSv31` rating), SARIF `cve/<id>` security results carrying the real base score, a `VULN` table column, and the `cve` / `cve:<severity>` gate. Full contract in **[docs/cve.md](docs/cve.md)**.
 
 ## Quick start
 
@@ -303,6 +314,7 @@ No FUD, just positioning — the tools below solve different problems:
 | Answers "why is this in my AIBOM?" | **Yes — file:line occurrences, technique, confidence in the BOM** | No — output describes the model, not your usage of it | Typically findings without BOM-native evidence |
 | CycloneDX `evidence.occurrences[]` | **Emitted** | Not emitted | Not emitted |
 | Load-time risk detection | **Built in — pickle / Lambda / template / PyFunc / unsafe-load, as CycloneDX `vulnerabilities[]` + SARIF, offline** | No | Varies — some scan model artifacts, typically SaaS or agent-based |
+| Known-CVE overlay | **Opt-in `--cve` — AI deps matched against OSV.dev with real CVSS v3 scores, into the same `vulnerabilities[]`/SARIF; honest about network + freshness** | Rarely | Sometimes, usually as the core product |
 | Compliance mapping | **Evidence-linked — NIST AI RMF / OWASP Agentic as CycloneDX attestations, honest about what a scan can't verify** | No | Sometimes, but without BOM-native evidence |
 | Coverage | Hosted APIs **and** local weights **and** frameworks, vector DBs, prompts, datasets, params, infra, RAG graphs | The named model | Usually model files and/or a curated subset |
 | Distribution | Single static Go binary, offline-capable | Python package | Agent or SaaS |

@@ -60,12 +60,18 @@ func (wr Writer) build(inv *airom.Inventory) sarifReport {
 	rules, ruleIndex := buildRules(comps)
 	riskRules, riskIndex := buildRiskRules(comps, len(rules))
 	rules = append(rules, riskRules...)
+	cveRules, cveIndex := buildCVERules(comps, len(rules))
+	rules = append(rules, cveRules...)
+
+	results := wr.buildResults(comps, ruleIndex)
+	results = append(results, buildRiskResults(comps, riskIndex)...)
+	results = append(results, buildCVEResults(comps, cveIndex)...)
 
 	run := sarifRun{
 		Tool:        buildTool(inv, rules),
 		ColumnKind:  columnKind,
 		Invocations: []sarifInvocation{buildInvocation(inv)},
-		Results:     append(wr.buildResults(comps, ruleIndex), buildRiskResults(comps, riskIndex)...),
+		Results:     results,
 	}
 
 	// SRCROOT anchors artifact URIs to a filesystem root, so it is emitted only
@@ -251,6 +257,168 @@ func securitySeverity(s airom.RiskSeverity) string {
 		return "5.0"
 	default:
 		return "3.0"
+	}
+}
+
+// buildCVERules adds one security rule per distinct CVE present, id
+// "cve/<id>", carrying `security-severity` — a real CVSS base score here, not
+// the synthetic marker the risk rules use. Indices continue from offset so CVE
+// results can reference them. Deterministic: rules sorted by id, each described
+// by its first-seen advisory (component order is already ID-sorted).
+func buildCVERules(comps []airom.Component, offset int) ([]sarifRule, map[string]int) {
+	rep := map[string]airom.Vulnerability{}
+	ids := make([]string, 0)
+	for _, c := range comps {
+		for _, v := range c.Vulnerabilities {
+			if _, seen := rep[v.ID]; !seen {
+				rep[v.ID] = v
+				ids = append(ids, v.ID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	sort.Strings(ids)
+
+	rules := make([]sarifRule, 0, len(ids))
+	index := make(map[string]int, len(ids))
+	for i, id := range ids {
+		v := rep[id]
+		ruleID := "cve/" + id
+		index[ruleID] = offset + i
+		props := map[string]any{
+			"security-severity":  cveSecuritySeverity(v),
+			"airom:cve.severity": string(v.Severity),
+		}
+		if v.Vector != "" {
+			props["airom:cve.vector"] = v.Vector
+		}
+		desc := v.Summary
+		if desc == "" {
+			desc = fmt.Sprintf("Known vulnerability %s.", id)
+		}
+		rules = append(rules, sarifRule{
+			ID:                   ruleID,
+			Name:                 upperCamelCase(ruleID),
+			ShortDescription:     sarifText{Text: desc},
+			DefaultConfiguration: sarifConfig{Level: cveLevel(v.Severity)},
+			HelpURI:              v.URL,
+			Properties:           props,
+		})
+	}
+	return rules, index
+}
+
+// buildCVEResults emits one security result per (component, CVE), in
+// (component, sorted-CVE) order — c.Vulnerabilities is sorted by the OSV
+// enricher. Each result anchors to the component's primary sighting (the
+// manifest line declaring the vulnerable package).
+func buildCVEResults(comps []airom.Component, index map[string]int) []sarifResult {
+	if len(index) == 0 {
+		return nil
+	}
+	var results []sarifResult
+	for _, c := range comps {
+		for _, v := range c.Vulnerabilities {
+			ruleID := "cve/" + v.ID
+			props := map[string]any{
+				"airom:componentId":  string(c.ID),
+				"airom:cve.severity": string(v.Severity),
+			}
+			if v.Score > 0 {
+				props["airom:cve.score"] = v.Score
+			}
+			if v.Fixed != "" {
+				props["airom:cve.fixed"] = v.Fixed
+			}
+			results = append(results, sarifResult{
+				RuleID:     ruleID,
+				RuleIndex:  index[ruleID],
+				Level:      cveLevel(v.Severity),
+				Message:    sarifText{Text: cveMessage(c, v)},
+				Locations:  primaryLocations(c),
+				Properties: props,
+			})
+		}
+	}
+	return results
+}
+
+// primaryLocations projects a component's lowest (path, line) occurrence to a
+// single SARIF location, or an empty slice when it carries none. CVEs are a
+// property of the package, so they anchor to where the package was declared.
+func primaryLocations(c airom.Component) []sarifLocation {
+	occs := c.Evidence.Occurrences
+	if len(occs) == 0 {
+		return []sarifLocation{}
+	}
+	best := occs[0]
+	for _, o := range occs[1:] {
+		if o.Location.Path != best.Location.Path {
+			if o.Location.Path < best.Location.Path {
+				best = o
+			}
+			continue
+		}
+		if o.Location.Line < best.Location.Line {
+			best = o
+		}
+	}
+	if best.Location.Path == "" {
+		return []sarifLocation{}
+	}
+	return []sarifLocation{{
+		PhysicalLocation: sarifPhysicalLocation{
+			ArtifactLocation: sarifArtifactLocation{URI: best.Location.Path, URIBaseID: srcRootID},
+			Region:           buildRegion(best),
+		},
+	}}
+}
+
+// cveMessage renders the security-result headline.
+func cveMessage(c airom.Component, v airom.Vulnerability) string {
+	name := c.Name
+	if ver, ok := c.Version.Value(); ok {
+		name = fmt.Sprintf("%s %s", name, ver)
+	}
+	msg := fmt.Sprintf("%s (%s) affects %s", v.ID, v.Severity, name)
+	if v.Fixed != "" {
+		msg += fmt.Sprintf("; fixed in %s", v.Fixed)
+	}
+	return msg
+}
+
+// cveLevel maps a CVE severity bucket to a SARIF result level.
+func cveLevel(s airom.VulnSeverity) string {
+	switch s {
+	case airom.VulnCritical, airom.VulnHigh:
+		return "error"
+	case airom.VulnMedium:
+		return "warning"
+	default:
+		return "note"
+	}
+}
+
+// cveSecuritySeverity is the GitHub Code Scanning `security-severity` value: the
+// real CVSS base score when known, else a bucket midpoint from the text
+// severity so the finding still sorts into the right band.
+func cveSecuritySeverity(v airom.Vulnerability) string {
+	if v.Score > 0 {
+		return fmt.Sprintf("%.1f", v.Score)
+	}
+	switch v.Severity {
+	case airom.VulnCritical:
+		return "9.5"
+	case airom.VulnHigh:
+		return "8.0"
+	case airom.VulnMedium:
+		return "5.0"
+	case airom.VulnLow:
+		return "3.0"
+	default:
+		return "0.0"
 	}
 }
 

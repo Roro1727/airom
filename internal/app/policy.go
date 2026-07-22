@@ -64,6 +64,9 @@ var (
 	// The selector carries uppercase and dots (control ids like MAP-2.1), so it
 	// gets a permissive capture that parseComplianceSel then validates.
 	complianceRe = regexp.MustCompile(`^compliance(?::(.+))?$`)
+	// cveRe matches the CVE selectors: "cve" (any) or "cve:<severity>" — a
+	// severity THRESHOLD (cve:high fires on high and critical). Requires --cve.
+	cveRe = regexp.MustCompile(`^cve(?::([a-z]+))?$`)
 )
 
 // MatchAny is the policy used when --exit-code is set without --fail-on:
@@ -143,6 +146,13 @@ func parseTerm(raw string) (term, error) {
 	if m := complianceRe.FindStringSubmatch(s); m != nil {
 		if _, err := parseComplianceSel(m[1]); err != nil {
 			return term{}, err
+		}
+		return term{Ident: s}, nil
+	}
+	// CVE selectors ("cve", "cve:<severity>").
+	if m := cveRe.FindStringSubmatch(s); m != nil {
+		if sev := m[1]; sev != "" && cveSeverityRank(sev) == 0 {
+			return term{}, fmt.Errorf("unknown cve severity %q; want critical, high, medium, or low", sev)
 		}
 		return term{Ident: s}, nil
 	}
@@ -294,6 +304,54 @@ func complianceMatches(ident string, inv *airom.Inventory) bool {
 	return false
 }
 
+// cveTermMatches evaluates "cve" (any vuln) or "cve:<severity>" (a vuln at or
+// above that severity — a threshold) against one component.
+func cveTermMatches(ident string, c *airom.Component) bool {
+	threshold := 0 // "cve" — any vulnerability (rank 0 admits every severity)
+	if sev, ok := strings.CutPrefix(ident, "cve:"); ok {
+		threshold = cveSeverityRank(sev)
+	}
+	for _, v := range c.Vulnerabilities {
+		if cveSeverityRank(string(v.Severity)) >= threshold {
+			return true
+		}
+	}
+	return false
+}
+
+// cveSeverityRank orders CVE severities for threshold gating; 0 = unknown/none.
+func cveSeverityRank(sev string) int {
+	switch sev {
+	case string(airom.VulnCritical):
+		return 4
+	case string(airom.VulnHigh):
+		return 3
+	case string(airom.VulnMedium):
+		return 2
+	case string(airom.VulnLow):
+		return 1
+	default:
+		return 0
+	}
+}
+
+// ReferencesCVE reports whether the policy gates on a CVE selector — so config
+// validation can reject gating on CVEs that were never fetched (--fail-on cve
+// without --cve).
+func (p *Policy) ReferencesCVE() bool {
+	if p == nil {
+		return false
+	}
+	for _, conj := range p.anyOf {
+		for _, t := range conj.terms {
+			if t.Ident == "cve" || strings.HasPrefix(t.Ident, "cve:") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ReferencesCompliance reports whether the policy gates on a compliance
 // selector — so config validation can reject gating on compliance that was
 // never evaluated (--fail-on compliance:gap without --compliance).
@@ -332,6 +390,9 @@ func termMatches(t term, c *airom.Component) bool {
 	}
 	if t.Ident == "risk" || strings.HasPrefix(t.Ident, "risk:") {
 		return riskTermMatches(t.Ident, c)
+	}
+	if t.Ident == "cve" || strings.HasPrefix(t.Ident, "cve:") {
+		return cveTermMatches(t.Ident, c)
 	}
 	// pickle-risk: deprecated alias for the pickle-import risk (back-compat).
 	if t.Ident == "pickle-risk" {

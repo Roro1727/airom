@@ -106,6 +106,13 @@ def test_stats_block(airom_binary, ai_project):
     assert inv.stats.files_processed > 0
 
 
+def test_cve_option_renders_flag():
+    """The opt-in CVE overlay renders --cve and stays absent by default. Pure
+    unit — no network, no binary."""
+    assert "--cve" not in airom.ScanOptions().to_flags()
+    assert "--cve" in airom.ScanOptions(cve=True).to_flags()
+
+
 def test_fatal_error_raises_scanerror(airom_binary, tmp_path):
     with pytest.raises(airom.ScanError) as ei:
         airom.fs(str(tmp_path / "does-not-exist"), binary=airom_binary)

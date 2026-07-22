@@ -652,6 +652,42 @@ func buildVulnerabilities(inv *airom.Inventory) []cyclonedx.Vulnerability {
 			v.Properties = props.sorted()
 			vulns = append(vulns, v)
 		}
+		// CVEs from the OSV overlay: a real advisory id + CVSSv3 rating (not the
+		// "other" method the artifact risks use), affecting this component.
+		for _, cve := range c.Vulnerabilities {
+			rating := cyclonedx.VulnerabilityRating{
+				Source:   &cyclonedx.Source{Name: cve.Source},
+				Severity: cdxVulnSeverity(cve.Severity),
+			}
+			if cve.Vector != "" {
+				rating.Method = cdxScoringMethod(cve.Vector)
+				rating.Vector = cve.Vector
+			}
+			if cve.Score > 0 {
+				s := cve.Score
+				rating.Score = &s
+			}
+			v := cyclonedx.Vulnerability{
+				ID:          cve.ID,
+				Source:      &cyclonedx.Source{Name: cve.Source, URL: cve.URL},
+				Ratings:     &[]cyclonedx.VulnerabilityRating{rating},
+				Description: cve.Summary,
+				Affects:     &[]cyclonedx.Affects{{Ref: string(c.ID)}},
+			}
+			if len(cve.Aliases) > 0 {
+				refs := make([]cyclonedx.VulnerabilityReference, 0, len(cve.Aliases))
+				for _, a := range cve.Aliases {
+					refs = append(refs, cyclonedx.VulnerabilityReference{ID: a, Source: &cyclonedx.Source{Name: "osv.dev"}})
+				}
+				v.References = &refs
+			}
+			if cve.Fixed != "" {
+				var props propList
+				props.add("airom:cve.fixedVersion", cve.Fixed)
+				v.Properties = props.sorted()
+			}
+			vulns = append(vulns, v)
+		}
 	}
 	sort.SliceStable(vulns, func(i, j int) bool {
 		ri := (*vulns[i].Affects)[0].Ref
@@ -687,6 +723,42 @@ func cdxSeverity(s airom.RiskSeverity) cyclonedx.Severity {
 		return cyclonedx.SeverityMedium
 	default:
 		return cyclonedx.SeverityLow
+	}
+}
+
+// cdxVulnSeverity maps a CVE severity bucket (which includes critical/unknown).
+func cdxVulnSeverity(s airom.VulnSeverity) cyclonedx.Severity {
+	switch s {
+	case airom.VulnCritical:
+		return cyclonedx.SeverityCritical
+	case airom.VulnHigh:
+		return cyclonedx.SeverityHigh
+	case airom.VulnMedium:
+		return cyclonedx.SeverityMedium
+	case airom.VulnLow:
+		return cyclonedx.SeverityLow
+	default:
+		return cyclonedx.SeverityUnknown
+	}
+}
+
+// cdxScoringMethod names the CVSS version from the vector prefix so the emitted
+// rating.method matches the vector it carries — labeling a CVSS:4.0 or CVSS:2.0
+// vector as CVSSv31 would misdirect any consumer that parses per the method.
+// AIROM only computes v3 scores, so a v2/v4 vector rides with its text-derived
+// severity and no fabricated score.
+func cdxScoringMethod(vector string) cyclonedx.ScoringMethod {
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.1/"):
+		return cyclonedx.ScoringMethodCVSSv31
+	case strings.HasPrefix(vector, "CVSS:3.0/"):
+		return cyclonedx.ScoringMethodCVSSv3
+	case strings.HasPrefix(vector, "CVSS:2.0/") || strings.HasPrefix(vector, "AV:"):
+		return cyclonedx.ScoringMethodCVSSv2
+	case strings.HasPrefix(vector, "CVSS:4.0/"):
+		return cyclonedx.ScoringMethodCVSSv4
+	default:
+		return cyclonedx.ScoringMethodOther
 	}
 }
 

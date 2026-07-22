@@ -14,6 +14,7 @@ import (
 	"github.com/airomhq/airom/internal/detectors/all"
 	"github.com/airomhq/airom/internal/dispatch"
 	"github.com/airomhq/airom/internal/engine"
+	"github.com/airomhq/airom/internal/osv"
 	"github.com/airomhq/airom/internal/ruleengine"
 	"github.com/airomhq/airom/internal/source"
 	"github.com/airomhq/airom/pkg/airom"
@@ -141,6 +142,21 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 		Serial:    newSerial(),
 		Timestamp: time.Now().UTC(),
 	})
+
+	// The CVE overlay (opt-in) matches package purls against OSV.dev before
+	// compliance runs, so a compliance control that maps to CVEs sees them. It
+	// degrades honestly on a network failure (warnings, no CVEs) — never fatal…
+	// EXCEPT when a CVE gate is active: a gate that silently passes because the
+	// fetch failed is CI theater, so there we fail closed with a clear error
+	// rather than let the outage look like a clean build.
+	if cfg.CVE {
+		if failed := osv.Enrich(ctx, inv, osv.Options{}); failed > 0 && cfg.Policy.ReferencesCVE() {
+			return nil, fmt.Errorf(
+				"cve gate (--fail-on %s) cannot be evaluated: %d component(s) could not be checked against OSV.dev; re-run when it is reachable",
+				cfg.Policy, failed,
+			)
+		}
+	}
 
 	// Compliance mapping is a post-assembly overlay: evaluate the requested
 	// frameworks against the finished inventory (§ risks.md sibling). An

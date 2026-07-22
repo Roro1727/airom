@@ -65,6 +65,22 @@
                 "airom:risk.severity": "high",
                 "security-severity": "8.0"
               }
+            },
+            {
+              "id": "cve/CVE-2024-0001",
+              "name": "CveCVE20240001",
+              "shortDescription": {
+                "text": "Server-side request forgery in the example loader."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://osv.dev/vulnerability/CVE-2024-0001",
+              "properties": {
+                "airom:cve.severity": "high",
+                "airom:cve.vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                "security-severity": "7.5"
+              }
             }
           ],
           "properties": {
@@ -244,6 +260,30 @@
             "airom:componentId": "airom:bbbb444455556666",
             "airom:risk.severity": "high",
             "airom:risk.symbols": "builtins.eval|os.system"
+          }
+        },
+        {
+          "ruleId": "cve/CVE-2024-0001",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "CVE-2024-0001 (high) affects llama-3-8b q4_k_m; fixed in 0.2.5"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "models/llama.gguf",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "airom:componentId": "airom:bbbb444455556666",
+            "airom:cve.fixed": "0.2.5",
+            "airom:cve.score": 7.5,
+            "airom:cve.severity": "high"
           }
         }
       ]

@@ -84,6 +84,14 @@ func sample() *airom.Inventory {
 					Detail:     []string{"builtins.eval", "os.system"},
 					Occurrence: &airom.Occurrence{Location: airom.Location{Path: "models/llama.gguf"}, DetectorID: "modelfilex/torch", Method: airom.MethodBinary, Confidence: 0.95},
 				}},
+				Vulnerabilities: []airom.Vulnerability{{
+					ID: "CVE-2024-0001", Aliases: []string{"GHSA-aaaa-bbbb-cccc"},
+					Severity: airom.VulnHigh, Score: 7.5,
+					Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+					Summary: "Server-side request forgery in the example loader.",
+					Fixed:   "0.2.5", Source: "osv.dev",
+					URL: "https://osv.dev/vulnerability/CVE-2024-0001",
+				}},
 				Evidence: airom.Evidence{Occurrences: []airom.Occurrence{
 					{
 						Location:   airom.Location{Path: "models/llama.gguf", Line: 0},
@@ -189,6 +197,13 @@ func parse(t *testing.T, b []byte) report {
 	return r
 }
 
+// isSecurityRule reports whether an id names a security finding (risk/<slug> or
+// cve/<id>) rather than a per-occurrence inventory result — the inventory tests
+// skip these, which have their own shape (TestRiskResults, TestCVEResults).
+func isSecurityRule(id string) bool {
+	return strings.HasPrefix(id, "risk/") || strings.HasPrefix(id, "cve/")
+}
+
 func TestEnvelope(t *testing.T) {
 	r := parse(t, render(t, false))
 	run := r.Runs[0]
@@ -222,7 +237,7 @@ func TestOneRulePerDetector(t *testing.T) {
 		Properties           map[string]any         `json:"properties"`
 	}
 	for _, r := range all {
-		if !strings.HasPrefix(r.ID, "risk/") {
+		if !isSecurityRule(r.ID) {
 			rules = append(rules, r)
 		}
 	}
@@ -265,7 +280,7 @@ func TestOneResultPerOccurrence(t *testing.T) {
 		if rules[res.RuleIndex].ID != res.RuleID {
 			t.Errorf("ruleIndex %d does not match ruleId %q", res.RuleIndex, res.RuleID)
 		}
-		if !strings.HasPrefix(res.RuleID, "risk/") {
+		if !isSecurityRule(res.RuleID) {
 			inventory++
 		}
 	}
@@ -279,7 +294,7 @@ func TestLevelKindToggle(t *testing.T) {
 	// The note/informational toggle applies to inventory results only; risk
 	// results are security findings and keep their severity level in both modes.
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
-		if strings.HasPrefix(res.RuleID, "risk/") {
+		if isSecurityRule(res.RuleID) {
 			continue
 		}
 		if res.Level != "note" || res.Kind != "" {
@@ -287,7 +302,7 @@ func TestLevelKindToggle(t *testing.T) {
 		}
 	}
 	for _, res := range parse(t, render(t, true)).Runs[0].Results {
-		if strings.HasPrefix(res.RuleID, "risk/") {
+		if isSecurityRule(res.RuleID) {
 			continue
 		}
 		if res.Kind != "informational" || res.Level != "" {
@@ -344,7 +359,7 @@ func TestUTF16ColumnAndSnippet(t *testing.T) {
 
 func TestPartialFingerprintRecipe(t *testing.T) {
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
-		if strings.HasPrefix(res.RuleID, "risk/") {
+		if isSecurityRule(res.RuleID) {
 			continue // risk results are not component-identity fingerprinted
 		}
 		uri := res.Locations[0].PhysicalLocation.ArtifactLocation.URI
@@ -371,7 +386,7 @@ func TestPartialFingerprintRecipe(t *testing.T) {
 
 func TestResultProperties(t *testing.T) {
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
-		if strings.HasPrefix(res.RuleID, "risk/") {
+		if isSecurityRule(res.RuleID) {
 			continue // risk results have their own shape; see TestRiskResults
 		}
 		p := res.Properties
@@ -402,7 +417,7 @@ func TestResultProperties(t *testing.T) {
 func TestMessageText(t *testing.T) {
 	got := map[string]string{}
 	for _, res := range parse(t, render(t, false)).Runs[0].Results {
-		if strings.HasPrefix(res.RuleID, "risk/") {
+		if isSecurityRule(res.RuleID) {
 			continue // risk messages are asserted in TestRiskResults
 		}
 		got[res.Locations[0].PhysicalLocation.ArtifactLocation.URI] = res.Message.Text
@@ -456,6 +471,49 @@ func TestRiskResults(t *testing.T) {
 	}
 	if !resFound {
 		t.Fatal("no risk/pickle-import result emitted")
+	}
+}
+
+// TestCVEResults checks the CVE overlay: a cve/<id> security rule carrying the
+// real CVSS base score, and a result anchored to the package's declared line.
+func TestCVEResults(t *testing.T) {
+	run := parse(t, render(t, false)).Runs[0]
+
+	ruleFound := false
+	for _, r := range run.Tool.Driver.Rules {
+		if r.ID != "cve/CVE-2024-0001" {
+			continue
+		}
+		ruleFound = true
+		if r.Properties["security-severity"] != "7.5" {
+			t.Errorf("security-severity = %v, want 7.5", r.Properties["security-severity"])
+		}
+		if r.DefaultConfiguration.Level != "error" {
+			t.Errorf("rule level = %q, want error", r.DefaultConfiguration.Level)
+		}
+	}
+	if !ruleFound {
+		t.Fatal("no cve/CVE-2024-0001 rule emitted")
+	}
+
+	resFound := false
+	for _, res := range run.Results {
+		if res.RuleID != "cve/CVE-2024-0001" {
+			continue
+		}
+		resFound = true
+		if res.Level != "error" {
+			t.Errorf("result level = %q, want error", res.Level)
+		}
+		if uri := res.Locations[0].PhysicalLocation.ArtifactLocation.URI; uri != "models/llama.gguf" {
+			t.Errorf("cve location = %q, want models/llama.gguf", uri)
+		}
+		if res.Properties["airom:cve.fixed"] != "0.2.5" {
+			t.Errorf("cve fixed = %v, want 0.2.5", res.Properties["airom:cve.fixed"])
+		}
+	}
+	if !resFound {
+		t.Fatal("no cve/CVE-2024-0001 result emitted")
 	}
 }
 

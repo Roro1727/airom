@@ -24,6 +24,7 @@ def _common(
     no_cache: bool = False,
     cache_dir: str | None = None,
     offline: bool = False,
+    cve: bool = False,
     stats: bool = False,
     fail_on: str | None = None,
     exit_code: int | None = None,
@@ -39,6 +40,7 @@ def _common(
         no_cache=no_cache,
         cache_dir=cache_dir,
         offline=offline,
+        cve=cve,
         stats=stats,
         fail_on=fail_on,
         exit_code=exit_code,
@@ -60,6 +62,9 @@ _DOC_COMMON = """
     * ``max_file_size`` / ``io_budget`` — size caps, e.g. ``"1m"``, ``"512m"``.
     * ``parallel`` — worker count. Output is byte-identical at any value.
     * ``no_cache`` / ``cache_dir`` / ``offline`` / ``stats`` — as per the CLI.
+    * ``cve`` — opt-in CVE overlay: match AI dependencies against OSV.dev and
+      attach known CVEs. Queries the network, so it cannot be combined with
+      ``offline``; not deterministic over time.
     * ``fail_on`` / ``exit_code`` — the opt-in CI gate. A match is reported on
       :class:`ScanResult`, never raised.
     * ``binary`` — an explicit path to the ``airom`` executable.

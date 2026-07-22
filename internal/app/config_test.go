@@ -98,6 +98,16 @@ func TestValidate(t *testing.T) {
 			c.Outputs = []OutputSpec{{Format: FormatTable}, {Format: FormatJSON, Path: "a.json"}}
 		}, ""},
 		{"bad exit code", func(c *Config) { c.ExitCode = 300 }, "exit-code"},
+		{"cve ok", func(c *Config) { c.CVE = true }, ""},
+		{"cve with offline conflicts", func(c *Config) { c.CVE = true; c.Offline = true }, "--offline"},
+		{"fail-on cve without --cve", func(c *Config) {
+			p, _ := ParsePolicy("cve:high")
+			c.Policy = p
+		}, "references cve"},
+		{"fail-on cve with --cve ok", func(c *Config) {
+			p, _ := ParsePolicy("cve:high")
+			c.Policy, c.CVE = p, true
+		}, ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

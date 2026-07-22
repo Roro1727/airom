@@ -24,6 +24,7 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.StringArray("compliance", nil,
 		fmt.Sprintf("map the AIBOM onto a governance framework; repeatable; frameworks: %s",
 			strings.Join(app.ComplianceFrameworks(), ", ")))
+	fs.Bool("cve", false, "match AI package dependencies against OSV.dev for known CVEs (opt-in; requires network, not deterministic over time)")
 	fs.Int("parallel", 0, "worker count (default: GOMAXPROCS)")
 	fs.String("io-budget", formatSize(app.DefaultIOBudget), "byte-weighted I/O semaphore budget (k/m/g suffixes)")
 	fs.String("max-file-size", formatSize(app.DefaultMaxFileSize), "full-content read cap for text detectors (k/m/g suffixes)")

@@ -54,18 +54,20 @@ func (t Writer) Write(w io.Writer, inv *airom.Inventory) error {
 
 	writeSummary(w, inv, comps)
 
-	// The RISK/FLAGS columns appear only when a scan surfaces at least one
-	// artifact risk, so risk-free output stays narrow.
-	anyRisk := false
+	// The RISK/FLAGS and VULN columns appear only when a scan surfaces at least
+	// one artifact risk / CVE, so risk- and CVE-free output stays narrow.
+	anyRisk, anyVuln := false, false
 	for _, c := range comps {
 		if len(c.Risks) > 0 {
 			anyRisk = true
-			break
+		}
+		if len(c.Vulnerabilities) > 0 {
+			anyVuln = true
 		}
 	}
 
 	fmt.Fprintln(w)
-	writeTable(w, comps, anyRisk)
+	writeTable(w, comps, anyRisk, anyVuln)
 
 	if t.wide {
 		fmt.Fprintln(w)
@@ -136,10 +138,13 @@ func writeSummary(w io.Writer, inv *airom.Inventory, comps []airom.Component) {
 
 // writeTable renders the component table with box-drawing borders, columns
 // sized to their widest cell (full names are never truncated).
-func writeTable(w io.Writer, comps []airom.Component, anyRisk bool) {
+func writeTable(w io.Writer, comps []airom.Component, anyRisk, anyVuln bool) {
 	headers := []string{"KIND", "NAME", "VERSION", "PROVIDER", "CONF"}
 	if anyRisk {
 		headers = append(headers, "RISK", "FLAGS")
+	}
+	if anyVuln {
+		headers = append(headers, "VULN")
 	}
 	headers = append(headers, "LOCATION", "EVIDENCE")
 
@@ -153,6 +158,9 @@ func writeTable(w io.Writer, comps []airom.Component, anyRisk bool) {
 		}
 		if anyRisk {
 			row = append(row, severityCell(c), flagsCell(c))
+		}
+		if anyVuln {
+			row = append(row, vulnCell(c))
 		}
 		row = append(row, locationCell(c), fmt.Sprintf("%d occ", len(c.Evidence.Occurrences)))
 		rows = append(rows, row)
@@ -288,6 +296,36 @@ func flagsCell(c airom.Component) string {
 	}
 	sort.Strings(slugs)
 	return strings.Join(slugs, ", ")
+}
+
+// vulnCell renders the CVE overlay for a component as "<top-severity> (<n>)"
+// — the highest CVSS bucket among its CVEs and the total count — or "-".
+func vulnCell(c airom.Component) string {
+	if len(c.Vulnerabilities) == 0 {
+		return "-"
+	}
+	top := c.Vulnerabilities[0].Severity
+	for _, v := range c.Vulnerabilities[1:] {
+		if vulnRank(v.Severity) > vulnRank(top) {
+			top = v.Severity
+		}
+	}
+	return fmt.Sprintf("%s (%d)", top, len(c.Vulnerabilities))
+}
+
+func vulnRank(s airom.VulnSeverity) int {
+	switch s {
+	case airom.VulnCritical:
+		return 4
+	case airom.VulnHigh:
+		return 3
+	case airom.VulnMedium:
+		return 2
+	case airom.VulnLow:
+		return 1
+	default:
+		return 0
+	}
 }
 
 // locationCell renders the primary sighting — the lowest (path, line)

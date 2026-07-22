@@ -158,7 +158,22 @@
             "confidence": 0.95
           }
         ]
-      }
+      },
+      "vulnerabilities": [
+        {
+          "id": "CVE-2024-0001",
+          "aliases": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "severity": "high",
+          "score": 7.5,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "summary": "Server-side request forgery in the example loader.",
+          "fixedVersion": "0.2.5",
+          "source": "osv.dev",
+          "url": "https://osv.dev/vulnerability/CVE-2024-0001"
+        }
+      ]
     },
     {
       "id": "airom:4444444444444444",

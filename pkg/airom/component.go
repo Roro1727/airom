@@ -197,5 +197,10 @@ type Component struct {
 	// and SARIF security results. Sorted by (ID, Detail) for determinism (P7).
 	Risks []ArtifactRisk `json:"risks,omitempty"`
 
+	// Vulnerabilities is the opt-in CVE overlay (--cve): known advisories from
+	// OSV.dev matched by this component's purl, projected into CycloneDX
+	// vulnerabilities[] with a real CVSS rating. Sorted by ID for determinism.
+	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
+
 	Attestations []AttestationRef `json:"attestations,omitempty"`
 }

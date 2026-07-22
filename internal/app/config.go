@@ -103,6 +103,7 @@ type Config struct {
 	Select     string   // detector selection expression (Syft-style; applied in Phase 5)
 	RulePaths  []string // --rules overlays (loaded in Phase 6)
 	Compliance []string // --compliance framework ids (e.g. "nist-ai-rmf"); empty = off
+	CVE        bool     // --cve: match package purls against OSV.dev (opt-in; needs network)
 
 	// Performance knobs (invariant P2: peak memory is a function of these,
 	// never of input size)
@@ -234,6 +235,14 @@ func (c *Config) Validate() error {
 	// silently never fire. Require --compliance whenever --fail-on names it.
 	if c.Policy.ReferencesCompliance() && len(c.Compliance) == 0 {
 		return fmt.Errorf("--fail-on references compliance but no --compliance framework was given")
+	}
+	// The CVE overlay queries OSV.dev over the network, so it cannot run under
+	// --offline, and gating on CVEs you never fetched would silently never fire.
+	if c.CVE && c.Offline {
+		return fmt.Errorf("--cve queries OSV.dev over the network and cannot be used with --offline")
+	}
+	if c.Policy.ReferencesCVE() && !c.CVE {
+		return fmt.Errorf("--fail-on references cve but --cve was not given")
 	}
 	stdout := 0
 	for _, o := range c.Outputs {

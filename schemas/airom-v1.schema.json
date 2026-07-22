@@ -181,7 +181,34 @@
           }
         },
         "props": { "type": "array", "items": { "$ref": "#/$defs/kv" } },
-        "attestations": { "type": "array" }
+        "attestations": { "type": "array" },
+        "risks": { "type": "array", "items": { "$ref": "#/$defs/artifactRisk" } },
+        "vulnerabilities": { "type": "array", "items": { "$ref": "#/$defs/vulnerability" } }
+      }
+    },
+    "artifactRisk": {
+      "type": "object",
+      "required": ["id", "severity"],
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "enum": ["high", "medium", "low"] },
+        "detail": { "type": "array", "items": { "type": "string" } },
+        "occurrence": { "$ref": "#/$defs/occurrence" }
+      }
+    },
+    "vulnerability": {
+      "type": "object",
+      "required": ["id", "severity", "source"],
+      "properties": {
+        "id": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "severity": { "enum": ["critical", "high", "medium", "low", "unknown"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "vector": { "type": "string" },
+        "summary": { "type": "string" },
+        "fixedVersion": { "type": "string" },
+        "source": { "type": "string" },
+        "url": { "type": "string" }
       }
     },
     "relationship": {

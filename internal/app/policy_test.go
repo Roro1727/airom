@@ -15,6 +15,9 @@ func TestParsePolicyValid(t *testing.T) {
 	}{
 		{"hosted-llm", 1, []int{1}},
 		{"pickle-risk", 1, []int{1}},
+		{"cve", 1, []int{1}},
+		{"cve:high", 1, []int{1}},
+		{"cve:critical&framework", 1, []int{2}},
 		{"hosted-llm&confidence>=0.9", 1, []int{2}},
 		{"  hosted-llm & confidence >= 0.9 ", 1, []int{2}},
 		{"local-model-file|hosted-llm&confidence>=0.8", 2, []int{1, 2}},
@@ -59,6 +62,9 @@ func TestParsePolicyInvalid(t *testing.T) {
 		"Hosted-LLM", // uppercase not allowed
 		"has space",
 		"confidence0.9",
+		"cve:bogus",  // unknown cve severity
+		"cve:severe", // unknown cve severity
+		"cve:pickle", // cve takes a severity, not a slug
 	} {
 		t.Run(expr, func(t *testing.T) {
 			if _, err := ParsePolicy(expr); err == nil {
@@ -72,6 +78,37 @@ func TestMatchAny(t *testing.T) {
 	p := MatchAny()
 	if p == nil || len(p.anyOf) != 1 {
 		t.Fatalf("MatchAny misshapen: %+v", p)
+	}
+}
+
+// TestReferencesCVE pins the guard that config validation relies on to reject
+// gating on CVEs that were never fetched (--fail-on cve without --cve).
+func TestReferencesCVE(t *testing.T) {
+	cases := []struct {
+		expr string
+		want bool
+	}{
+		{"cve", true},
+		{"cve:high", true},
+		{"hosted-llm|cve:critical", true},
+		{"framework&cve", true},
+		{"hosted-llm", false},
+		{"risk:high", false},
+		{"pickle-risk", false},
+	}
+	for _, tc := range cases {
+		p, err := ParsePolicy(tc.expr)
+		if err != nil {
+			t.Fatalf("ParsePolicy(%q): %v", tc.expr, err)
+		}
+		if got := p.ReferencesCVE(); got != tc.want {
+			t.Errorf("ReferencesCVE(%q) = %v, want %v", tc.expr, got, tc.want)
+		}
+	}
+	// A nil policy references nothing.
+	var nilPolicy *Policy
+	if nilPolicy.ReferencesCVE() {
+		t.Error("nil policy must not reference CVE")
 	}
 }
 

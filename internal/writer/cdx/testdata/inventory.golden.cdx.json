@@ -492,6 +492,44 @@
           "value": "builtins.eval|os.system"
         }
       ]
+    },
+    {
+      "id": "CVE-2024-0001",
+      "source": {
+        "name": "osv.dev",
+        "url": "https://osv.dev/vulnerability/CVE-2024-0001"
+      },
+      "references": [
+        {
+          "id": "GHSA-aaaa-bbbb-cccc",
+          "source": {
+            "name": "osv.dev"
+          }
+        }
+      ],
+      "ratings": [
+        {
+          "source": {
+            "name": "osv.dev"
+          },
+          "score": 7.5,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "description": "Server-side request forgery in the example loader.",
+      "affects": [
+        {
+          "ref": "airom:3333333333333333"
+        }
+      ],
+      "properties": [
+        {
+          "name": "airom:cve.fixedVersion",
+          "value": "0.2.5"
+        }
+      ]
     }
   ],
   "declarations": {

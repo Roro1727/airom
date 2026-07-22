@@ -24,6 +24,13 @@ func TestPolicyMatches(t *testing.T) {
 			Kind: airom.KindLocalModelFile, Name: "m.pt", Confidence: 0.9,
 			Risks: []airom.ArtifactRisk{{ID: airom.RiskPickleImport, Severity: airom.RiskHigh, Detail: []string{"os.system"}}},
 		},
+		{
+			Kind: airom.KindFramework, Name: "langchain", Confidence: 0.95,
+			Vulnerabilities: []airom.Vulnerability{
+				{ID: "CVE-2024-0001", Severity: airom.VulnHigh, Score: 7.5},
+				{ID: "CVE-2024-0002", Severity: airom.VulnMedium, Score: 5.3},
+			},
+		},
 	}}
 	rootOnly := &airom.Inventory{Components: []airom.Component{
 		{Kind: airom.KindApplication, Name: ".", Confidence: 1.0},
@@ -56,6 +63,12 @@ func TestPolicyMatches(t *testing.T) {
 		{"risk:medium", inv, false},                  // none at medium
 		{"risk:pickle-import", inv, true},            // by catalog slug
 		{"vector-db|risk:high", inv, true},           // OR with a risk selector
+		{"cve", inv, true},                           // any CVE (langchain has two)
+		{"cve:high", inv, true},                      // threshold fires on the high CVE
+		{"cve:critical", inv, false},                 // none at critical
+		{"cve:medium", inv, true},                    // threshold fires on high AND medium
+		{"framework&cve:high", inv, true},            // one component is both
+		{"hosted-llm&cve", inv, false},               // gpt-4.1 has no CVE (single-component rule)
 		{"confidence>=0.95", inv, true},              // openai
 		// "application" is no longer expressible: it is rejected at parse time
 		// (TestParsePolicyRejectsUnknownIdentifiers) precisely because it could

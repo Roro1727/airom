@@ -36,6 +36,9 @@ func TestTable(t *testing.T) {
 		"Scan Summary", "Components", "By Type", "By Severity",
 		// the fixture's tiny.gguf carries a high pickle-import risk
 		"high", "pickle-import",
+		// the fixture's langchain carries one high CVE — the VULN column shows
+		// "<top-severity> (<count>)" and appears only when a CVE is present
+		"VULN", "high (1)",
 		// the LOCATION column shows each component's primary sighting —
 		// gpt-4.1 has two occurrences, so this also asserts the min-pick
 		"LOCATION", "src/rag.py:7",

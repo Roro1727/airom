@@ -70,7 +70,18 @@ func BuildFixture() *airom.Inventory {
 		PURL:       "pkg:pypi/langchain@0.2.1",
 		Confidence: 0.985,
 		Package:    &airom.PackageFacet{Ecosystem: "pypi"},
-		Evidence:   airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "requirements.txt", Line: 1}, DetectorID: "manifest/pypi-requirements", Method: airom.MethodManifest, Confidence: 0.95}}},
+		// CVE overlay: one advisory exercising the --cve projection — CVSS v3.1
+		// vector/score, an alias, and a fixed version. Hand-authored (the OSV
+		// client has its own tests); this fixture proves the writer projection.
+		Vulnerabilities: []airom.Vulnerability{{
+			ID: "CVE-2024-0001", Aliases: []string{"GHSA-aaaa-bbbb-cccc"},
+			Severity: airom.VulnHigh, Score: 7.5,
+			Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+			Summary: "Server-side request forgery in the example loader.",
+			Fixed:   "0.2.5", Source: "osv.dev",
+			URL: "https://osv.dev/vulnerability/CVE-2024-0001",
+		}},
+		Evidence: airom.Evidence{Occurrences: []airom.Occurrence{{Location: airom.Location{Path: "requirements.txt", Line: 1}, DetectorID: "manifest/pypi-requirements", Method: airom.MethodManifest, Confidence: 0.95}}},
 	}
 	dataset := airom.Component{
 		ID: "airom:4444444444444444", Kind: airom.KindDataset, Name: "squad",

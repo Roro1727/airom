@@ -159,6 +159,16 @@ func fixtureInventory() *airom.Inventory {
 		SourceInfo: "declared in requirements.txt",
 		Confidence: 0.95,
 		Package:    &airom.PackageFacet{Ecosystem: "pypi"},
+		// CVE overlay: one advisory with a CVSS v3.1 vector/score, an alias, and a
+		// fixed version, so the golden pins the vulnerabilities[] projection.
+		Vulnerabilities: []airom.Vulnerability{{
+			ID: "CVE-2024-0001", Aliases: []string{"GHSA-aaaa-bbbb-cccc"},
+			Severity: airom.VulnHigh, Score: 7.5,
+			Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+			Summary: "Server-side request forgery in the example loader.",
+			Fixed:   "0.2.5", Source: "osv.dev",
+			URL: "https://osv.dev/vulnerability/CVE-2024-0001",
+		}},
 		Evidence: airom.Evidence{
 			Occurrences: []airom.Occurrence{{
 				Location:   airom.Location{Path: "requirements.txt", Line: 3},
@@ -552,6 +562,26 @@ func TestVersion17(t *testing.T) {
 	}
 	if !bytes.Contains(raw, []byte("bom-1.7.schema.json")) {
 		t.Error("1.7 output should reference the 1.7 schema")
+	}
+}
+
+// TestCDXScoringMethod pins the vector→method mapping: labeling a v2/v4 vector
+// as CVSSv31 would misdirect any consumer that parses the score per the method.
+func TestCDXScoringMethod(t *testing.T) {
+	cases := []struct {
+		vector string
+		want   cyclonedx.ScoringMethod
+	}{
+		{"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", cyclonedx.ScoringMethodCVSSv31},
+		{"CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H", cyclonedx.ScoringMethodCVSSv3},
+		{"CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N", cyclonedx.ScoringMethodCVSSv4},
+		{"AV:N/AC:L/Au:N/C:P/I:P/A:P", cyclonedx.ScoringMethodCVSSv2}, // bare v2, no prefix
+		{"something-else", cyclonedx.ScoringMethodOther},
+	}
+	for _, c := range cases {
+		if got := cdxScoringMethod(c.vector); got != c.want {
+			t.Errorf("cdxScoringMethod(%q) = %q, want %q", c.vector, got, c.want)
+		}
 	}
 }
 

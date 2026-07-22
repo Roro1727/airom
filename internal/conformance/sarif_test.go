@@ -72,10 +72,10 @@ func TestSARIFStructuralConformance(t *testing.T) {
 			t.Errorf("result[%d] ruleIndex %d does not point at ruleId %q", i, idx, ruleID)
 		}
 
-		// Risk results are security findings with their own severity level and
-		// no component-identity fingerprint; the §7.1 inventory encoding below
-		// applies to detector results only.
-		if strings.HasPrefix(ruleID, "risk/") {
+		// Risk and CVE results are security findings with their own severity
+		// level and no component-identity fingerprint; the §7.1 inventory
+		// encoding below applies to detector results only.
+		if strings.HasPrefix(ruleID, "risk/") || strings.HasPrefix(ruleID, "cve/") {
 			continue
 		}
 
@@ -105,7 +105,7 @@ func TestSARIFStrictKindToggle(t *testing.T) {
 	}
 	for i, r := range results {
 		res := obj(t, r)
-		if strings.HasPrefix(str(t, res["ruleId"]), "risk/") {
+		if id := str(t, res["ruleId"]); strings.HasPrefix(id, "risk/") || strings.HasPrefix(id, "cve/") {
 			continue // security findings keep their level in strict mode
 		}
 		if got := res["kind"]; got != "informational" {
@@ -127,8 +127,8 @@ func TestSARIFFingerprintRecipe(t *testing.T) {
 	for _, r := range results {
 		res := obj(t, r)
 		ruleID := str(t, res["ruleId"])
-		if strings.HasPrefix(ruleID, "risk/") {
-			continue // risk results are not component-identity fingerprinted
+		if strings.HasPrefix(ruleID, "risk/") || strings.HasPrefix(ruleID, "cve/") {
+			continue // security findings are not component-identity fingerprinted
 		}
 		compID := str(t, obj(t, res["properties"])["airom:componentId"])
 		loc := obj(t, arr(t, res["locations"])[0])

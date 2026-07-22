@@ -29,8 +29,8 @@ const configFileName = ".airom.yaml"
 var knownKeys = map[string]bool{
 	// global flags (flags.go)
 	"output": true, "format": true, "select": true, "rules": true,
-	"compliance": true,
-	"parallel":   true, "io-budget": true, "max-file-size": true,
+	"compliance": true, "cve": true,
+	"parallel": true, "io-budget": true, "max-file-size": true,
 	"min-confidence": true, "ignore": true, "cache-dir": true,
 	"no-cache": true, "cdx-version": true, "sarif-strict-kinds": true,
 	"exit-code": true, "fail-on": true, "offline": true, "pprof": true,
@@ -343,6 +343,7 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		Select:     k.String("select"),
 		RulePaths:  stringsKey(k, "rules"),
 		Compliance: stringsKey(k, "compliance"),
+		CVE:        k.Bool("cve"),
 
 		Parallel:      parallel,
 		IOBudget:      ioBudget,

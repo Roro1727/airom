@@ -118,6 +118,17 @@ components:
       ecosystem: pypi
     purl: pkg:pypi/langchain@0.2.1
     version: 0.2.1
+    vulnerabilities:
+      - aliases:
+          - GHSA-aaaa-bbbb-cccc
+        fixedVersion: 0.2.5
+        id: CVE-2024-0001
+        score: 7.5
+        severity: high
+        source: osv.dev
+        summary: Server-side request forgery in the example loader.
+        url: https://osv.dev/vulnerability/CVE-2024-0001
+        vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
   - confidence: 0.7
     data:
       format: jsonl
