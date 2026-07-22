@@ -49,11 +49,6 @@ AI Bill of Materials — /tmp/my-ai-app
 │   hosted-llm         1       │
 │   library            1       │
 │   vector-db          1       │
-│                              │
-│ By Severity                  │
-│   high               0       │
-│   medium             0       │
-│   low                0       │
 └──────────────────────────────┘
 
 ┌────────────┬─────────────┬─────────┬───────────┬───────┬────────────────────┬──────────┐
@@ -68,10 +63,11 @@ AI Bill of Materials — /tmp/my-ai-app
 └────────────┴─────────────┴─────────┴───────────┴───────┴────────────────────┴──────────┘
 ```
 
-A boxed **Scan Summary** panel (target, counts, a By-Type and By-Severity
-breakdown) precedes the component table. The table columns are `KIND`, `NAME`,
-`VERSION`, `PROVIDER`, `CONF`, `LOCATION`, `EVIDENCE` — plus `RISK` (severity)
-and `FLAGS` (the [risk](/concepts/risks) slugs) when a scan surfaces a risk.
+A boxed **Scan Summary** panel (target, counts, a By-Type breakdown, and a
+Vulnerabilities-by-severity breakdown when the [CVE overlay](/concepts/cve) ran)
+precedes the component table. The table columns are `KIND`, `NAME`, `VERSION`,
+`PROVIDER`, `CONF`, `LOCATION`, `EVIDENCE` — plus a `VULN` column (top severity +
+count) when a scan surfaces CVEs, followed by a per-CVE detail table.
 `LOCATION` is the primary sighting (`path:line`); `EVIDENCE` is the total
 occurrence count (`2 occ`), not a file list. `--wide` expands every occurrence
 below the table. Empty scalars render as `-`. The scan-root application component

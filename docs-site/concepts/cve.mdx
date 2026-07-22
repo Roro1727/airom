@@ -1,20 +1,21 @@
 ---
 title: "CVE overlay"
-description: "Opt-in --cve matches AIROM's AI dependencies against OSV.dev and attaches known CVEs with real CVSS v3 scores — offline core, live overlay."
+description: "The default-on CVE overlay matches AIROM's AI dependencies against OSV.dev and attaches known CVEs with real CVSS v3 scores — disable with --no-cve."
 icon: "bug"
 ---
 
 AIROM's core scan is offline and deterministic: it reports what an artifact *is*. The
-**CVE overlay** (`--cve`) adds what is *known about it today* — it matches the AI package
+**CVE overlay** adds what is *known about it today* — it matches the AI package
 dependencies AIROM already inventoried (by their [purl](https://github.com/package-url/purl-spec))
 against the live [OSV.dev](https://osv.dev) advisory database and attaches the resulting
 CVEs, with real CVSS v3 base scores computed from each vector, to those components.
 
 <Warning>
-**Opt-in on purpose.** The overlay touches the network — so it is mutually exclusive with
-`--offline` — and it is **not deterministic across time**: the same scan surfaces more
-CVEs next month as OSV grows. That is right for a vulnerability check and wrong for a
-reproducible bill of materials, so you choose per run which you want.
+**On by default — disable with `--no-cve` or `--offline`.** The overlay touches the
+network, and it is **not deterministic across time**: the same scan surfaces more CVEs next
+month as OSV grows. That is right for a vulnerability check and wrong for a reproducible
+bill of materials, so turn it off (`--no-cve`) when you need a byte-stable BOM, or
+`--offline` to also assert no network for the whole run.
 </Warning>
 
 <Info>
@@ -28,14 +29,16 @@ dedicated SCA for the latter.
 ## Usage
 
 ```bash
-airom fs . --cve                                       # CVEs in every output format
-airom fs . --cve -o cyclonedx=airom.cdx.json           # CVEs ride in vulnerabilities[]
-airom fs . --cve --exit-code 1 --fail-on "cve:high"    # fail CI on a high/critical CVE
+airom fs .                                          # CVEs included by default
+airom fs . -o cyclonedx=airom.cdx.json              # CVEs ride in vulnerabilities[]
+airom fs . --exit-code 1 --fail-on "cve:high"       # fail CI on a high/critical CVE
+airom fs . --no-cve                                 # skip the overlay (offline, byte-stable)
+airom fs . --offline                                # skip it (and assert no network at all)
 ```
 
-`--cve` composes with everything else — a `--compliance` control that maps to "known
-vulnerabilities" sees the CVEs (the overlay runs before compliance), and every output
-format projects them.
+The overlay composes with everything else — a `--compliance` control that maps to "known
+vulnerabilities" sees the CVEs (it runs before compliance), and every output format
+projects them.
 
 ## How CVEs appear in output
 
@@ -48,7 +51,7 @@ format projects them.
     `airom:cve.fixedVersion` property.
 
     ```bash title="CycloneDX with CVEs in vulnerabilities[]"
-    airom fs . --cve -o cyclonedx=airom.cdx.json
+    airom fs . -o cyclonedx=airom.cdx.json
     ```
   </Tab>
   <Tab title="SARIF">
@@ -58,7 +61,7 @@ format projects them.
     the vulnerable package.
 
     ```bash title="SARIF for code scanning"
-    airom fs . --cve -o sarif=airom.sarif
+    airom fs . -o sarif=airom.sarif
     ```
   </Tab>
   <Tab title="Native JSON / YAML">
@@ -66,8 +69,10 @@ format projects them.
     `{id, aliases, severity, score, vector, summary, fixedVersion, source, url}`.
   </Tab>
   <Tab title="Table">
-    A `VULN` column appears (only when a CVE was found) showing the top severity and
-    count, e.g. `high (2)`.
+    The component table gains a `VULN` column (top severity + count, e.g. `high (2)`), the
+    summary panel gains a `Vulnerabilities` breakdown by severity, and a per-CVE detail
+    table follows — `LIBRARY / VULNERABILITY / SEVERITY / STATUS / INSTALLED / FIXED /
+    TITLE`, most-severe first, with the advisory title and URL wrapped in the last column.
   </Tab>
 </Tabs>
 
@@ -88,9 +93,9 @@ into the standard bands:
 `cve:<severity>` in `--fail-on` is a **threshold, not an exact match**:
 
 ```bash
-airom fs . --cve --fail-on "cve"           # any CVE at all
-airom fs . --cve --fail-on "cve:high"      # high AND critical
-airom fs . --cve --fail-on "cve:medium"    # medium and above
+airom fs . --fail-on "cve"           # any CVE at all
+airom fs . --fail-on "cve:high"      # high AND critical
+airom fs . --fail-on "cve:medium"    # medium and above
 ```
 
 ## Honesty and degradation

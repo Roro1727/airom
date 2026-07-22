@@ -273,7 +273,7 @@ every command carries: `-h`/`--help`, and `--version` on the root.
 | `--cache-dir` | string | `<user cache dir>/airom` | Scan cache location. |
 | `--cdx-version` | string | `1.6` | CycloneDX spec version: `1.6` or `1.7`. |
 | `--compliance` | stringArray | — | Map the AIBOM onto a governance framework (`nist-ai-rmf`, `owasp-agentic`). Repeatable. |
-| `--cve` | bool | `false` | Match AI package dependencies against OSV.dev for known CVEs (opt-in; queries the network, so mutually exclusive with `--offline`; not deterministic over time). See [CVE overlay](/concepts/cve). |
+| `--no-cve` | bool | `false` | Disable the OSV.dev **CVE overlay**, which is **on by default**. The overlay matches AI dependencies against OSV.dev for known CVEs; it queries the network and is not deterministic over time, so `--no-cve` (or `--offline`) gives a byte-stable offline BOM. See [CVE overlay](/concepts/cve). |
 | `--exit-code` | int | `1` when a policy is active | Exit status when `--fail-on` matches. `0` reports matches without failing. |
 | `--fail-on` | string | — | CI policy expression, e.g. `"hosted-llm&confidence>=0.9"`. |
 | `--format` | string | — | Single-format alias for `-o`. Mutually exclusive with `-o`. |
@@ -354,7 +354,7 @@ clause     = term   *( "&" term )        ; AND — all terms must hold for ONE c
 term       = ident | risk | cve | compliance | comparison
 ident      = a ComponentKind ("hosted-llm")
 risk       = "risk" | "risk:<severity>" | "risk:<slug>"        ; see Risk detection
-cve        = "cve"  | "cve:<severity>"                          ; threshold; requires --cve
+cve        = "cve"  | "cve:<severity>"                          ; threshold; overlay is on by default
 compliance = "compliance:gap" | "compliance:<fw>" | "compliance:<fw>:<control>" ; requires --compliance
 comparison = "confidence" OP number      ; OP: >= <= > < =
 ```
@@ -366,7 +366,7 @@ An unknown term is a **usage error at parse time**, never a silently-passing gat
 ```bash title="Policy examples"
 airom fs . --fail-on "hosted-llm"
 airom fs . --fail-on "risk:high"
-airom fs . --cve --fail-on "cve:high"       # high AND critical (threshold)
+airom fs . --fail-on "cve:high"             # high AND critical (overlay on by default)
 airom fs . --fail-on "hosted-llm&confidence>=0.9"
 airom fs . --fail-on "local-model-file|hosted-llm&confidence>=0.8"
 ```
@@ -377,7 +377,7 @@ Any of the 13 component kinds may be used as an `ident`: `hosted-llm`,
 `application`. Beyond kinds: the [risk](/concepts/risks) selectors (`risk`,
 `risk:<severity>`, `risk:<slug>`; `pickle-risk` is a deprecated alias for
 `risk:pickle-import`), the [CVE](/concepts/cve) selectors (`cve`,
-`cve:<severity>` — a threshold, requires `--cve`), and the
+`cve:<severity>` — a threshold; the overlay is on by default), and the
 [compliance](/concepts/compliance) selectors (`compliance:gap`,
 `compliance:<framework>`, `compliance:<framework>:<control>`; requires
 `--compliance`, cannot be `&`-combined).
@@ -401,11 +401,6 @@ AI Bill of Materials — /tmp/my-ai-app
 │   hosted-llm         1       │
 │   library            1       │
 │   vector-db          1       │
-│                              │
-│ By Severity                  │
-│   high               0       │
-│   medium             0       │
-│   low                0       │
 └──────────────────────────────┘
 
 ┌────────────┬─────────────┬─────────┬───────────┬───────┬────────────────────┬──────────┐
@@ -419,11 +414,13 @@ AI Bill of Materials — /tmp/my-ai-app
 │ vector-db  │ chroma      │ 0.5.5   │ chroma    │ 0.985 │ requirements.txt:3 │ 2 occ    │
 ```
 
-A boxed **Scan Summary** panel (target, counts, By-Type and By-Severity) precedes
-the table. Columns are `KIND`, `NAME`, `VERSION`, `PROVIDER`, `CONF`, `LOCATION`,
-`EVIDENCE`, plus `RISK` and `FLAGS` when a scan surfaces a [risk](/concepts/risks).
-`LOCATION` is the primary sighting (`path:line`) and `EVIDENCE` renders as `n occ`
-— the number of occurrences backing the component. `--wide` lists every one.
+A boxed **Scan Summary** panel (target, counts, a By-Type breakdown, and a
+Vulnerabilities-by-severity breakdown when the [CVE overlay](/concepts/cve) ran)
+precedes the table. Columns are `KIND`, `NAME`, `VERSION`, `PROVIDER`, `CONF`,
+`LOCATION`, `EVIDENCE`, plus a `VULN` column (and a per-CVE detail table below)
+when a scan surfaces CVEs. `LOCATION` is the primary sighting (`path:line`) and
+`EVIDENCE` renders as `n occ` — the number of occurrences backing the component.
+`--wide` lists every one.
 
 <Card title="Configuration reference" icon="sliders" href="/reference/configuration">
   Every flag here can also come from `AIROM_*` env vars or `.airom.yaml`.

@@ -107,10 +107,11 @@ def test_stats_block(airom_binary, ai_project):
 
 
 def test_cve_option_renders_flag():
-    """The opt-in CVE overlay renders --cve and stays absent by default. Pure
-    unit — no network, no binary."""
+    """The CVE overlay is on by default (no flag); cve=False renders --no-cve.
+    Pure unit — no network, no binary."""
+    assert "--no-cve" not in airom.ScanOptions().to_flags()
     assert "--cve" not in airom.ScanOptions().to_flags()
-    assert "--cve" in airom.ScanOptions(cve=True).to_flags()
+    assert "--no-cve" in airom.ScanOptions(cve=False).to_flags()
 
 
 def test_fatal_error_raises_scanerror(airom_binary, tmp_path):

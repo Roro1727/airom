@@ -1,4 +1,4 @@
-# CVE overlay (`--cve`)
+# CVE overlay
 
 AIROM's core scan is offline and deterministic: it reports what an artifact
 *is*. The **CVE overlay** adds what is *known about it today* — it matches the
@@ -6,16 +6,17 @@ AI package dependencies AIROM already inventoried (by their [purl][purl])
 against the live [OSV.dev][osv] advisory database and attaches the resulting
 CVEs to those components.
 
-It is **opt-in** (`--cve`) for two honest reasons:
+It is **on by default**. To turn it off, pass **`--no-cve`** (or **`--offline`**,
+which disables it along with every other network operation). Two honest reasons
+you might want to:
 
 - **It touches the network.** Every other AIROM operation on a local target is
-  offline; this one queries a live API, so it is mutually exclusive with
-  `--offline` (asserting one while requesting the other is a usage error, not a
-  silent no-op).
+  offline; this one queries a live API. `--offline` disables it (and asserts no
+  network for the whole run).
 - **It is not deterministic across time.** The same scan of the same code
   surfaces *more* CVEs next month as OSV grows. That is the right behavior for a
   vulnerability check and the wrong behavior for a reproducible bill of
-  materials — so you choose, per run, which you want.
+  materials — so disable it (`--no-cve`) when you need a byte-stable BOM.
 
 > **Scope: AI dependencies, not a general-purpose SCA.** The overlay queries
 > only the components AIROM inventories — the AI/ML frameworks, SDKs, and
@@ -27,14 +28,16 @@ It is **opt-in** (`--cve`) for two honest reasons:
 ## Usage
 
 ```console
-$ airom fs . --cve
-$ airom fs . --cve -o cyclonedx=aibom.cdx.json     # CVEs ride in vulnerabilities[]
-$ airom fs . --cve --fail-on cve:high --exit-code 1 # fail CI on a high/critical CVE
+$ airom fs .                                    # CVEs included by default
+$ airom fs . -o cyclonedx=aibom.cdx.json        # CVEs ride in vulnerabilities[]
+$ airom fs . --fail-on cve:high --exit-code 1   # fail CI on a high/critical CVE
+$ airom fs . --no-cve                           # skip the overlay (offline, byte-stable)
+$ airom fs . --offline                          # skip it (and assert no network at all)
 ```
 
-`--cve` composes with everything else — `--compliance` frameworks that map to
-"known vulnerabilities" see the CVEs (the overlay runs before compliance), and
-every output format projects them.
+The overlay composes with everything else — `--compliance` frameworks that map
+to "known vulnerabilities" see the CVEs (it runs before compliance), and every
+output format projects them.
 
 ## How CVEs appear in output
 
@@ -43,7 +46,7 @@ every output format projects them.
 | CycloneDX | top-level `vulnerabilities[]` — the CVE `id`, `source.name: osv.dev`, a `ratings[]` entry with `method: CVSSv31`, the real `score`, `severity`, and `vector`, aliases as `references[]`, and `affects[].ref` pointing at the component's `bom-ref`. The first fixed version rides in an `airom:cve.fixedVersion` property. |
 | SARIF | a `cve/<id>` rule carrying the GitHub `security-severity` property — the **real CVSS base score** here, not the synthetic marker the risk rules use — and a result (level `error`/`warning`/`note` by severity) anchored to the manifest line that declared the vulnerable package. |
 | Native JSON / YAML | `component.vulnerabilities[]` — `{id, aliases, severity, score, vector, summary, fixedVersion, source, url}`. |
-| Table | a `VULN` column (present only when a CVE was found) showing the top severity and count, e.g. `high (2)`. |
+| Table | a `VULN` column on the component (top severity + count, e.g. `high (2)`), a `Vulnerabilities` breakdown in the summary panel, and a per-CVE detail table below — `LIBRARY / VULNERABILITY / SEVERITY / STATUS / INSTALLED / FIXED / TITLE`, most-severe first. |
 | `--fail-on` | `cve` (any CVE), or `cve:<severity>` (a **threshold** — see below). |
 
 ## Severity and the `--fail-on` threshold

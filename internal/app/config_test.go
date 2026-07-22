@@ -98,13 +98,19 @@ func TestValidate(t *testing.T) {
 			c.Outputs = []OutputSpec{{Format: FormatTable}, {Format: FormatJSON, Path: "a.json"}}
 		}, ""},
 		{"bad exit code", func(c *Config) { c.ExitCode = 300 }, "exit-code"},
-		{"cve ok", func(c *Config) { c.CVE = true }, ""},
-		{"cve with offline conflicts", func(c *Config) { c.CVE = true; c.Offline = true }, "--offline"},
-		{"fail-on cve without --cve", func(c *Config) {
+		{"cve on ok", func(c *Config) { c.CVE = true }, ""},
+		// --offline no longer conflicts with the (now-default) overlay; it just
+		// disables it. ApplyDefaults forces CVE off, so this is valid.
+		{"offline disables cve, not an error", func(c *Config) { c.CVE = true; c.Offline = true }, ""},
+		{"fail-on cve with the overlay disabled", func(c *Config) {
 			p, _ := ParsePolicy("cve:high")
-			c.Policy = p
-		}, "references cve"},
-		{"fail-on cve with --cve ok", func(c *Config) {
+			c.Policy, c.CVE = p, false
+		}, "overlay is disabled"},
+		{"fail-on cve while offline", func(c *Config) {
+			p, _ := ParsePolicy("cve")
+			c.Policy, c.CVE, c.Offline = p, true, true // ApplyDefaults forces CVE off
+		}, "overlay is disabled"},
+		{"fail-on cve with cve on ok", func(c *Config) {
 			p, _ := ParsePolicy("cve:high")
 			c.Policy, c.CVE = p, true
 		}, ""},

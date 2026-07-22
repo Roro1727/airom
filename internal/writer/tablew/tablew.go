@@ -1,8 +1,9 @@
 // Package tablew writes the human-readable table (ARCHITECTURE.md §11): a boxed
-// scan-summary panel (counts by kind and by risk severity) followed by a
-// box-drawn component table, sorted by kind then name. The scan-root
-// application component is omitted (it is metadata, not a finding). Verbose
-// mode expands the file:line occurrences under each row.
+// scan-summary panel (counts by kind, and by CVE severity when the CVE overlay
+// ran) followed by a box-drawn component table, sorted by kind then name, and a
+// per-CVE detail table when vulnerabilities were found. The scan-root
+// application component is omitted (it is metadata, not a finding). Verbose mode
+// expands the file:line occurrences under each row.
 package tablew
 
 import (
@@ -10,6 +11,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/airomhq/airom/internal/writer"
@@ -54,20 +56,24 @@ func (t Writer) Write(w io.Writer, inv *airom.Inventory) error {
 
 	writeSummary(w, inv, comps)
 
-	// The RISK/FLAGS and VULN columns appear only when a scan surfaces at least
-	// one artifact risk / CVE, so risk- and CVE-free output stays narrow.
-	anyRisk, anyVuln := false, false
+	// The VULN column appears only when a scan surfaces at least one CVE, so
+	// CVE-free output stays narrow.
+	anyVuln := false
 	for _, c := range comps {
-		if len(c.Risks) > 0 {
-			anyRisk = true
-		}
 		if len(c.Vulnerabilities) > 0 {
 			anyVuln = true
+			break
 		}
 	}
 
 	fmt.Fprintln(w)
-	writeTable(w, comps, anyRisk, anyVuln)
+	writeTable(w, comps, anyVuln)
+
+	// The per-CVE detail table (library, id, severity, fix, title) follows the
+	// component table when the CVE overlay found anything.
+	if anyVuln {
+		writeVulnTable(w, comps)
+	}
 
 	if t.wide {
 		fmt.Fprintln(w)
@@ -121,16 +127,24 @@ func writeSummary(w io.Writer, inv *airom.Inventory, comps []airom.Component) {
 		lines = append(lines, fmt.Sprintf("  %-18s %d", k, byKind[k]))
 	}
 
-	// By Severity — each risk-bearing component counted at its highest severity.
-	sev := map[airom.RiskSeverity]int{airom.RiskHigh: 0, airom.RiskMedium: 0, airom.RiskLow: 0}
+	// Vulnerabilities — total CVEs by severity bucket (the CVE overlay). Shown
+	// only when the scan surfaced CVEs, and only the non-empty buckets.
+	cveBySev := map[airom.VulnSeverity]int{}
+	total := 0
 	for _, c := range comps {
-		if s, ok := topSeverity(c); ok {
-			sev[s]++
+		for _, v := range c.Vulnerabilities {
+			cveBySev[v.Severity]++
+			total++
 		}
 	}
-	lines = append(lines, "", "By Severity")
-	for _, s := range []airom.RiskSeverity{airom.RiskHigh, airom.RiskMedium, airom.RiskLow} {
-		lines = append(lines, fmt.Sprintf("  %-18s %d", s, sev[s]))
+	if total > 0 {
+		lines = append(lines, "", "Vulnerabilities")
+		lines = append(lines, fmt.Sprintf("  %-18s %d", "total", total))
+		for _, s := range airom.VulnSeverities() {
+			if n := cveBySev[s]; n > 0 {
+				lines = append(lines, fmt.Sprintf("  %-18s %d", s, n))
+			}
+		}
 	}
 
 	summaryBox(w, "Scan Summary", lines)
@@ -138,11 +152,8 @@ func writeSummary(w io.Writer, inv *airom.Inventory, comps []airom.Component) {
 
 // writeTable renders the component table with box-drawing borders, columns
 // sized to their widest cell (full names are never truncated).
-func writeTable(w io.Writer, comps []airom.Component, anyRisk, anyVuln bool) {
+func writeTable(w io.Writer, comps []airom.Component, anyVuln bool) {
 	headers := []string{"KIND", "NAME", "VERSION", "PROVIDER", "CONF"}
-	if anyRisk {
-		headers = append(headers, "RISK", "FLAGS")
-	}
 	if anyVuln {
 		headers = append(headers, "VULN")
 	}
@@ -156,9 +167,6 @@ func writeTable(w io.Writer, comps []airom.Component, anyRisk, anyVuln bool) {
 			string(c.Kind), name(c), dash(version), dash(provider),
 			writer.FormatConfidence(c.Confidence),
 		}
-		if anyRisk {
-			row = append(row, severityCell(c), flagsCell(c))
-		}
 		if anyVuln {
 			row = append(row, vulnCell(c))
 		}
@@ -170,22 +178,67 @@ func writeTable(w io.Writer, comps []airom.Component, anyRisk, anyVuln bool) {
 
 // ── rendering helpers ───────────────────────────────────────────────────────
 
+// runeLen counts runes — used where a rune count is what's wanted (wrap width,
+// tail truncation). Column alignment uses dispWidth instead.
 func runeLen(s string) int { return utf8.RuneCountInString(s) }
+
+// dispWidth approximates the terminal-cell width of s: East-Asian wide/fullwidth
+// runes and most emoji take two cells, combining/enclosing marks zero, the rest
+// one. It is an approximation (not the full Unicode width tables), but it keeps
+// the box drawings rectangular for the non-ASCII advisory titles OSV can carry —
+// pure-ASCII output (every golden) is unaffected, since there dispWidth == the
+// rune count.
+func dispWidth(s string) int {
+	w := 0
+	for _, r := range s {
+		switch {
+		case r == 0:
+		case unicode.In(r, unicode.Mn, unicode.Me): // combining / enclosing marks
+		case isWide(r):
+			w += 2
+		default:
+			w++
+		}
+	}
+	return w
+}
+
+// isWide reports whether r occupies two terminal cells (CJK, Hangul, Kana,
+// fullwidth forms, and the common emoji/symbol blocks).
+func isWide(r rune) bool {
+	switch {
+	case r >= 0x1100 && r <= 0x115F, // Hangul Jamo
+		r >= 0x2E80 && r <= 0x303E,   // CJK radicals … Kangxi
+		r >= 0x3041 && r <= 0x33FF,   // Hiragana … CJK compat
+		r >= 0x3400 && r <= 0x4DBF,   // CJK Ext A
+		r >= 0x4E00 && r <= 0x9FFF,   // CJK Unified
+		r >= 0xA000 && r <= 0xA4CF,   // Yi
+		r >= 0xAC00 && r <= 0xD7A3,   // Hangul syllables
+		r >= 0xF900 && r <= 0xFAFF,   // CJK compat ideographs
+		r >= 0xFE30 && r <= 0xFE4F,   // CJK compat forms
+		r >= 0xFF00 && r <= 0xFF60,   // Fullwidth forms
+		r >= 0xFFE0 && r <= 0xFFE6,   // Fullwidth signs
+		r >= 0x1F300 && r <= 0x1FAFF, // emoji & pictographs
+		r >= 0x20000 && r <= 0x3FFFD: // CJK Ext B+
+		return true
+	}
+	return false
+}
 
 func kv(k, v string) string { return fmt.Sprintf("%-13s %s", k, v) }
 
 // summaryBox draws a single-column box with the title set into the top border.
 func summaryBox(w io.Writer, title string, lines []string) {
-	inner := runeLen("─ " + title + " ")
+	inner := dispWidth("─ " + title + " ")
 	for _, l := range lines {
-		if runeLen(l) > inner {
-			inner = runeLen(l)
+		if dispWidth(l) > inner {
+			inner = dispWidth(l)
 		}
 	}
 	head := "─ " + title + " "
-	fmt.Fprintln(w, "┌"+head+strings.Repeat("─", inner-runeLen(head)+2)+"┐")
+	fmt.Fprintln(w, "┌"+head+strings.Repeat("─", inner-dispWidth(head)+2)+"┐")
 	for _, l := range lines {
-		fmt.Fprintln(w, "│ "+l+strings.Repeat(" ", inner-runeLen(l))+" │")
+		fmt.Fprintln(w, "│ "+l+strings.Repeat(" ", inner-dispWidth(l))+" │")
 	}
 	fmt.Fprintln(w, "└"+strings.Repeat("─", inner+2)+"┘")
 }
@@ -195,11 +248,11 @@ func boxTable(w io.Writer, headers []string, rows [][]string) {
 	n := len(headers)
 	width := make([]int, n)
 	for i, h := range headers {
-		width[i] = runeLen(h)
+		width[i] = dispWidth(h)
 	}
 	for _, r := range rows {
 		for i := 0; i < n; i++ {
-			if l := runeLen(r[i]); l > width[i] {
+			if l := dispWidth(r[i]); l > width[i] {
 				width[i] = l
 			}
 		}
@@ -220,7 +273,7 @@ func boxTable(w io.Writer, headers []string, rows [][]string) {
 		var b strings.Builder
 		b.WriteString("│")
 		for i := 0; i < n; i++ {
-			b.WriteString(" " + cells[i] + strings.Repeat(" ", width[i]-runeLen(cells[i])) + " │")
+			b.WriteString(" " + cells[i] + strings.Repeat(" ", width[i]-dispWidth(cells[i])) + " │")
 		}
 		return b.String()
 	}
@@ -229,6 +282,70 @@ func boxTable(w io.Writer, headers []string, rows [][]string) {
 	fmt.Fprintln(w, rule("├", "┼", "┤"))
 	for _, r := range rows {
 		fmt.Fprintln(w, row(r))
+	}
+	fmt.Fprintln(w, rule("└", "┴", "┘"))
+}
+
+// boxMultiline draws a bordered table whose cells may each span several lines
+// (rows is [row][column][line]). A logical row is as tall as its tallest cell,
+// shorter cells pad with blanks, and a rule separates every logical row.
+func boxMultiline(w io.Writer, headers []string, rows [][][]string) {
+	n := len(headers)
+	width := make([]int, n)
+	for i, h := range headers {
+		width[i] = dispWidth(h)
+	}
+	for _, r := range rows {
+		for i := 0; i < n; i++ {
+			for _, line := range r[i] {
+				if l := dispWidth(line); l > width[i] {
+					width[i] = l
+				}
+			}
+		}
+	}
+	rule := func(l, m, rr string) string {
+		var b strings.Builder
+		b.WriteString(l)
+		for i := 0; i < n; i++ {
+			b.WriteString(strings.Repeat("─", width[i]+2))
+			if i < n-1 {
+				b.WriteString(m)
+			}
+		}
+		b.WriteString(rr)
+		return b.String()
+	}
+	physical := func(cells []string) string {
+		var b strings.Builder
+		b.WriteString("│")
+		for i := 0; i < n; i++ {
+			b.WriteString(" " + cells[i] + strings.Repeat(" ", width[i]-dispWidth(cells[i])) + " │")
+		}
+		return b.String()
+	}
+	fmt.Fprintln(w, rule("┌", "┬", "┐"))
+	fmt.Fprintln(w, physical(headers))
+	fmt.Fprintln(w, rule("├", "┼", "┤"))
+	for ri, r := range rows {
+		if ri > 0 {
+			fmt.Fprintln(w, rule("├", "┼", "┤"))
+		}
+		height := 1
+		for i := 0; i < n; i++ {
+			if len(r[i]) > height {
+				height = len(r[i])
+			}
+		}
+		for k := 0; k < height; k++ {
+			line := make([]string, n)
+			for i := 0; i < n; i++ {
+				if k < len(r[i]) {
+					line[i] = r[i][k]
+				}
+			}
+			fmt.Fprintln(w, physical(line))
+		}
 	}
 	fmt.Fprintln(w, rule("└", "┴", "┘"))
 }
@@ -257,45 +374,104 @@ func truncate(s string, limit int) string {
 	return "…" + string(r[len(r)-(limit-1):])
 }
 
-// topSeverity returns the highest severity among a component's risks.
-func topSeverity(c airom.Component) (airom.RiskSeverity, bool) {
-	if len(c.Risks) == 0 {
-		return "", false
+// writeVulnTable renders the per-CVE detail table (library, id, severity,
+// status, installed/fixed version, and the wrapped advisory title + URL), one
+// row per (component, CVE), most-severe first. The advisory title and URL wrap
+// inside the TITLE column, so long summaries stay readable.
+func writeVulnTable(w io.Writer, comps []airom.Component) {
+	type vrow struct {
+		lib, id    string
+		sev        airom.VulnSeverity
+		status     string
+		installed  string
+		fixed      string
+		title, url string
 	}
-	top := c.Risks[0].Severity
-	for _, r := range c.Risks[1:] {
-		if severityRank(r.Severity) > severityRank(top) {
-			top = r.Severity
+	var rows []vrow
+	for _, c := range comps {
+		installed, _ := c.Version.Value()
+		for _, v := range c.Vulnerabilities {
+			status := "affected"
+			if v.Fixed != "" {
+				status = "fixed"
+			}
+			rows = append(rows, vrow{
+				lib: name(c), id: v.ID, sev: v.Severity, status: status,
+				installed: dash(installed), fixed: dash(v.Fixed), title: v.Summary, url: v.URL,
+			})
 		}
 	}
-	return top, true
+	if len(rows) == 0 {
+		return
+	}
+	sort.SliceStable(rows, func(i, j int) bool {
+		if ri, rj := vulnRank(rows[i].sev), vulnRank(rows[j].sev); ri != rj {
+			return ri > rj // most severe first
+		}
+		if rows[i].lib != rows[j].lib {
+			return rows[i].lib < rows[j].lib
+		}
+		return rows[i].id < rows[j].id
+	})
+
+	const titleWidth = 48
+	headers := []string{"LIBRARY", "VULNERABILITY", "SEVERITY", "STATUS", "INSTALLED", "FIXED", "TITLE"}
+	cells := make([][][]string, 0, len(rows))
+	for _, r := range rows {
+		title := wrapText(r.title, titleWidth)
+		if r.url != "" {
+			title = append(title, r.url)
+		}
+		if len(title) == 0 {
+			title = []string{"-"}
+		}
+		cells = append(cells, [][]string{
+			{r.lib},
+			{r.id},
+			{strings.ToUpper(string(r.sev))},
+			{r.status},
+			{r.installed},
+			{r.fixed},
+			title,
+		})
+	}
+	fmt.Fprintf(w, "\nVulnerabilities (%d)\n", len(rows))
+	boxMultiline(w, headers, cells)
 }
 
-// severityCell renders the highest severity as a plain bucket, or "-".
-func severityCell(c airom.Component) string {
-	if s, ok := topSeverity(c); ok {
-		return string(s)
+// wrapText greedily word-wraps s to lines of at most width runes, hard-splitting
+// any single word longer than width. Returns nil for empty input.
+func wrapText(s string, width int) []string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
 	}
-	return "-"
-}
-
-// flagsCell renders the risk slugs (pickle-import, unsafe-load, …) sorted and
-// deduplicated, or "-" when risk-free.
-func flagsCell(c airom.Component) string {
-	if len(c.Risks) == 0 {
-		return "-"
-	}
-	seen := map[string]bool{}
-	var slugs []string
-	for _, r := range c.Risks {
-		s := airom.RiskByID(r.ID).Slug
-		if !seen[s] {
-			seen[s] = true
-			slugs = append(slugs, s)
+	var lines []string
+	cur := ""
+	for _, word := range strings.Fields(s) {
+		for runeLen(word) > width { // hard-split an over-long word
+			if cur != "" {
+				lines = append(lines, cur)
+				cur = ""
+			}
+			r := []rune(word)
+			lines = append(lines, string(r[:width]))
+			word = string(r[width:])
+		}
+		switch {
+		case cur == "":
+			cur = word
+		case runeLen(cur)+1+runeLen(word) <= width:
+			cur += " " + word
+		default:
+			lines = append(lines, cur)
+			cur = word
 		}
 	}
-	sort.Strings(slugs)
-	return strings.Join(slugs, ", ")
+	if cur != "" {
+		lines = append(lines, cur)
+	}
+	return lines
 }
 
 // vulnCell renders the CVE overlay for a component as "<top-severity> (<n>)"
@@ -360,15 +536,4 @@ func locLess(a, b airom.Location) bool {
 		return a.Path < b.Path
 	}
 	return a.Line < b.Line
-}
-
-func severityRank(s airom.RiskSeverity) int {
-	switch s {
-	case airom.RiskHigh:
-		return 3
-	case airom.RiskMedium:
-		return 2
-	default:
-		return 1
-	}
 }

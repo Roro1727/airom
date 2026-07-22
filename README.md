@@ -10,7 +10,7 @@ AIROM is an open-source scanner that discovers AI assets — including models, p
 [![Go Reference](https://pkg.go.dev/badge/github.com/airomhq/airom.svg)](https://pkg.go.dev/github.com/airomhq/airom)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-> **v0.1.6.** Early but real: the pipeline, detectors, rule packs, and every writer are implemented and tested, with the **AI-native risk overlay**, an opt-in **[CVE overlay](#cve-overlay)** (OSV.dev), and **compliance framework mapping** (see [Risk detection](#risk-detection) and [Compliance mapping](#compliance-mapping)). The terminal output is a boxed scan-summary panel and a component table with `LOCATION`, `RISK`, and `FLAGS` columns, and `--wide` expands every occurrence under each component. See [Project status](#project-status) for the honest ledger of what ships today versus what is deferred.
+> **v0.1.6.** Early but real: the pipeline, detectors, rule packs, and every writer are implemented and tested, with the **AI-native risk overlay**, a **[CVE overlay](#cve-overlay)** (OSV.dev, on by default), and **compliance framework mapping** (see [Risk detection](#risk-detection) and [Compliance mapping](#compliance-mapping)). The terminal output is a boxed scan-summary panel, a component table with a `VULN` column, and a per-CVE detail table; `--wide` expands every occurrence under each component. See [Project status](#project-status) for the honest ledger of what ships today versus what is deferred.
 
 ---
 
@@ -52,7 +52,7 @@ That evidence is emitted as CycloneDX 1.6 `evidence.identity[]` + `evidence.occu
 
 **Languages:** Python, JavaScript, TypeScript, Go, Java, Rust, C#, Kotlin
 
-**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM (with `vulnerabilities[]` for risks and opt-in CVEs, and `definitions`/`declarations` for compliance) · SARIF 2.1.0 · YAML · a Markdown compliance report · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
+**Output formats:** native AIBOM JSON (versioned schema) · CycloneDX 1.6 ML-BOM (with `vulnerabilities[]` for risks and CVEs, and `definitions`/`declarations` for compliance) · SARIF 2.1.0 · YAML · a Markdown compliance report · table — any combination in one scan. SPDX 3.0.1 AI profile is a reserved v2 slot.
 
 ## Risk detection
 
@@ -66,7 +66,7 @@ Beyond inventory, AIROM flags **AI-native security risks** — load-time code-ex
 | `savedmodel-pyfunc` | medium | A TensorFlow SavedModel graph invoking a `PyFunc`-family Python callback |
 | `unsafe-load` | medium | A `torch.load(..., weights_only=False)` call site — an explicit opt-out of safe deserialization |
 
-Risks project natively into **CycloneDX `vulnerabilities[]`** (non-CVE ids with a named source; no fabricated CVSS), **SARIF security results** carrying GitHub's `security-severity` — so a poisoned checkpoint becomes a Code Scanning alert on the PR that introduced it — a `RISK` column in the table view, and the CI gate:
+Risks project natively into **CycloneDX `vulnerabilities[]`** (non-CVE ids with a named source; no fabricated CVSS), **SARIF security results** carrying GitHub's `security-severity` — so a poisoned checkpoint becomes a Code Scanning alert on the PR that introduced it — the native JSON/YAML, and the CI gate:
 
 ```bash
 airom scan . --exit-code 1 --fail-on "risk:high"          # fail on any high-severity risk
@@ -95,14 +95,15 @@ That evidence-linked conformance is something a tool that drops evidence on expo
 
 ## CVE overlay
 
-The core scan is offline and deterministic — it reports what an artifact *is*. `--cve` adds what is *known about it today*: it matches the AI package dependencies AIROM inventoried (by their purl) against the live **[OSV.dev](https://osv.dev)** database and attaches the resulting CVEs — with real CVSS v3 scores computed from each vector — to those components.
+The core scan is offline and deterministic — it reports what an artifact *is*. The CVE overlay adds what is *known about it today*: it matches the AI package dependencies AIROM inventoried (by their purl) against the live **[OSV.dev](https://osv.dev)** database and attaches the resulting CVEs — with real CVSS v3 scores computed from each vector — to those components. It's **on by default**.
 
 ```bash
-airom scan . --cve                                      # CVEs in every output format
-airom scan . --cve --exit-code 1 --fail-on "cve:high"   # fail CI on a high/critical CVE
+airom scan .                                    # CVEs included in every output format
+airom scan . --exit-code 1 --fail-on "cve:high" # fail CI on a high/critical CVE
+airom scan . --no-cve                           # skip it — offline, byte-stable BOM
 ```
 
-It's **opt-in** on purpose: it touches the network (so it's mutually exclusive with `--offline`) and it isn't deterministic across time (the same scan surfaces more CVEs as OSV grows — right for a vuln check, wrong for a reproducible BOM). It's **scoped to AI dependencies**, not a general-purpose SCA, and it **degrades honestly** — a network failure yields no CVEs and a warning, never a failed scan. CVEs project into CycloneDX `vulnerabilities[]` (with a genuine `CVSSv31` rating), SARIF `cve/<id>` security results carrying the real base score, a `VULN` table column, and the `cve` / `cve:<severity>` gate. Full contract in **[docs/cve.md](docs/cve.md)**.
+Disable it with `--no-cve` (or `--offline`) when you want an offline, reproducible BOM — it touches the network and isn't deterministic across time (the same scan surfaces more CVEs as OSV grows). It's **scoped to AI dependencies**, not a general-purpose SCA, and it **degrades honestly** — a network failure yields no CVEs and a warning, never a failed scan (except an active `--fail-on cve` gate fails closed rather than silently pass). CVEs project into CycloneDX `vulnerabilities[]` (with a genuine `CVSSv31` rating), SARIF `cve/<id>` security results carrying the real base score, a `VULN` column plus a per-CVE detail table, and the `cve` / `cve:<severity>` gate. Full contract in **[docs/cve.md](docs/cve.md)**.
 
 ## Quick start
 
@@ -169,46 +170,55 @@ AI Bill of Materials — /tmp/my-rag-app
 
 ┌─ Scan Summary ────────────────┐
 │ Target        /tmp/my-rag-app │
-│ Components    12              │
-│ Relationships 3               │
+│ Components    8               │
 │ Files         5 scanned       │
 │                               │
 │ By Type                       │
-│   ai-config          2        │
 │   library            2        │
-│   local-model-file   2        │
 │   embedding-model    1        │
 │   framework          1        │
 │   hosted-llm         1        │
+│   local-model-file   1        │
 │   prompt             1        │
-│   rag-pipeline       1        │
 │   vector-db          1        │
 │                               │
-│ By Severity                   │
-│   high               1        │
-│   medium             0        │
-│   low                0        │
+│ Vulnerabilities               │
+│   total              3        │
+│   critical           1        │
+│   high               2        │
 └───────────────────────────────┘
 
-┌──────────────────┬────────────────────────┬─────────┬─────────────┬───────┬──────┬───────────────┬────────────────────┬──────────┐
-│ KIND             │ NAME                   │ VERSION │ PROVIDER    │ CONF  │ RISK │ FLAGS         │ LOCATION           │ EVIDENCE │
-├──────────────────┼────────────────────────┼─────────┼─────────────┼───────┼──────┼───────────────┼────────────────────┼──────────┤
-│ ai-config        │ max_tokens             │ -       │ -           │ 0.5   │ -    │ -             │ src/rag.py:17      │ 1 occ    │
-│ ai-config        │ temperature            │ -       │ -           │ 0.5   │ -    │ -             │ src/rag.py:16      │ 1 occ    │
-│ embedding-model  │ text-embedding-3-large │ -       │ openai      │ 0.85  │ -    │ -             │ src/rag.py:6       │ 1 occ    │
-│ framework        │ langchain              │ 0.2.16  │ langchain   │ 0.95  │ -    │ -             │ requirements.txt:2 │ 1 occ    │
-│ hosted-llm       │ gpt-4.1                │ -       │ openai      │ 0.85  │ -    │ -             │ src/rag.py:15      │ 1 occ    │
-│ library          │ openai                 │ 1.51.0  │ openai      │ 0.985 │ -    │ -             │ requirements.txt:3 │ 2 occ    │
-│ library          │ sentence-transformers  │ 3.1.1   │ huggingface │ 0.95  │ -    │ -             │ requirements.txt:5 │ 1 occ    │
-│ local-model-file │ poisoned.pt            │ -       │ local       │ 0.95  │ high │ pickle-import │ models/poisoned.pt │ 1 occ    │
-│ local-model-file │ tiny.gguf              │ -       │ local       │ 0.95  │ -    │ -             │ models/tiny.gguf   │ 1 occ    │
-│ prompt           │ system.txt             │ -       │ -           │ 0.8   │ -    │ -             │ prompts/system.txt │ 1 occ    │
-│ rag-pipeline     │ rag-pipeline           │ -       │ -           │ 0.6   │ -    │ -             │ src/rag.py:6       │ 1 occ    │
-│ vector-db        │ chroma                 │ 0.5.5   │ chroma      │ 0.985 │ -    │ -             │ requirements.txt:4 │ 3 occ    │
-└──────────────────┴────────────────────────┴─────────┴─────────────┴───────┴──────┴───────────────┴────────────────────┴──────────┘
+┌──────────────────┬───────────────────────────────┬─────────┬─────────────┬───────┬──────────────┬────────────────────┬──────────┐
+│ KIND             │ NAME                          │ VERSION │ PROVIDER    │ CONF  │ VULN         │ LOCATION           │ EVIDENCE │
+├──────────────────┼───────────────────────────────┼─────────┼─────────────┼───────┼──────────────┼────────────────────┼──────────┤
+│ embedding-model  │ openai/text-embedding-3-large │ -       │ openai      │ 0.85  │ -            │ src/rag.py:6       │ 1 occ    │
+│ framework        │ langchain/langchain           │ 0.2.16  │ langchain   │ 0.95  │ high (2)     │ requirements.txt:2 │ 1 occ    │
+│ hosted-llm       │ openai/gpt-4.1                │ -       │ openai      │ 0.85  │ -            │ src/rag.py:15      │ 1 occ    │
+│ library          │ openai                        │ 1.51.0  │ openai      │ 0.985 │ -            │ requirements.txt:3 │ 1 occ    │
+│ library          │ transformers                  │ 4.44.0  │ huggingface │ 0.95  │ critical (1) │ requirements.txt:5 │ 1 occ    │
+│ local-model-file │ tiny.gguf                     │ -       │ local       │ 0.95  │ -            │ models/tiny.gguf   │ 1 occ    │
+│ prompt           │ system.txt                    │ -       │ -           │ 0.8   │ -            │ prompts/system.txt │ 1 occ    │
+│ vector-db        │ chroma                        │ 0.5.5   │ chroma      │ 0.985 │ -            │ requirements.txt:4 │ 1 occ    │
+└──────────────────┴───────────────────────────────┴─────────┴─────────────┴───────┴──────────────┴────────────────────┴──────────┘
+
+Vulnerabilities (3)
+┌─────────────────────┬────────────────┬──────────┬────────┬───────────┬────────┬──────────────────────────────────────────────────┐
+│ LIBRARY             │ VULNERABILITY  │ SEVERITY │ STATUS │ INSTALLED │ FIXED  │ TITLE                                            │
+├─────────────────────┼────────────────┼──────────┼────────┼───────────┼────────┼──────────────────────────────────────────────────┤
+│ transformers        │ CVE-2024-11392 │ CRITICAL │ fixed  │ 4.44.0    │ 4.48.0 │ Deserialization of untrusted data in the Trax    │
+│                     │                │          │        │           │        │ model loader.                                    │
+│                     │                │          │        │           │        │ https://osv.dev/vulnerability/CVE-2024-11392     │
+├─────────────────────┼────────────────┼──────────┼────────┼───────────┼────────┼──────────────────────────────────────────────────┤
+│ langchain/langchain │ CVE-2024-46946 │ HIGH     │ fixed  │ 0.2.16    │ 0.3.0  │ SSRF in the LangChain experimental LLMMathChain. │
+│                     │                │          │        │           │        │ https://osv.dev/vulnerability/CVE-2024-46946     │
+├─────────────────────┼────────────────┼──────────┼────────┼───────────┼────────┼──────────────────────────────────────────────────┤
+│ langchain/langchain │ CVE-2024-8309  │ HIGH     │ fixed  │ 0.2.16    │ 0.2.19 │ SQL injection via the SQLDatabase chain in       │
+│                     │                │          │        │           │        │ LangChain.                                       │
+│                     │                │          │        │           │        │ https://osv.dev/vulnerability/CVE-2024-8309      │
+└─────────────────────┴────────────────┴──────────┴────────┴───────────┴────────┴──────────────────────────────────────────────────┘
 ```
 
-> The `poisoned.pt` row shows the [risk overlay](#risk-detection) inline: a `high` severity with the `pickle-import` flag. Risk-free scans omit the `RISK`/`FLAGS` columns. `LOCATION` is each component's primary `file:line`; `--wide` lists every occurrence.
+> The **CVE overlay runs by default**: the `VULN` column flags affected components, the summary counts CVEs by severity, and the per-CVE detail table lists each advisory (most-severe first) with its fix and title. Pass `--no-cve` (or `--offline`) to skip it for a byte-stable, offline BOM. `LOCATION` is each component's primary `file:line`; `--wide` lists every occurrence. Load-time **risks** (pickle, Lambda, …) still surface in the CycloneDX/SARIF/JSON outputs — see [Risk detection](#risk-detection).
 
 And the answer to the auditor's question, in the CycloneDX BOM (abridged):
 
@@ -284,7 +294,7 @@ Rules can even declare relationships and capture generation parameters at the ca
 
 ## Project status
 
-AIROM is at **v0.1.6**: feature-complete against the 10-phase plan, architecture through a multi-agent production review, with the risk overlay, an opt-in CVE overlay (OSV.dev), compliance mapping, and a reworked terminal table added on top. Early software — expect rough edges, and see the deferred row below for what it deliberately does not do yet. Honest ledger:
+AIROM is at **v0.1.6**: feature-complete against the 10-phase plan, architecture through a multi-agent production review, with the risk overlay, a default-on CVE overlay (OSV.dev), compliance mapping, and a reworked terminal table added on top. Early software — expect rough edges, and see the deferred row below for what it deliberately does not do yet. Honest ledger:
 
 | Area | Status |
 |---|---|
@@ -314,7 +324,7 @@ No FUD, just positioning — the tools below solve different problems:
 | Answers "why is this in my AIBOM?" | **Yes — file:line occurrences, technique, confidence in the BOM** | No — output describes the model, not your usage of it | Typically findings without BOM-native evidence |
 | CycloneDX `evidence.occurrences[]` | **Emitted** | Not emitted | Not emitted |
 | Load-time risk detection | **Built in — pickle / Lambda / template / PyFunc / unsafe-load, as CycloneDX `vulnerabilities[]` + SARIF, offline** | No | Varies — some scan model artifacts, typically SaaS or agent-based |
-| Known-CVE overlay | **Opt-in `--cve` — AI deps matched against OSV.dev with real CVSS v3 scores, into the same `vulnerabilities[]`/SARIF; honest about network + freshness** | Rarely | Sometimes, usually as the core product |
+| Known-CVE overlay | **On by default — AI deps matched against OSV.dev with real CVSS v3 scores, into the same `vulnerabilities[]`/SARIF; `--no-cve` for offline/reproducible** | Rarely | Sometimes, usually as the core product |
 | Compliance mapping | **Evidence-linked — NIST AI RMF / OWASP Agentic as CycloneDX attestations, honest about what a scan can't verify** | No | Sometimes, but without BOM-native evidence |
 | Coverage | Hosted APIs **and** local weights **and** frameworks, vector DBs, prompts, datasets, params, infra, RAG graphs | The named model | Usually model files and/or a curated subset |
 | Distribution | Single static Go binary, offline-capable | Python package | Agent or SaaS |

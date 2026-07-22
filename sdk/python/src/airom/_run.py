@@ -61,7 +61,7 @@ class ScanOptions:
     no_cache: bool = False
     cache_dir: str | None = None
     offline: bool = False
-    cve: bool = False
+    cve: bool = True
     stats: bool = False
     fail_on: str | None = None
     exit_code: int | None = None
@@ -89,8 +89,9 @@ class ScanOptions:
             out += ["--cache-dir", str(self.cache_dir)]
         if self.offline:
             out += ["--offline"]
-        if self.cve:
-            out += ["--cve"]
+        # The CVE overlay is on by default; only the opt-out needs a flag.
+        if not self.cve:
+            out += ["--no-cve"]
         if self.stats:
             out += ["--stats"]
         if self.fail_on is not None:

@@ -33,18 +33,26 @@ func TestTable(t *testing.T) {
 	}
 	for _, want := range []string{
 		"gpt-4.1", "langchain", "0.2.1", "hosted-llm",
-		"Scan Summary", "Components", "By Type", "By Severity",
-		// the fixture's tiny.gguf carries a high pickle-import risk
-		"high", "pickle-import",
-		// the fixture's langchain carries one high CVE — the VULN column shows
-		// "<top-severity> (<count>)" and appears only when a CVE is present
-		"VULN", "high (1)",
+		"Scan Summary", "Components", "By Type",
+		// the fixture's langchain carries one high CVE — the summary shows a
+		// Vulnerabilities breakdown and the component table a VULN column
+		"Vulnerabilities", "total", "VULN", "high (1)",
+		// the per-CVE detail table follows the component table
+		"LIBRARY", "VULNERABILITY", "SEVERITY", "STATUS", "INSTALLED", "FIXED", "TITLE",
+		"CVE-2024-0001", "HIGH", "fixed", "0.2.5",
+		"Server-side request forgery", "https://osv.dev/vulnerability/CVE-2024-0001",
 		// the LOCATION column shows each component's primary sighting —
 		// gpt-4.1 has two occurrences, so this also asserts the min-pick
 		"LOCATION", "src/rag.py:7",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("table missing %q:\n%s", want, out)
+		}
+	}
+	// the RISK/FLAGS columns and their risk slugs are gone from the table view
+	for _, gone := range []string{"RISK", "FLAGS", "pickle-import"} {
+		if strings.Contains(out, gone) {
+			t.Errorf("table should no longer surface %q:\n%s", gone, out)
 		}
 	}
 	// deterministic

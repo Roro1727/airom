@@ -136,6 +136,46 @@ func TestWideFlagResolves(t *testing.T) {
 	}
 }
 
+// TestCVEDefaultsOnAndOptOut pins the default-on CVE overlay and every opt-out:
+// --no-cve, an explicit --cve=false, --offline, and `cve: false` in a config
+// file. Honoring the file value matters — silently ignoring it would leave an
+// airgapped user making live OSV queries.
+func TestCVEDefaultsOnAndOptOut(t *testing.T) {
+	check := func(t *testing.T, want bool, args ...string) {
+		t.Helper()
+		got := captureScan(t)
+		t.Chdir(t.TempDir())
+		if _, err := execute(t, append([]string{"fs", "."}, args...)...); err != nil {
+			t.Fatalf("fs %v: %v", args, err)
+		}
+		if (*got) == nil {
+			t.Fatal("runScan not invoked")
+		}
+		if (*got).CVE != want {
+			t.Errorf("fs %v: CVE = %v, want %v", args, (*got).CVE, want)
+		}
+	}
+	t.Run("default on", func(t *testing.T) { check(t, true) })
+	t.Run("--no-cve off", func(t *testing.T) { check(t, false, "--no-cve") })
+	t.Run("--cve=false off", func(t *testing.T) { check(t, false, "--cve=false") })
+	t.Run("--offline off", func(t *testing.T) { check(t, false, "--offline") })
+
+	t.Run("cve:false in .airom.yaml off", func(t *testing.T) {
+		got := captureScan(t)
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, ".airom.yaml"), []byte("cve: false\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		t.Chdir(dir)
+		if _, err := execute(t, "fs", "."); err != nil {
+			t.Fatalf("fs: %v", err)
+		}
+		if (*got).CVE {
+			t.Error("cve: false in .airom.yaml must disable the overlay, not be silently ignored")
+		}
+	})
+}
+
 func TestConfigPrecedence(t *testing.T) {
 	got := captureScan(t)
 	dir := t.TempDir()

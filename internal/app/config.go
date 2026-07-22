@@ -103,7 +103,7 @@ type Config struct {
 	Select     string   // detector selection expression (Syft-style; applied in Phase 5)
 	RulePaths  []string // --rules overlays (loaded in Phase 6)
 	Compliance []string // --compliance framework ids (e.g. "nist-ai-rmf"); empty = off
-	CVE        bool     // --cve: match package purls against OSV.dev (opt-in; needs network)
+	CVE        bool     // match package purls against OSV.dev (on by default; off under --no-cve/--offline)
 
 	// Performance knobs (invariant P2: peak memory is a function of these,
 	// never of input size)
@@ -197,6 +197,13 @@ func (c *Config) ApplyDefaults() {
 	if len(c.Outputs) == 0 {
 		c.Outputs = []OutputSpec{{Format: FormatTable}}
 	}
+	// The CVE overlay needs the network; --offline always wins over it. The CLI
+	// already computes CVE this way, but enforce it here too so a programmatic
+	// Config{CVE: true, Offline: true} degrades to offline rather than trying to
+	// reach OSV.dev.
+	if c.Offline {
+		c.CVE = false
+	}
 }
 
 // Validate rejects configurations the engine must never see. Violations are
@@ -236,13 +243,12 @@ func (c *Config) Validate() error {
 	if c.Policy.ReferencesCompliance() && len(c.Compliance) == 0 {
 		return fmt.Errorf("--fail-on references compliance but no --compliance framework was given")
 	}
-	// The CVE overlay queries OSV.dev over the network, so it cannot run under
-	// --offline, and gating on CVEs you never fetched would silently never fire.
-	if c.CVE && c.Offline {
-		return fmt.Errorf("--cve queries OSV.dev over the network and cannot be used with --offline")
-	}
+	// Gating on CVEs while the overlay is disabled is CI theater — the gate would
+	// silently never fire. The overlay is on by default, so this only trips when
+	// the user turned it off with --no-cve or --offline. (ApplyDefaults has
+	// already forced CVE off under --offline.)
 	if c.Policy.ReferencesCVE() && !c.CVE {
-		return fmt.Errorf("--fail-on references cve but --cve was not given")
+		return fmt.Errorf("--fail-on references cve but the CVE overlay is disabled (remove --no-cve, or drop --offline)")
 	}
 	stdout := 0
 	for _, o := range c.Outputs {

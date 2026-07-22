@@ -68,9 +68,10 @@ catalog](#extending-the-catalog).
     airom fs . -o json=airom.json
     ```
   </Tab>
-  <Tab title="Table / CI gate">
-    The table view adds a `RISK` column. The CI gate matches `risk` (any),
-    `risk:<severity>`, or `risk:<slug>`:
+  <Tab title="CI gate">
+    Risks surface in the CycloneDX / SARIF / JSON outputs above; the human table
+    view focuses on CVEs (see [CVE overlay](/concepts/cve)). The CI gate matches
+    `risk` (any), `risk:<severity>`, or `risk:<slug>`:
 
     ```bash title="Fail the build on a high-severity risk"
     airom fs . --exit-code 1 --fail-on "risk:high"

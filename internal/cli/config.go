@@ -29,7 +29,7 @@ const configFileName = ".airom.yaml"
 var knownKeys = map[string]bool{
 	// global flags (flags.go)
 	"output": true, "format": true, "select": true, "rules": true,
-	"compliance": true, "cve": true,
+	"compliance": true, "cve": true, "no-cve": true,
 	"parallel": true, "io-budget": true, "max-file-size": true,
 	"min-confidence": true, "ignore": true, "cache-dir": true,
 	"no-cache": true, "cdx-version": true, "sarif-strict-kinds": true,
@@ -299,11 +299,14 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		return nil, &app.UsageError{Err: err}
 	}
 
-	var noCache, sarifStrict, offline, stats, wide, quiet, noProgress, k8sAll, k8sParallelImages bool
+	cveFlag := true // --cve defaults on; honored so an explicit false disables
+	var noCache, sarifStrict, offline, noCVE, stats, wide, quiet, noProgress, k8sAll, k8sParallelImages bool
 	for key, dst := range map[string]*bool{
 		"no-cache":           &noCache,
 		"sarif-strict-kinds": &sarifStrict,
 		"offline":            &offline,
+		"cve":                &cveFlag,
+		"no-cve":             &noCVE,
 		"stats":              &stats,
 		"wide":               &wide,
 		"quiet":              &quiet,
@@ -343,7 +346,11 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 		Select:     k.String("select"),
 		RulePaths:  stringsKey(k, "rules"),
 		Compliance: stringsKey(k, "compliance"),
-		CVE:        k.Bool("cve"),
+		// The CVE overlay is on by default; --no-cve, an explicit --cve=false /
+		// `cve: false`, or --offline disable it. Honoring the deprecated --cve's
+		// value matters: silently ignoring `cve: false` would leave a user who
+		// meant "no network" making live OSV queries.
+		CVE: cveFlag && !noCVE && !offline,
 
 		Parallel:      parallel,
 		IOBudget:      ioBudget,

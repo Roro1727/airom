@@ -24,7 +24,14 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.StringArray("compliance", nil,
 		fmt.Sprintf("map the AIBOM onto a governance framework; repeatable; frameworks: %s",
 			strings.Join(app.ComplianceFrameworks(), ", ")))
-	fs.Bool("cve", false, "match AI package dependencies against OSV.dev for known CVEs (opt-in; requires network, not deterministic over time)")
+	// The CVE overlay is on by default. --no-cve (or --offline) turns it off.
+	// --cve is kept for commands written against v0.1.6 (when it was opt-in): it
+	// defaults true, so it is normally redundant, but an explicit --cve=false (or
+	// `cve: false` in a config file) is still honored — silently ignoring it would
+	// leave a user who meant "no network" making live queries.
+	fs.Bool("cve", true, "deprecated: the CVE overlay is on by default; use --no-cve to disable")
+	_ = fs.MarkDeprecated("cve", "the CVE overlay is on by default now; use --no-cve to disable it")
+	fs.Bool("no-cve", false, "disable the OSV.dev CVE overlay (it is on by default; also implied by --offline)")
 	fs.Int("parallel", 0, "worker count (default: GOMAXPROCS)")
 	fs.String("io-budget", formatSize(app.DefaultIOBudget), "byte-weighted I/O semaphore budget (k/m/g suffixes)")
 	fs.String("max-file-size", formatSize(app.DefaultMaxFileSize), "full-content read cap for text detectors (k/m/g suffixes)")
