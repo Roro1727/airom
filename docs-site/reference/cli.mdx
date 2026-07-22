@@ -373,15 +373,38 @@ Any of the 13 component kinds may be used as an `ident`: `hosted-llm`,
 The default output is a table on stdout.
 
 ```text title="airom fs ."
-AI Bill of Materials — /home/you/my-ai-app
-7 component(s), 3 relationship(s)
+AI Bill of Materials — /tmp/my-ai-app
 
-KIND              NAME                    VERSION   PROVIDER   CONF   EVIDENCE
-hosted-llm        gpt-4.1                 -         openai     0.87   12 occ
-framework         langchain               0.3.14    -          0.95   2 occ
+┌─ Scan Summary ───────────────┐
+│ Target        /tmp/my-ai-app │
+│ Components    4              │
+│ Relationships 1              │
+│ Files         2 scanned      │
+│                              │
+│ By Type                      │
+│   framework          1       │
+│   hosted-llm         1       │
+│   library            1       │
+│   vector-db          1       │
+│                              │
+│ By Severity                  │
+│   high               0       │
+│   medium             0       │
+│   low                0       │
+└──────────────────────────────┘
+
+┌────────────┬───────────┬─────────┬───────────┬───────┬──────────┐
+│ KIND       │ NAME      │ VERSION │ PROVIDER  │ CONF  │ EVIDENCE │
+├────────────┼───────────┼─────────┼───────────┼───────┼──────────┤
+│ framework  │ langchain │ 0.2.16  │ langchain │ 0.95  │ 1 occ    │
+│ hosted-llm │ gpt-4.1   │ -       │ openai    │ 0.85  │ 1 occ    │
+│ library    │ openai    │ 1.51.0  │ openai    │ 0.985 │ 2 occ    │
+│ vector-db  │ chroma    │ 0.5.5   │ chroma    │ 0.985 │ 2 occ    │
 ```
 
-The columns are exactly `KIND`, `NAME`, `VERSION`, `PROVIDER`, `CONF`, `EVIDENCE`.
+A boxed **Scan Summary** panel (target, counts, By-Type and By-Severity) precedes
+the table. Columns are `KIND`, `NAME`, `VERSION`, `PROVIDER`, `CONF`, `EVIDENCE`,
+plus `RISK` and `FLAGS` when a scan surfaces a [risk](/concepts/risks).
 Evidence renders as `n occ` — the number of occurrences backing the component.
 
 <Card title="Configuration reference" icon="sliders" href="/reference/configuration">

@@ -109,14 +109,9 @@ airom image --input img.tar \
   -o table -o cyclonedx=aibom.cdx.json
 ```
 
-```
-AI Bill of Materials — img.tar
-7 component(s), 3 relationship(s)
-
-KIND              NAME                    VERSION   PROVIDER   CONF   EVIDENCE
-hosted-llm        gpt-4.1                 -         openai     0.87   12 occ
-framework         langchain               0.3.14    -          0.95   2 occ
-```
+The output is identical to a filesystem scan — a boxed **Scan Summary** panel
+followed by the component table (see [Output formats](/output/formats)) — because
+AIROM scans the application source extracted from the image.
 
 <Tip>
   `--parallel`, `--io-budget`, `--max-file-size`, and `--select` behave the same as on a filesystem scan. See [/scanning/filesystem](/scanning/filesystem).

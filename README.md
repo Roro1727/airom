@@ -154,18 +154,50 @@ airom scan . --exit-code 1 --fail-on "local-model-file&confidence>=0.9"
 ```
 $ airom scan .
 
-AI Bill of Materials — /home/you/my-ai-app
-7 component(s), 3 relationship(s)
+AI Bill of Materials — my-rag-app
 
-KIND              NAME                         VERSION   PROVIDER   CONF   EVIDENCE
-hosted-llm        gpt-4.1                      -         openai     0.87   12 occ
-embedding-model   text-embedding-3-large       -         openai     0.85   3 occ
-local-model-file  llama-3-8b-instruct.Q4_K_M   -         local      0.97   2 occ
-framework         langchain                    0.3.14    -          0.95   2 occ
-vector-db         chromadb                     0.6.3     -          0.92   4 occ
-prompt            system-prompt.md             -         local      0.80   1 occ
-rag-pipeline      rag-pipeline#1               -         -          0.78   0 occ
+┌─ Scan Summary ─────────────────────┐
+│ Target        my-rag-app           │
+│ Components    12                   │
+│ Relationships 3                    │
+│ Files         6 scanned            │
+│                                    │
+│ By Type                            │
+│   ai-config          2             │
+│   library            2             │
+│   local-model-file   2             │
+│   embedding-model    1             │
+│   framework          1             │
+│   hosted-llm         1             │
+│   prompt             1             │
+│   rag-pipeline       1             │
+│   vector-db          1             │
+│                                    │
+│ By Severity                        │
+│   high               1             │
+│   medium             0             │
+│   low                0             │
+└────────────────────────────────────┘
+
+┌──────────────────┬────────────────────────┬─────────┬─────────────┬───────┬──────┬───────────────┬──────────┐
+│ KIND             │ NAME                   │ VERSION │ PROVIDER    │ CONF  │ RISK │ FLAGS         │ EVIDENCE │
+├──────────────────┼────────────────────────┼─────────┼─────────────┼───────┼──────┼───────────────┼──────────┤
+│ ai-config        │ max_tokens             │ -       │ -           │ 0.5   │ -    │ -             │ 1 occ    │
+│ ai-config        │ temperature            │ -       │ -           │ 0.5   │ -    │ -             │ 1 occ    │
+│ embedding-model  │ text-embedding-3-large │ -       │ openai      │ 0.85  │ -    │ -             │ 1 occ    │
+│ framework        │ langchain              │ 0.2.16  │ langchain   │ 0.95  │ -    │ -             │ 1 occ    │
+│ hosted-llm       │ gpt-4.1                │ -       │ openai      │ 0.85  │ -    │ -             │ 1 occ    │
+│ library          │ openai                 │ 1.51.0  │ openai      │ 0.985 │ -    │ -             │ 2 occ    │
+│ library          │ sentence-transformers  │ 3.1.1   │ huggingface │ 0.95  │ -    │ -             │ 1 occ    │
+│ local-model-file │ poisoned.pt            │ -       │ local       │ 0.95  │ high │ pickle-import │ 1 occ    │
+│ local-model-file │ tiny.gguf              │ -       │ local       │ 0.95  │ -    │ -             │ 1 occ    │
+│ prompt           │ system.txt             │ -       │ -           │ 0.8   │ -    │ -             │ 1 occ    │
+│ rag-pipeline     │ rag-pipeline           │ -       │ -           │ 0.6   │ -    │ -             │ 1 occ    │
+│ vector-db        │ chroma                 │ 0.5.5   │ chroma      │ 0.985 │ -    │ -             │ 3 occ    │
+└──────────────────┴────────────────────────┴─────────┴─────────────┴───────┴──────┴───────────────┴──────────┘
 ```
+
+> The `poisoned.pt` row shows the [risk overlay](#risk-detection) inline: a `high` severity with the `pickle-import` flag. Risk-free scans omit the `RISK`/`FLAGS` columns.
 
 And the answer to the auditor's question, in the CycloneDX BOM (abridged):
 
