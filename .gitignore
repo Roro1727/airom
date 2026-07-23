@@ -42,3 +42,9 @@ go.work.sum
 # `mint dev` local preview cache/build output; the .mdx sources ARE tracked.
 /docs-site/.mintlify/
 /docs-site/node_modules/
+
+# ── Nested airom-rules checkout ──────────────────────────────────────────────
+# The airom-rules repo (github.com/airomhq/airom-rules) may be checked out here
+# for local rule-channel maintenance. It is its OWN git repo — never track it
+# from airom, or it gets committed as a gitlink.
+/airom-rules/
