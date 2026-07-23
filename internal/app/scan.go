@@ -51,7 +51,7 @@ func buildCatalog(cfg *Config) (*engine.Catalog, *ruleengine.Matcher, error) {
 // runScanPipeline executes the full pipeline over an acquired source:
 // phase 1 (engine + dispatcher) → phase 2 (project detectors) → assembly.
 func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airom.Inventory, error) {
-	catalog, _, err := buildCatalog(cfg)
+	catalog, matcher, err := buildCatalog(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -134,9 +134,16 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 		Detectors:      detStats,
 	}
 
+	// Stamp rule-pack provenance onto a per-scan copy of the tool identity (never
+	// the package global): the effective-ruleset hash, and the active source —
+	// "builtin" until PR4 wires a fetched bundle version through here.
+	tool := Tool
+	tool.RulesHash = matcher.Hash()
+	tool.RulesVersion = "builtin"
+
 	info := src.Info()
 	inv := assemble.Build(findings, unknowns, stats, assemble.Options{
-		Tool:      Tool,
+		Tool:      tool,
 		Source:    airom.SourceInfo{Kind: string(info.Kind), Target: info.Target},
 		Lifecycle: "pre-build",
 		Serial:    newSerial(),

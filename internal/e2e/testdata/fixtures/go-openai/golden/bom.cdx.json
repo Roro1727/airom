@@ -37,6 +37,14 @@
     },
     "properties": [
       {
+        "name": "airom:rules.hash",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "name": "airom:rules.version",
+        "value": "builtin"
+      },
+      {
         "name": "airom:source.target",
         "value": "go-openai"
       },

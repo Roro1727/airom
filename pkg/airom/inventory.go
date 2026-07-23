@@ -46,6 +46,11 @@ type ToolInfo struct {
 	Name    string `json:"name"` // "airom"
 	Version string `json:"version"`
 	Commit  string `json:"commit,omitempty"`
+	// Rule-pack provenance: which ruleset produced this document. RulesVersion
+	// is "builtin" (the embedded packs) or a fetched bundle version; RulesHash
+	// is the SHA-256 of the effective ruleset (self-invalidating, reproducible).
+	RulesVersion string `json:"rulesVersion,omitempty"`
+	RulesHash    string `json:"rulesHash,omitempty"`
 }
 
 // GitInfo is repository provenance for repo-backed scans.

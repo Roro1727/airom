@@ -430,8 +430,18 @@ func buildTool(inv *airom.Inventory, rules []sarifRule) sarifTool {
 		InformationURI:  informationURI,
 		Rules:           rules,
 	}
+	props := map[string]any{}
 	if inv.Tool.Commit != "" {
-		d.Properties = map[string]any{"airom:tool.commit": inv.Tool.Commit}
+		props["airom:tool.commit"] = inv.Tool.Commit
+	}
+	if inv.Tool.RulesVersion != "" {
+		props["airom:rules.version"] = inv.Tool.RulesVersion
+	}
+	if inv.Tool.RulesHash != "" {
+		props["airom:rules.hash"] = inv.Tool.RulesHash
+	}
+	if len(props) > 0 {
+		d.Properties = props
 	}
 	return sarifTool{Driver: d}
 }

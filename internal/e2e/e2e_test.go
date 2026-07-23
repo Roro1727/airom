@@ -114,6 +114,16 @@ func normalize(inv *airom.Inventory, name string) {
 	for i := range inv.Stats.Detectors {
 		inv.Stats.Detectors[i].NS = 0
 	}
+
+	// The rule-pack hash is deterministic for a fixed ruleset but changes
+	// whenever any embedded rule changes — pinning the real value here would
+	// force every e2e golden to be regenerated on rule edits that don't even
+	// touch these fixtures. Normalize it; the exact projection is asserted in
+	// the writer unit tests (writertest fixture carries a fixed hash).
+	// RulesVersion ("builtin") is stable, so it stays.
+	if inv.Tool.RulesHash != "" {
+		inv.Tool.RulesHash = "0000000000000000000000000000000000000000000000000000000000000000"
+	}
 }
 
 // renderFormat renders inv to one writer format with default options.

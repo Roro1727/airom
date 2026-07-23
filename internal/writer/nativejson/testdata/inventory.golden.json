@@ -3,7 +3,9 @@
   "tool": {
     "name": "airom",
     "version": "1.0.0",
-    "commit": "abc123"
+    "commit": "abc123",
+    "rulesVersion": "builtin",
+    "rulesHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
   },
   "serial": "urn:uuid:00000000-0000-4000-8000-000000000000",
   "timestamp": "2026-07-17T12:00:00Z",

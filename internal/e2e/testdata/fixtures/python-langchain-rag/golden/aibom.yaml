@@ -532,4 +532,6 @@ stats:
 timestamp: "2026-07-17T12:00:00Z"
 tool:
   name: airom
+  rulesHash: "0000000000000000000000000000000000000000000000000000000000000000"
+  rulesVersion: builtin
   version: dev

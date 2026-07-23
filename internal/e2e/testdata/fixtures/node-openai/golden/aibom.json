@@ -2,7 +2,9 @@
   "schemaVersion": "1",
   "tool": {
     "name": "airom",
-    "version": "dev"
+    "version": "dev",
+    "rulesVersion": "builtin",
+    "rulesHash": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "serial": "urn:uuid:00000000-0000-4000-8000-000000000000",
   "timestamp": "2026-07-17T12:00:00Z",

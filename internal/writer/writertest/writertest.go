@@ -128,7 +128,7 @@ func BuildFixture() *airom.Inventory {
 
 	return &airom.Inventory{
 		SchemaVersion: "1",
-		Tool:          airom.ToolInfo{Name: "airom", Version: "1.0.0", Commit: "abc123"},
+		Tool:          airom.ToolInfo{Name: "airom", Version: "1.0.0", Commit: "abc123", RulesVersion: "builtin", RulesHash: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},
 		Serial:        "urn:uuid:00000000-0000-4000-8000-000000000000",
 		Timestamp:     ts,
 		Lifecycle:     "pre-build",

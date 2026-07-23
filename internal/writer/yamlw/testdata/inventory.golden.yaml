@@ -196,6 +196,8 @@ timestamp: "2026-07-17T12:00:00Z"
 tool:
   commit: abc123
   name: airom
+  rulesHash: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  rulesVersion: builtin
   version: 1.0.0
 unknowns:
   - detectorId: modelfile/safetensors

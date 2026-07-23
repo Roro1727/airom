@@ -37,7 +37,11 @@
                 "airom:method": "manifest-analysis"
               }
             }
-          ]
+          ],
+          "properties": {
+            "airom:rules.hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "airom:rules.version": "builtin"
+          }
         }
       },
       "columnKind": "utf16CodeUnits",

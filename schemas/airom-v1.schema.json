@@ -15,7 +15,9 @@
       "properties": {
         "name": { "type": "string" },
         "version": { "type": "string" },
-        "commit": { "type": "string" }
+        "commit": { "type": "string" },
+        "rulesVersion": { "type": "string" },
+        "rulesHash": { "type": "string" }
       }
     },
     "serial": { "type": "string", "pattern": "^urn:uuid:" },

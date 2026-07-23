@@ -170,6 +170,12 @@ func (b *builder) metadata() *cyclonedx.Metadata {
 	if inv.Tool.Commit != "" {
 		props.add("airom:tool.commit", inv.Tool.Commit)
 	}
+	if inv.Tool.RulesVersion != "" {
+		props.add("airom:rules.version", inv.Tool.RulesVersion)
+	}
+	if inv.Tool.RulesHash != "" {
+		props.add("airom:rules.hash", inv.Tool.RulesHash)
+	}
 	if inv.Source.Kind != "" {
 		props.add("airom:source.type", inv.Source.Kind)
 	}
