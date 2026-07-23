@@ -199,6 +199,28 @@ airom rules test <file>
 Exactly one `<file>`. Prints `<file>: OK (n expectation(s) checked)` on success;
 failures exit non-zero.
 
+### airom rules update
+
+Fetch, verify, and cache a signed rule bundle from the
+[airom-rules](https://github.com/airomhq/airom-rules) release channel. This is
+the only rules subcommand that touches the network — scans never do. See
+[Rule updates](/rules/updates) for the full model.
+
+```bash title="airom rules update"
+airom rules update              # the latest release
+airom rules update v1.2.0       # a pinned version
+```
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--rules-source` | string | the airom-rules release channel | Base URL override (mirror or testing). |
+| `--insecure-skip-signature` | bool | `false` | Skip ed25519 verification (**not recommended**); the tarball checksum is still enforced. |
+
+The bundle is verified against the public key embedded in airom (signature, then
+tarball SHA-256) and cached under `<cache-dir>/rules/<version>`; any failure is
+fatal and leaves the previous bundle in place. `--offline` refuses to fetch.
+`airom clean` removes it.
+
 ## Contributor commands
 
 ### airom dev new-rulepack
@@ -270,8 +292,9 @@ every command carries: `-h`/`--help`, and `--version` on the root.
 
 | Flag | Type | Default | Meaning |
 | ---- | ---- | ------- | ------- |
-| `--cache-dir` | string | `<user cache dir>/airom` | Scan cache location. |
+| `--cache-dir` | string | `<user cache dir>/airom` | Scan cache location (also where fetched rule bundles live). |
 | `--cdx-version` | string | `1.6` | CycloneDX spec version: `1.6` or `1.7`. |
+| `--no-cached-rules` | bool | `false` | Ignore any fetched rule bundle; scan with the built-in packs. See [Rule updates](/rules/updates). |
 | `--compliance` | stringArray | — | Map the AIBOM onto a governance framework (`nist-ai-rmf`, `owasp-agentic`). Repeatable. |
 | `--no-cve` | bool | `false` | Disable the OSV.dev **CVE overlay**, which is **on by default**. The overlay matches AI dependencies against OSV.dev for known CVEs; it queries the network and is not deterministic over time, so `--no-cve` (or `--offline`) gives a byte-stable offline BOM. See [CVE overlay](/concepts/cve). |
 | `--exit-code` | int | `1` when a policy is active | Exit status when `--fail-on` matches. `0` reports matches without failing. |

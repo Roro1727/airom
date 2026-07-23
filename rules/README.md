@@ -4,6 +4,11 @@ This directory holds the **embedded declarative rule packs** — the contributor
 the project ([ARCHITECTURE.md §6.3](../docs/ARCHITECTURE.md)). The directory layout and the
 rules below are binding now; the pack contents land in **Phase 6**.
 
+**Distribution.** These packs are compiled into the binary as the offline floor, and also
+seed the [airom-rules](https://github.com/airomhq/airom-rules) overlay channel: `airom rules
+update` fetches a newer **signed** bundle without a new airom release, and stable overlay
+rules are promoted back here over time.
+
 ## The bright line
 
 > If the detection is expressible as **keywords + regex over classified text regions + a

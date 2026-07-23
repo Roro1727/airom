@@ -41,7 +41,7 @@
           },
           {
             "group": "Rules",
-            "pages": ["rules/overview", "rules/writing-rules"]
+            "pages": ["rules/overview", "rules/writing-rules", "rules/updates"]
           },
           {
             "group": "Reference",

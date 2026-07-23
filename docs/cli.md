@@ -71,8 +71,9 @@ Every scan command accepts these. `<size>` values take `k`/`m`/`g` suffixes.
 | `--max-file-size <size>` | size | `1m` | Full-content read cap for text-category detectors. Header-only binary parsers (GGUF, safetensors, …) are exempt — a 40 GB model file still costs only a 32 KB header read. |
 | `--min-confidence <f>` | float | `0` | Presentation-layer filter on assembled confidence (0–1). Merging keeps everything; this only trims output. |
 | `--ignore <glob>` | string, repeatable | — | Additional ignore globs, applied on top of `.gitignore`/`.airomignore`. Participates in the cache namespace. |
-| `--cache-dir <path>` | path | `<user cache dir>/airom` | bbolt cache location (per-user OS cache directory by default). |
+| `--cache-dir <path>` | path | `<user cache dir>/airom` | bbolt cache location (per-user OS cache directory by default). Also where `airom rules update` stores fetched rule bundles. |
 | `--no-cache` | bool | `false` | Disable cache reads and writes for this run. |
+| `--no-cached-rules` | bool | `false` | Ignore any rule bundle fetched by `airom rules update` (from [airom-rules](https://github.com/airomhq/airom-rules)); scan with the built-in packs. |
 | `--cdx-version <v>` | string | `1.6` | CycloneDX spec version: `1.6` (default) or `1.7` (modelCard shape is identical in both). |
 | `--sarif-strict-kinds` | bool | `false` | Emit spec-pure `kind:"informational"` instead of the GitHub-Code-Scanning-compatible default `level:"note"`. |
 | `--exit-code N` | int | `1` (when policy active) | Exit status to return when `--fail-on` matches. Setting `--exit-code` without `--fail-on` implies failing on **any** component. An explicit `--exit-code 0` with `--fail-on` means "evaluate and report matches, but never fail the build". |
@@ -237,7 +238,7 @@ need:      content
 selected:  selected by "default"
 ```
 
-### `airom rules {list | lint <file> | test <file>}`
+### `airom rules {list | lint <file> | test <file> | update [version]}`
 
 - `list` — the effective compiled ruleset (embedded + `--rules` overlays), each rule with
   its originating layer.
@@ -246,11 +247,18 @@ selected:  selected by "default"
   named groups referenced, IDs globally unique, fixture coverage.
 - `test <file>` — run a pack's fixtures and compare against its golden **without a Go
   toolchain** — the rules-contributor loop in one command.
+- `update [version]` — fetch, verify (ed25519), and cache a signed rule bundle from the
+  [airom-rules](https://github.com/airomhq/airom-rules) channel; scans then prefer it over
+  the embedded packs. The **only** rules subcommand that touches the network — scans never
+  do. Flags: `--rules-source <url>` (mirror/testing override), `--insecure-skip-signature`
+  (skip signature verification; the checksum is still enforced). `--offline` refuses to
+  fetch; `--no-cached-rules` makes a scan ignore the bundle; `airom clean` removes it.
 
 ```console
 $ airom rules lint rules/models/fireworks.yaml
 $ airom rules test rules/models/fireworks.yaml
 $ airom rules list --rules ./mycorp-overrides.yaml
+$ airom rules update v1.2.0
 ```
 
 ### `airom dev {new-rulepack <name> | new-detector <name>}`
