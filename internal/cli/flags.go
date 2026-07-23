@@ -62,6 +62,7 @@ func addGlobalFlags(fs *pflag.FlagSet) {
 	fs.Bool("no-progress", false, "disable the scan progress indicator (auto-off when stderr is not a terminal)")
 	fs.Bool("stats", false, "emit the full ScanStats block in the output")
 	fs.Bool("wide", false, "table: expand every file:line occurrence under each component")
+	fs.Bool("no-cached-rules", false, "ignore any fetched rule bundle; scan with the built-in packs")
 	fs.CountP("verbose", "v", "increase log verbosity (repeatable; -vv adds source locations)")
 	fs.BoolP("quiet", "q", false, "errors only")
 }

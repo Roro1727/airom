@@ -34,11 +34,9 @@ func embeddedPublicKey() ed25519.PublicKey {
 
 // verifyManifest checks the detached ed25519 signature over the manifest bytes.
 // sig is base64-encoded. It fails closed: an absent key, a malformed signature,
-// or a bad signature all return an error unless the caller opted out entirely.
-func verifyManifest(manifest, sig []byte, key ed25519.PublicKey, skip bool) error {
-	if skip {
-		return nil
-	}
+// or a bad signature all return an error. The caller decides whether to call it
+// at all (InsecureSkipSignature bypasses both this and the signature fetch).
+func verifyManifest(manifest, sig []byte, key ed25519.PublicKey) error {
 	if key == nil {
 		key = embeddedPublicKey()
 	}

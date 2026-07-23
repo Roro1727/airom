@@ -124,6 +124,13 @@ type Config struct {
 	SARIFStrictKinds bool
 	Wide             bool // table: expand every file:line occurrence under each component
 
+	// Rule updates (Model B). NoCachedRules forces scans onto the embedded
+	// packs, ignoring any fetched bundle. RulesSource/InsecureSkipSignature
+	// only affect `airom rules update`.
+	NoCachedRules         bool
+	RulesSource           string
+	InsecureSkipSignature bool
+
 	// CI policy (exit-code contract in docs/cli.md). Nil Policy = no gate:
 	// scan success always exits 0 regardless of findings.
 	Policy   *Policy

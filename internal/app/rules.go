@@ -1,13 +1,16 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/airomhq/airom/internal/ruleengine"
 	"github.com/airomhq/airom/internal/ruleengine/ruletest"
+	"github.com/airomhq/airom/internal/rulesync"
 )
 
 // EmbeddedRules is the built-in rule-pack filesystem (rules/**). It is set
@@ -16,24 +19,70 @@ import (
 // empty set. nil means "no embedded packs".
 var EmbeddedRules fs.FS
 
-// loadRuleset assembles the effective ruleset: embedded defaults plus the
-// configured --rules overlays.
-func loadRuleset(cfg *Config) (*ruleengine.Ruleset, error) {
-	rs, err := ruleengine.Load(EmbeddedRules, cfg.RulePaths, os.ReadFile)
-	if err != nil {
-		return nil, &UsageError{Err: err}
+// resolveRuleBase picks the base rule layer for a scan: a verified, cached
+// bundle when one is installed (and --no-cached-rules is off), else the
+// embedded packs — the offline floor. It returns the filesystem plus a
+// provenance label ("builtin" or the bundle version). --rules overlays layer
+// on top of whichever wins, downstream in ruleengine.Load.
+func resolveRuleBase(cfg *Config) (fs.FS, string) {
+	if cfg.NoCachedRules {
+		return EmbeddedRules, "builtin"
 	}
-	return rs, nil
+	dir := cfg.CacheDir
+	if dir == "" {
+		dir = DefaultCacheDir()
+	}
+	if bundle, version, ok := rulesync.Active(dir); ok {
+		return bundle, version
+	}
+	return EmbeddedRules, "builtin"
+}
+
+// loadRuleset assembles the effective ruleset (base layer + --rules overlays)
+// and reports its provenance label. A cached bundle that fails to load must
+// never brick a scan: it falls back to the embedded packs (with the same
+// overlays) and a warning, so a bad fetch degrades instead of turning every
+// scan fatal.
+func loadRuleset(cfg *Config) (*ruleengine.Ruleset, string, error) {
+	base, version := resolveRuleBase(cfg)
+	rs, err := ruleengine.Load(base, cfg.RulePaths, os.ReadFile)
+	if err != nil && version != "builtin" {
+		slog.Warn("cached rule bundle failed to load; using the built-in packs", "version", version, "error", err)
+		version = "builtin"
+		rs, err = ruleengine.Load(EmbeddedRules, cfg.RulePaths, os.ReadFile)
+	}
+	if err != nil {
+		return nil, "", &UsageError{Err: err}
+	}
+	return rs, version, nil
 }
 
 // RulesList returns the effective compiled ruleset (each rule with its
 // originating layer) for `airom rules list`.
 func RulesList(cfg *Config) ([]ruleengine.EffectiveRule, error) {
-	rs, err := loadRuleset(cfg)
+	rs, _, err := loadRuleset(cfg)
 	if err != nil {
 		return nil, err
 	}
 	return rs.Rules, nil
+}
+
+// RulesUpdate fetches, verifies, and caches a signed rule bundle from the
+// airom-rules release channel for `airom rules update` (Model B). version is
+// the positional argument ("" or "latest" → the newest release). It touches
+// the network; a scan never does.
+func RulesUpdate(ctx context.Context, cfg *Config, version string) (*rulesync.Result, error) {
+	dir := cfg.CacheDir
+	if dir == "" {
+		dir = DefaultCacheDir()
+	}
+	return rulesync.Update(ctx, rulesync.Options{
+		CacheDir:              dir,
+		Version:               version,
+		Source:                cfg.RulesSource,
+		Offline:               cfg.Offline,
+		InsecureSkipSignature: cfg.InsecureSkipSignature,
+	})
 }
 
 // RulesLint validates a single user rule-pack file against the full lint

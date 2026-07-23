@@ -87,14 +87,18 @@ func Update(ctx context.Context, o Options) (*Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fetch manifest: %w", err)
 	}
-	sigBytes, err := get(ctx, client, base+"/manifest.json.sig")
-	if err != nil {
-		return nil, fmt.Errorf("fetch signature: %w", err)
-	}
 
-	// 2. authenticity — verify BEFORE trusting any field in the manifest.
-	if err := verifyManifest(manifestBytes, sigBytes, o.PublicKey, o.InsecureSkipSignature); err != nil {
-		return nil, err
+	// 2. authenticity — verify BEFORE trusting any field in the manifest. The
+	// signature (and its fetch) is skipped only under an explicit opt-out; the
+	// integrity check below still runs.
+	if !o.InsecureSkipSignature {
+		sigBytes, err := get(ctx, client, base+"/manifest.json.sig")
+		if err != nil {
+			return nil, fmt.Errorf("fetch signature: %w", err)
+		}
+		if err := verifyManifest(manifestBytes, sigBytes, o.PublicKey); err != nil {
+			return nil, err
+		}
 	}
 
 	var m Manifest

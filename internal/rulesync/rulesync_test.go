@@ -244,6 +244,25 @@ func TestUntarSkipsNonRegularAndNonYAML(t *testing.T) {
 	}
 }
 
+func TestUntarSkipsDotfiles(t *testing.T) {
+	// macOS tar injects AppleDouble "._name" siblings; they end in .yaml but are
+	// binary and would break the loader. They must be dropped, not extracted.
+	dest := t.TempDir()
+	tgz := makeTarGz(t, map[string]string{
+		"frameworks/._agno.yaml": "\x00\x01binary AppleDouble junk\n",
+		"frameworks/agno.yaml":   "pack: agno\nversion: 1\n",
+	})
+	if err := untar(tgz, dest); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dest, "frameworks", "._agno.yaml")); !os.IsNotExist(err) {
+		t.Error("AppleDouble dotfile was extracted")
+	}
+	if _, err := os.Stat(filepath.Join(dest, "frameworks", "agno.yaml")); err != nil {
+		t.Errorf("real pack missing: %v", err)
+	}
+}
+
 func TestUntarRejectsEmptyBundle(t *testing.T) {
 	tgz := makeTarGz(t, map[string]string{"README.md": "no packs here\n"})
 	if err := untar(tgz, t.TempDir()); err == nil {

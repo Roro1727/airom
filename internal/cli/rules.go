@@ -18,7 +18,45 @@ func newRulesCmd() *cobra.Command {
 		GroupID: groupInspect,
 		Short:   "Inspect, lint, and test rule packs",
 	}
-	cmd.AddCommand(newRulesListCmd(), newRulesLintCmd(), newRulesTestCmd())
+	cmd.AddCommand(newRulesListCmd(), newRulesLintCmd(), newRulesTestCmd(), newRulesUpdateCmd())
+	return cmd
+}
+
+// newRulesUpdateCmd fetches a signed rule bundle from the airom-rules release
+// channel into the cache; scans then prefer it over the built-in packs. This is
+// the only rules subcommand that touches the network (Model B).
+func newRulesUpdateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update [version]",
+		Short: "Fetch, verify (ed25519), and cache a signed rule bundle from airom-rules",
+		Args:  maxArgs(1, "an optional <version> (default: the latest release)"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("determine working directory: %w", err)
+			}
+			cfg, err := buildConfig(cmd.Flags(), wd, app.SourceFS, ".")
+			if err != nil {
+				return err
+			}
+			version := ""
+			if len(args) == 1 {
+				version = args[0]
+			}
+			res, err := app.RulesUpdate(cmd.Context(), cfg, version)
+			if err != nil {
+				return err
+			}
+			w := cmd.OutOrStdout()
+			fmt.Fprintf(w, "Installed rule bundle %s — %d pack(s), %d rule(s)\n", res.Version, res.PackCount, res.RuleCount)
+			fmt.Fprintf(w, "  sha256: %s\n", res.SHA256)
+			fmt.Fprintf(w, "  cache:  %s\n", res.Path)
+			fmt.Fprintln(w, "Scans now use this bundle. Use --no-cached-rules to fall back to the built-in packs, or 'airom clean' to remove it.")
+			return nil
+		},
+	}
+	cmd.Flags().String("rules-source", "", "base URL to fetch the bundle from (default: the airom-rules release channel)")
+	cmd.Flags().Bool("insecure-skip-signature", false, "skip ed25519 signature verification (NOT recommended; the checksum check still runs)")
 	return cmd
 }
 

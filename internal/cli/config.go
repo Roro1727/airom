@@ -36,6 +36,7 @@ var knownKeys = map[string]bool{
 	"exit-code": true, "fail-on": true, "offline": true, "pprof": true,
 	"trace": true, "stats": true, "verbose": true, "quiet": true,
 	"no-progress": true, "wide": true,
+	"no-cached-rules": true, "rules-source": true, "insecure-skip-signature": true,
 	// command-specific (image, k8s)
 	"input": true, "platform": true, "namespace": true,
 	"all-namespaces": true, "manifests": true, "parallel-images": true,
@@ -301,18 +302,21 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 
 	cveFlag := true // --cve defaults on; honored so an explicit false disables
 	var noCache, sarifStrict, offline, noCVE, stats, wide, quiet, noProgress, k8sAll, k8sParallelImages bool
+	var noCachedRules, insecureSkipSig bool
 	for key, dst := range map[string]*bool{
-		"no-cache":           &noCache,
-		"sarif-strict-kinds": &sarifStrict,
-		"offline":            &offline,
-		"cve":                &cveFlag,
-		"no-cve":             &noCVE,
-		"stats":              &stats,
-		"wide":               &wide,
-		"quiet":              &quiet,
-		"no-progress":        &noProgress,
-		"all-namespaces":     &k8sAll,
-		"parallel-images":    &k8sParallelImages,
+		"no-cache":                &noCache,
+		"sarif-strict-kinds":      &sarifStrict,
+		"offline":                 &offline,
+		"cve":                     &cveFlag,
+		"no-cve":                  &noCVE,
+		"stats":                   &stats,
+		"wide":                    &wide,
+		"no-cached-rules":         &noCachedRules,
+		"insecure-skip-signature": &insecureSkipSig,
+		"quiet":                   &quiet,
+		"no-progress":             &noProgress,
+		"all-namespaces":          &k8sAll,
+		"parallel-images":         &k8sParallelImages,
 	} {
 		v, err := boolKey(k, key)
 		if err != nil {
@@ -363,6 +367,10 @@ func buildConfig(flags *pflag.FlagSet, workdir string, src app.SourceKind, targe
 
 		CDXVersion:       k.String("cdx-version"),
 		SARIFStrictKinds: sarifStrict,
+
+		NoCachedRules:         noCachedRules,
+		RulesSource:           k.String("rules-source"),
+		InsecureSkipSignature: insecureSkipSig,
 
 		Policy:   policy,
 		ExitCode: exitCode,

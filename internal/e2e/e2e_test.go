@@ -77,6 +77,12 @@ func scanNormalized(t *testing.T, name string, tweak func(*app.Config)) *airom.I
 	cfg := &app.Config{
 		Source: app.SourceFS,
 		Target: fixtureDir(name),
+		// Isolate the rule cache: a scan resolves its base rule layer from
+		// CacheDir (a fetched bundle overrides the embedded packs), and
+		// ApplyDefaults would otherwise point it at the real user cache —
+		// making the goldens depend on whether a dev ran `airom rules update`.
+		// An empty temp dir has no bundle, so the scan uses the embedded packs.
+		CacheDir: t.TempDir(),
 		// The goldens are committed INSIDE the fixture tree
 		// (fixtures/<name>/golden/), so the scan must never walk them —
 		// otherwise the suite is non-idempotent (each written golden becomes

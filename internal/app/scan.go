@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"sort"
 	"time"
 
@@ -28,14 +27,14 @@ var Tool = airom.ToolInfo{Name: "airom", Version: "dev"}
 // buildCatalog composes the detector catalog: generated built-ins plus the
 // rule-engine detector when the effective ruleset is non-empty (§6.2 —
 // explicit construction, compiled matcher via constructor, no globals).
-func buildCatalog(cfg *Config) (*engine.Catalog, *ruleengine.Matcher, error) {
-	ruleset, err := ruleengine.Load(EmbeddedRules, cfg.RulePaths, os.ReadFile)
+func buildCatalog(cfg *Config) (*engine.Catalog, *ruleengine.Matcher, string, error) {
+	ruleset, rulesVersion, err := loadRuleset(cfg)
 	if err != nil {
-		return nil, nil, &UsageError{Err: err}
+		return nil, nil, "", err
 	}
 	matcher, err := ruleengine.Compile(ruleset)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	catalog := engine.NewCatalog()
@@ -45,13 +44,13 @@ func buildCatalog(cfg *Config) (*engine.Catalog, *ruleengine.Matcher, error) {
 	if !matcher.Empty() {
 		catalog.Add(ruleengine.NewDetector(matcher))
 	}
-	return catalog, matcher, nil
+	return catalog, matcher, rulesVersion, nil
 }
 
 // runScanPipeline executes the full pipeline over an acquired source:
 // phase 1 (engine + dispatcher) → phase 2 (project detectors) → assembly.
 func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airom.Inventory, error) {
-	catalog, matcher, err := buildCatalog(cfg)
+	catalog, matcher, rulesVersion, err := buildCatalog(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +138,7 @@ func runScanPipeline(ctx context.Context, cfg *Config, src source.Source) (*airo
 	// "builtin" until PR4 wires a fetched bundle version through here.
 	tool := Tool
 	tool.RulesHash = matcher.Hash()
-	tool.RulesVersion = "builtin"
+	tool.RulesVersion = rulesVersion
 
 	info := src.Info()
 	inv := assemble.Build(findings, unknowns, stats, assemble.Options{
@@ -203,7 +202,7 @@ type DetectorInfo struct {
 // Detectors resolves the catalog (honoring --rules and --select) into the
 // self-documenting capability view (§6.2).
 func Detectors(cfg *Config) ([]DetectorInfo, error) {
-	catalog, matcher, err := buildCatalog(cfg)
+	catalog, matcher, _, err := buildCatalog(cfg)
 	if err != nil {
 		return nil, err
 	}

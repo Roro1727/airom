@@ -90,6 +90,9 @@ func untar(tarball []byte, dest string) error {
 		if h.Typeflag != tar.TypeReg || !strings.HasSuffix(name, ".yaml") {
 			continue // only regular pack files matter; ignore dirs, symlinks, etc.
 		}
+		if strings.HasPrefix(path.Base(name), ".") {
+			continue // dotfiles are never rule packs: AppleDouble ._*.yaml, editor cruft
+		}
 		if h.Size > maxFileSize {
 			return fmt.Errorf("bundle entry %q exceeds %d bytes", name, maxFileSize)
 		}
